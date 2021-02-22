@@ -16,14 +16,16 @@
 namespace vulkan_utils
 {
 
-	struct swapchain_support_details {
+	class swapchain_support_details {
+	public:
 		VkSurfaceCapabilitiesKHR capabilities;
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> present_modes;
 	};
 
 	
-	struct queue_family_indices {
+	class queue_family_indices {
+	public:
 		queue_family_indices() = default;
 		std::optional<uint32_t> graphic_family;
 		std::optional<uint32_t> transfert_family;

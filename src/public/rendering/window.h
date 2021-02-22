@@ -17,6 +17,7 @@ private:
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
 	VkDevice logical_device = VK_NULL_HANDLE;
+	vulkan_utils::queue_family_indices queue_families;
 	VkQueue graphic_queue = VK_NULL_HANDLE;
 	VkQueue transfert_queue = VK_NULL_HANDLE;
 	VkQueue present_queue = VK_NULL_HANDLE;
@@ -36,6 +37,5 @@ private:
 	void create_window_surface();
 	void select_physical_device();
 	void create_logical_device();
-	void create_vma_allocator();
-	
+	void create_vma_allocator();	
 };

@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "ios/logger.h"
+#include "rendering/vulkan/commandPool.h"
 
 std::mutex window_map_lock;
 std::unordered_map<GLFWwindow*, Window*> window_map;
@@ -87,6 +88,7 @@ void Window::create_vulkan_context()
 	select_physical_device();
 	create_logical_device();
 	create_vma_allocator();
+	command_pool::create_command_pools(logical_device, queue_families.graphic_family.value());
 }
 
 void Window::create_window_surface()
@@ -133,7 +135,7 @@ void Window::create_logical_device()
 {
 	logger::log("Create logical device");
 
-	vulkan_utils::queue_family_indices queue_families = vulkan_utils::find_device_queue_families(surface, physical_device);
+	queue_families = vulkan_utils::find_device_queue_families(surface, physical_device);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = { queue_families.graphic_family.value(), queue_families.present_family.value() };
