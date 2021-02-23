@@ -75,7 +75,9 @@ public:
 			return nullptr;
 		}
 	}
-	
+
+	bool is_empty() const { return pool_top == pool_bottom; }
+
 private:
 
 	ObjectType** pool = nullptr;

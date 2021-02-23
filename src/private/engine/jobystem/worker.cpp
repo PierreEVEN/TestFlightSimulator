@@ -3,36 +3,39 @@
 
 #include "ios/logger.h"
 
-#define MAX_WORKER_COUNT 128
-
 namespace job_system
 {
 	Worker* workers = nullptr;
-	size_t current_worker_count = 0;
-	TObjectPool<IJobTask, 2048> job_pool;
-
+	size_t worker_count = 0;
 	
-	void Worker::create_workers(int worker_count) {
-		if (worker_count < 0) worker_count = std::thread::hardware_concurrency();
+	TObjectPool<IJobTask, 2048> job_pool;
+	std::counting_semaphore<> workers_release_semaphore(0);	
+	std::binary_semaphore workers_free_semaphore(0);
 
-		logger::log("create %d workers", worker_count);
+	std::condition_variable wake_up_worker_condition_variable;
+	
+	int jobs = 0;
+	
+	void Worker::create_workers(int desired_worker_count) {
+		if (workers) logger::fail("cannot add more workers");
 
-		if (!workers) workers = static_cast<Worker*>(malloc(MAX_WORKER_COUNT * sizeof(Worker)));
-		if (worker_count + current_worker_count > MAX_WORKER_COUNT) {
-			logger::error("cannot create more than %d workers", MAX_WORKER_COUNT);
-			return;
-		}
-		
-		for (size_t i = current_worker_count; i < current_worker_count + worker_count; ++i) {
-			new (workers + i) Worker();
-		}
+		// Create one worker per CPU thread
+		if (desired_worker_count < 0) desired_worker_count = static_cast<int>(std::thread::hardware_concurrency());
 
-		current_worker_count += worker_count;
+		logger::log("create %d workers over %u CPU threads", desired_worker_count, std::thread::hardware_concurrency());
+
+		// Allocate workers memory
+		workers = static_cast<Worker*>(malloc(desired_worker_count * sizeof(Worker)));
+
+		// Create and release workers
+		for (size_t i = 0; i < desired_worker_count; ++i) new (workers + i) Worker();
+		worker_count += desired_worker_count;
+		for (size_t i = 0; i < desired_worker_count; ++i) workers_release_semaphore.release();
 	}
 
 	Worker& Worker::get()
 	{
-		for (uint32_t i = 0; i < current_worker_count; ++i) 
+		for (uint32_t i = 0; i < worker_count; ++i)
 		{
 			if (workers[i]) {
 				return workers[i];
@@ -44,14 +47,34 @@ namespace job_system
 
 	void Worker::push_job(IJobTask* newTask)
 	{
+		jobs++;
 		job_pool.push(newTask);
+		wake_up_worker_condition_variable.notify_one();
 	}
+
+	void Worker::wait_job_completion()	{
+
+
+		while (!job_pool.is_empty() || jobs > 0)
+		{
+			workers_free_semaphore.acquire();
+		}
+	}
+
+	Worker::Worker()
+		: worker_thread([](){
+				workers_release_semaphore.acquire();
+				while (true) get().next_task();
+		}){}
 
 	void Worker::next_task()
 	{
 		if (IJobTask* found_job = job_pool.pop())
 		{
 			found_job->execute();
+			jobs--;
+			workers_free_semaphore.release();
+			
 		}
 		else
 		{
