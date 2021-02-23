@@ -32,8 +32,13 @@ int main(int argc, char* argv[])
 	// Wait remaining job completion
 	logger::log("waiting remaining jobs...");
 	job_system::Worker::wait_job_completion();
-	logger::validate("process complete !");
+
 
 	// Destroy rendering context
 	glfwTerminate();
+	
+	job_system::Worker::destroy_workers();
+	logger::validate("process complete !");
+
+	
 }

@@ -16,7 +16,10 @@ namespace job_system {
 
 		static void push_job(class IJobTask* newTask);
 		static void wait_job_completion();
+		static void destroy_workers();
 
+		[[nodiscard]] static size_t get_worker_count();
+	
 	private:
 
 		Worker();

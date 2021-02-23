@@ -61,6 +61,16 @@ namespace job_system
 		}
 	}
 
+	void Worker::destroy_workers()
+	{
+		free(workers);
+	}
+
+	size_t Worker::get_worker_count()
+	{
+		return worker_count;
+	}
+
 	Worker::Worker()
 		: worker_thread([](){
 				workers_release_semaphore.acquire();

@@ -6,7 +6,6 @@
 #include <set>
 #include <unordered_map>
 
-
 #include "config.h"
 #include "ios/logger.h"
 #include "rendering/vulkan/commandPool.h"
@@ -19,6 +18,19 @@ void framebuffer_size_callback(GLFWwindow* handle, const int res_x, const int re
 	if (window_ptr != window_map.end())	{
 		window_ptr->second->resize_window(res_x, res_y);
 	}
+}
+
+WindowContext::WindowContext(GLFWwindow* handle, VkSurfaceKHR surface)
+{
+	select_physical_device(surface);
+	create_logical_device(surface);
+	create_vma_allocator();
+	command_pool = new command_pool::Container(logical_device, queue_families.graphic_family.value());
+}
+
+WindowContext::~WindowContext()
+{
+	logger::log("destroy window context");
 }
 
 Window::Window(const int res_x, const int res_y, const char* name, bool fullscreen)
@@ -38,8 +50,14 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	create_window_surface();
 
 	// Get vulkan context from existing window or create a new one
-	if (!window_map.empty()) initialize_from_window(*window_map.begin()->second);
-	else create_vulkan_context();
+	if (!window_map.empty()) {
+		logger::log("use context from '%s' window", window_map.begin()->second->window_name);
+		context = window_map.begin()->second->context;
+	}
+	else {
+		logger::log("create new vulkan context");
+		context = std::make_shared<WindowContext>(window_handle, surface);
+	}
 	
 	window_map[window_handle] = this;
 	
@@ -71,26 +89,6 @@ bool Window::end_frame()
 	return !glfwWindowShouldClose(window_handle);
 }
 
-void Window::initialize_from_window(const Window& other)
-{
-	logger::log("use context from '%s' window", other.window_name);
-	physical_device = other.physical_device;
-	logical_device = other.logical_device;
-	graphic_queue = other.graphic_queue;
-	transfert_queue = other.transfert_queue;
-	present_queue = other.present_queue;
-	vulkan_memory_allocator = other.vulkan_memory_allocator;
-}
-
-void Window::create_vulkan_context()
-{
-	logger::log("create new vulkan context");
-	select_physical_device();
-	create_logical_device();
-	create_vma_allocator();
-	command_pool::create_command_pools(logical_device, queue_families.graphic_family.value());
-}
-
 void Window::create_window_surface()
 {
 	VK_ENSURE(glfwCreateWindowSurface(vulkan_common::instance, window_handle, nullptr, &surface) != VK_SUCCESS, "Failed to create Window surface");
@@ -98,7 +96,7 @@ void Window::create_window_surface()
 	logger::log("Create Window surface");
 }
 
-void Window::select_physical_device()
+void WindowContext::select_physical_device(VkSurfaceKHR surface)
 {
 	// Get devices
 	uint32_t device_count = 0;
@@ -131,7 +129,7 @@ void Window::select_physical_device()
 	logger::log("Picking physical device %d (%s)", selected_device_properties.deviceID, selected_device_properties.deviceName);
 }
 
-void Window::create_logical_device()
+void WindowContext::create_logical_device(VkSurfaceKHR surface)
 {
 	logger::log("Create logical device");
 
@@ -182,7 +180,7 @@ void Window::create_logical_device()
 	VK_CHECK(present_queue, "Failed to find present queue");
 }
 
-void Window::create_vma_allocator()
+void WindowContext::create_vma_allocator()
 {
 	logger::log("Create memory allocators");
 	VmaAllocatorCreateInfo allocatorInfo = {};
