@@ -1,10 +1,9 @@
 #pragma once
 
 #include <mutex>
-#include <atomic>
+#include "ios/logger.h"
 
 static const unsigned int NUMBER_OF_JOBS = 4096;
-static const unsigned int MASK = NUMBER_OF_JOBS - 1;
 
 template<typename ObjectType>
 class IObjectPool
@@ -34,49 +33,27 @@ public:
 	virtual void push(ObjectType* object)
 	{
 		std::lock_guard lock(pool_lock);
-		long new_bottom = pool_bottom;
-		pool[pool_bottom & MASK] = object;
-		std::atomic_thread_fence(std::memory_order_acq_rel);
-		pool_bottom = new_bottom + 1;
+		if ((pool_bottom + 1) % NUMBER_OF_JOBS == pool_top)
+		{
+			logger::fail("job pool overflow : %d", NUMBER_OF_JOBS);
+		}
+		
+		pool[pool_bottom] = object;		
+		pool_bottom = (pool_bottom + 1) % NUMBER_OF_JOBS;
 	}
 
 	virtual ObjectType* pop()
 	{
 		std::lock_guard lock(pool_lock);
-		long new_bottom = pool_bottom - 1;
-		pool_bottom = new_bottom;
+		if (is_empty()) return nullptr;
 
-		std::atomic_thread_fence(std::memory_order_acq_rel);
-
-		long top = pool_top;
-
-		if (top <= new_bottom)
-		{
-			ObjectType* object = pool[new_bottom & MASK];
-			if (top != new_bottom)
-			{
-				// there's still more than one item left in the queue
-				return object;
-			}
-
-			// this is the last item in the queue
-			if (_InterlockedCompareExchange(&pool_top, top + 1, top) != top)
-			{
-				// failed race against steal operation
-				object = nullptr;
-			}
-
-			pool_bottom = top + 1;
-			return object;
-		}
-		else {
-			// deque was already empty
-			pool_bottom = top;
-			return nullptr;
-		}
+		ObjectType* object = pool[pool_top];
+		pool_top = (pool_top + 1) % NUMBER_OF_JOBS;
+		
+		return object;
 	}
 
-	bool is_empty() const { return pool_top == pool_bottom; }
+	[[nodiscard]] bool is_empty() const { return pool_top == pool_bottom; }
 
 private:
 

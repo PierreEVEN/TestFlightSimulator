@@ -20,7 +20,7 @@ namespace job_system
 		if (workers) logger::fail("cannot add more workers");
 
 		// Create one worker per CPU thread
-		if (desired_worker_count < 0) desired_worker_count = static_cast<int>(std::thread::hardware_concurrency());
+		if (desired_worker_count <= 0) desired_worker_count = static_cast<int>(std::thread::hardware_concurrency());
 
 		logger::log("create %d workers over %u CPU threads", desired_worker_count, std::thread::hardware_concurrency());
 

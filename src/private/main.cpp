@@ -10,11 +10,6 @@ void window_test()
 	Window game_window(800, 600, config::application_name);
 
 	while (game_window.begin_frame()) {
-
-
-
-		
-		
 		game_window.end_frame();
 	}
 }
@@ -22,7 +17,7 @@ void window_test()
 int main(int argc, char* argv[])
 {
 	// Create workers
-	job_system::Worker::create_workers(-1);
+	job_system::Worker::create_workers(0);
 
 	// Initialize rendering context
 	logger::log("initialize rendering");
