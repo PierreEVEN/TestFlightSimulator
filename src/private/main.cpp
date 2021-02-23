@@ -17,7 +17,7 @@ void window_test()
 int main(int argc, char* argv[])
 {
 	// Create workers
-	job_system::Worker::create_workers(0);
+	job_system::Worker::create_workers(2);
 
 	// Initialize rendering context
 	logger::log("initialize rendering");
@@ -32,13 +32,11 @@ int main(int argc, char* argv[])
 	// Wait remaining job completion
 	logger::log("waiting remaining jobs...");
 	job_system::Worker::wait_job_completion();
-
-
+	
 	// Destroy rendering context
+	vulkan_common::vulkan_shutdown();
 	glfwTerminate();
 	
 	job_system::Worker::destroy_workers();
-	logger::validate("process complete !");
-
-	
+	logger::validate("process complete !");	
 }

@@ -5,7 +5,6 @@
 namespace command_pool
 {
 	CommandPool::CommandPool(VkDevice logical_device, uint32_t queue)
-
 		: pool_logical_device(logical_device) {
 		VkCommandPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -14,9 +13,9 @@ namespace command_pool
 		VK_ENSURE(vkCreateCommandPool(logical_device, &poolInfo, vulkan_common::allocation_callback, &commandPool), "Failed to create command pool");
 	}
 
-	CommandPool::~CommandPool()
+	void CommandPool::destroy()
 	{
-		if (is_created) vkDestroyCommandPool(pool_logical_device, commandPool, vulkan_common::allocation_callback);
+		vkDestroyCommandPool(pool_logical_device, commandPool, vulkan_common::allocation_callback);
 	}
 
 	VkCommandPool& CommandPool::get()
@@ -39,11 +38,22 @@ namespace command_pool
 		: context_logical_device(logical_device), context_queue(queue)
 	{
 		command_pool_count = job_system::Worker::get_worker_count();
+		logger::log("create command pool for %d workers", command_pool_count);
 		command_pools = static_cast<CommandPool*>(std::malloc(command_pool_count * sizeof(CommandPool)));
 		for (int i = 0; i < job_system::Worker::get_worker_count(); ++i)
 		{
 			new (command_pools + i) CommandPool(logical_device, queue);
 		}
+	}
+
+	Container::~Container()
+	{
+		logger::log("destroy command pools");
+		for (int i = 0; i < command_pool_count; ++i)
+		{
+			command_pools[i].destroy();
+		}
+		free(command_pools);
 	}
 
 	VkCommandPool& Container::get()

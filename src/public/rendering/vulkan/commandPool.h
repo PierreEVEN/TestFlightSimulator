@@ -13,8 +13,7 @@ namespace command_pool
 	{
 	public:
 		CommandPool(VkDevice logical_device, uint32_t queue);
-
-		~CommandPool();
+		void destroy();
 
 		[[nodiscard]] VkCommandPool& get();
 
@@ -27,9 +26,10 @@ namespace command_pool
 		std::thread::id pool_thread_id;
 	};
 
-	class Container {
+	class Container final {
 	public:
 		Container(VkDevice logical_device, uint32_t queue);
+		~Container();
 
 		[[nodiscard]] VkCommandPool& get();
 

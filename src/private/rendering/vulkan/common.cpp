@@ -23,6 +23,12 @@ namespace vulkan_common {
 		create_validation_layers();
 		logger::validate("initialized vulkan");
 	}
+
+	void vulkan_shutdown()
+	{
+		destroy_validation_layers();
+		destroy_instance();
+	}
 	
 	VkDebugUtilsMessengerEXT debugMessenger;
 		
@@ -74,7 +80,7 @@ namespace vulkan_common {
 		if (!config::use_validation_layers) return;
 
 
-		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+		auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
 		if (func != nullptr) {
 			if (func(instance, &vulkan_utils::debug_messenger_create_infos, nullptr, &debugMessenger) != VK_SUCCESS)
 			{
@@ -87,13 +93,18 @@ namespace vulkan_common {
 		logger::log("enabled validation layers");		
 	}
 
-	/*
-	 * PER WINDOW INSTANCE
-	 */
-
-
-	void close()
+	void destroy_validation_layers()
 	{
-		
+		if (!config::use_validation_layers) return;
+
+		logger::log("Destroy validation layers");
+		auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+		if (func) func(instance, debugMessenger, allocation_callback);
+	}
+
+	void destroy_instance()
+	{
+		logger::log("Destroy Vulkan instance");
+		vkDestroyInstance(instance, allocation_callback);
 	}
 }
