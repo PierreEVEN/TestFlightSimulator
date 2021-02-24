@@ -6,7 +6,7 @@
 
 
 #include "ios/logger.h"
-#include "rendering/Window.h"
+#include "rendering/window.h"
 
 
 Swapchain::Swapchain(const VkExtent2D& extend, Window* window)

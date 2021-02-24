@@ -68,7 +68,7 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	setup_swapchain_property();
 	create_or_recreate_render_pass();
 
-	swapchain = new Swapchain(VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) }, this);
+	//swapchain = new Swapchain(VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) }, this);
 	
 	window_map[window_handle] = this;
 	
@@ -80,7 +80,7 @@ Window::~Window() {
 	window_map.erase(window_map.find(window_handle));
 	glfwDestroyWindow(window_handle);
 
-	delete swapchain;
+	//delete swapchain;
 	destroy_render_pass();
 	delete command_pool;
 	context = nullptr;
