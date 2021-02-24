@@ -63,6 +63,9 @@ namespace logger
 	template<typename... Params>
 	void fail(const char* format, Params... args) {
 		log_print(CONSOLE_ASSERT, logger::format(format, std::forward<Params>(args)...));
+#if _DEBUG
+		__debugbreak();
+#endif
 		exit(EXIT_FAILURE);
 	}
 }

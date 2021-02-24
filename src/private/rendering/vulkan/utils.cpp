@@ -255,4 +255,20 @@ namespace vulkan_utils
 		logger::error("cannot support required format");
 		exit(EXIT_FAILURE);
 	}
+
+	VkExtent2D choose_swapchain_extend(const VkSurfaceCapabilitiesKHR& capabilities, const VkExtent2D& initial_extend)
+	{
+		if (capabilities.currentExtent.width != UINT32_MAX) {
+			return capabilities.currentExtent;
+		}
+		else {
+			VkExtent2D actualExtent;
+
+			actualExtent.width = std::clamp(initial_extend.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+			actualExtent.height = std::clamp(initial_extend.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+			return actualExtent;
+		}
+	}
+
 }

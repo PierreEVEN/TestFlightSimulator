@@ -17,7 +17,7 @@ void window_test()
 int main(int argc, char* argv[])
 {
 	// Create workers
-	job_system::Worker::create_workers(2);
+	job_system::Worker::create_workers();
 
 	// Initialize rendering context
 	logger::log("initialize rendering");
@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 
 	// Create two test windows
 	job_system::new_job(window_test);
-	job_system::new_job(window_test);
+	//job_system::new_job(window_test);
 
 	// Wait remaining job completion
 	logger::log("waiting remaining jobs...");

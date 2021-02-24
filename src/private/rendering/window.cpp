@@ -10,6 +10,7 @@
 #include "config.h"
 #include "ios/logger.h"
 #include "rendering/vulkan/commandPool.h"
+#include "rendering/vulkan/swapchain.h"
 
 std::mutex window_map_lock;
 std::unordered_map<GLFWwindow*, Window*> window_map;
@@ -66,6 +67,8 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	command_pool = new command_pool::Container(context->logical_device, context->queue_families.graphic_family.value());
 	setup_swapchain_property();
 	create_or_recreate_render_pass();
+
+	swapchain = new Swapchain(VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) }, this);
 	
 	window_map[window_handle] = this;
 	
@@ -77,6 +80,7 @@ Window::~Window() {
 	window_map.erase(window_map.find(window_handle));
 	glfwDestroyWindow(window_handle);
 
+	delete swapchain;
 	destroy_render_pass();
 	delete command_pool;
 	context = nullptr;

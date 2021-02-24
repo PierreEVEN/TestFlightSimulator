@@ -40,7 +40,7 @@ add_library(glfw3 INTERFACE)
 target_link_libraries(glfw3 INTERFACE ${PROJECT_ROOT}/temp/third_party/glfw3.lib)
 target_include_directories(glfw3 INTERFACE ${PROJECT_ROOT}/third_party/glfw/include)
 
-file(GLOB_RECURSE SOURCES src/${TARGET}/private/*.cpp src/${TARGET}/public/*.h)
+file(GLOB_RECURSE SOURCES src/private/*.cpp src/public/*.h)
 add_executable(TestFlightSimulator ${SOURCES})
 	set_target_properties(TestFlightSimulator PROPERTIES 
 		ARCHIVE_OUTPUT_DIRECTORY "${BINARIES_DIR}/Lib"
@@ -50,6 +50,7 @@ add_executable(TestFlightSimulator ${SOURCES})
 target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/src/public)
 target_compile_features(TestFlightSimulator PUBLIC cxx_std_20)
 set_target_properties(TestFlightSimulator PROPERTIES CXX_EXTENSIONS OFF)
+source_group(TREE src/ FILES ${SOURCES})
 
 target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/VulkanMemoryAllocator/src)
 

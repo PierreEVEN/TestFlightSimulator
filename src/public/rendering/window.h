@@ -6,6 +6,8 @@
 #include "vulkan/commandPool.h"
 #include "vulkan/common.h"
 
+class Swapchain;
+
 class WindowContext
 {
 public:
@@ -42,6 +44,8 @@ public:
 
 private:
 
+	friend class Swapchain;
+
 	std::shared_ptr<WindowContext> context;
 	
 	GLFWwindow* window_handle;
@@ -52,16 +56,16 @@ private:
 	VkSampleCountFlagBits max_msaa_sample_count;
 	VkSampleCountFlagBits msaa_sample_count;
 	uint32_t swapchain_image_count;
-	
-	
+		
 	int window_width;
 	int window_height;
 	const char* window_name;
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 	VkRenderPass render_pass = VK_NULL_HANDLE;
+	Swapchain* swapchain;
 
 	friend void framebuffer_size_callback(GLFWwindow* handle, int res_x, int res_y);
-	void resize_window(int res_x, int res_y);		
+	void resize_window(int res_x, int res_y);	
 	void create_window_surface();
 	void setup_swapchain_property();
 	void create_or_recreate_render_pass();
