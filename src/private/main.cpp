@@ -6,7 +6,7 @@
 #include "config.h"
 #include "ios/logger.h"
 #include "misc/capabilities.h"
-#include "rendering/Window.h"
+#include "rendering/window.h"
 
 void window_test()
 {
