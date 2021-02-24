@@ -38,5 +38,5 @@ int main(int argc, char* argv[])
 	glfwTerminate();
 	
 	job_system::Worker::destroy_workers();
-	logger::validate("process complete !");	
+	logger::validate("process complete !");
 }

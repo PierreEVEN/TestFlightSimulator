@@ -31,5 +31,6 @@ namespace job_system {
 		
 		const std::thread worker_thread;
 		std::mutex WaitNewJobMutex;
+		bool run = true;
 	};
 }
