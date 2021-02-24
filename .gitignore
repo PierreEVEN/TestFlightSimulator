@@ -33,3 +33,5 @@
 
 temp
 bin
+.idea
+cmake-build-debug

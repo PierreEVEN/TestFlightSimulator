@@ -1,12 +1,11 @@
 #pragma once
 
+
 #if __has_include("semaphore")
 #include <semaphore>
 #else
-#define CUSTOM_SEMAPHORES
-#endif
-
-#ifdef CUSTOM_SEMAPHORES
+#include <condition_variable>
+#include <climits>
 
 
 #define SEM_VERIFY(cond, msg) {if (cond) {} else logger::fail(msg);}

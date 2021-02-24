@@ -7,7 +7,6 @@
 
 void window_test()
 {
-	job_system::new_job(window_test);
 	Window game_window(800, 600, config::application_name);
 
 	while (game_window.begin_frame()) {

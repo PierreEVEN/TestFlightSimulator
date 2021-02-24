@@ -59,7 +59,7 @@ add_executable(TestFlightSimulator ${SOURCES})
 target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/src/public)
 target_compile_features(TestFlightSimulator PUBLIC cxx_std_20)
 set_target_properties(TestFlightSimulator PROPERTIES CXX_EXTENSIONS OFF)
-source_group(TREE src/ FILES ${SOURCES})
+source_group(TREE ${PROJECT_ROOT}/src FILES ${SOURCES})
 
 target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/VulkanMemoryAllocator/src)
 
