@@ -1,7 +1,6 @@
 #pragma once
 
 #include <thread>
-#include <semaphore>
 
 #include "engine/containers/objectPool.h"
 

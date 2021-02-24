@@ -55,7 +55,7 @@ void Swapchain::create_or_recreate()
 	
 	if (surface_window->context->queue_families.graphic_family != surface_window->context->queue_families.present_family) {
 		create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-		create_info.queueFamilyIndexCount = queue_family_indices.size();
+		create_info.queueFamilyIndexCount = static_cast<uint32_t>(queue_family_indices.size());
 		create_info.pQueueFamilyIndices = queue_family_indices.data();
 	}
 	else {

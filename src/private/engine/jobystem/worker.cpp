@@ -2,6 +2,7 @@
 #include "engine/jobSystem/job.h"
 
 #include "ios/logger.h"
+#include "engine/semaphores.h"
 
 namespace job_system
 {
