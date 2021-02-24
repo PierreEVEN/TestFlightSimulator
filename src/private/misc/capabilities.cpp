@@ -3,11 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <cstring>
 
 
 #include "config.h"
 #include "ios/logger.h"
-#include "rendering/Window.h"
+#include "rendering/window.h"
 
 namespace capabilities
 {

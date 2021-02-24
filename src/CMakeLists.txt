@@ -1,4 +1,4 @@
-#Extended cmake function library
+Extended cmake function library
 
 
 # Set current project target category
