@@ -9,14 +9,14 @@
 #include <optional>
 #include <vector>
 
-
-#define VK_ENSURE(condition, message) if ((condition) != VK_SUCCESS) { logger::fail("VK_ERROR : %s", message); }
-#define VK_CHECK(object, message) if ((object) == VK_NULL_HANDLE) { logger::fail("VK_ERROR_NULL_HANDLE : %s", message); }
+#include "ios/logger.h"
+#define VK_ENSURE(condition, ...) if ((condition) != VK_SUCCESS) { logger::fail("VK_ERROR : %s", __VA_ARGS__); }
+#define VK_CHECK(object, ...) if ((object) == VK_NULL_HANDLE) { logger::fail("VK_ERROR_NULL_HANDLE : %s", __VA_ARGS__); }
 
 namespace vulkan_utils
 {
 
-	class swapchain_support_details {
+	class SwapchainSupportDetails {
 	public:
 		VkSurfaceCapabilitiesKHR capabilities;
 		std::vector<VkSurfaceFormatKHR> formats;
@@ -24,9 +24,9 @@ namespace vulkan_utils
 	};
 
 	
-	class queue_family_indices {
+	class QueueFamilyIndices {
 	public:
-		queue_family_indices() = default;
+		QueueFamilyIndices() = default;
 		std::optional<uint32_t> graphic_family;
 		std::optional<uint32_t> transfert_family;
 		std::optional<uint32_t> present_family;
@@ -36,8 +36,8 @@ namespace vulkan_utils
 	extern VkDebugUtilsMessengerCreateInfoEXT debug_messenger_create_infos;
 
 	std::vector<const char*> get_required_extensions();
-	swapchain_support_details get_swapchain_support_details(VkSurfaceKHR surface, VkPhysicalDevice device);
-	queue_family_indices find_device_queue_families(VkSurfaceKHR surface, VkPhysicalDevice device);
+	SwapchainSupportDetails get_swapchain_support_details(VkSurfaceKHR surface, VkPhysicalDevice device);
+	QueueFamilyIndices find_device_queue_families(VkSurfaceKHR surface, VkPhysicalDevice device);
 	bool is_physical_device_suitable(VkSurfaceKHR surface, VkPhysicalDevice device);
 	VkSurfaceFormatKHR choose_swapchain_surface_format(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 	VkSampleCountFlagBits get_max_usable_sample_count(VkPhysicalDevice physical_device);
@@ -45,4 +45,5 @@ namespace vulkan_utils
 	VkFormat find_texture_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features, VkPhysicalDevice physical_device);
 	VkFormat get_depth_format(VkPhysicalDevice physical_device);
 	VkExtent2D choose_swapchain_extend(const VkSurfaceCapabilitiesKHR& capabilities, const VkExtent2D& initial_extend);
+	uint32_t find_memory_type(VkPhysicalDevice physical_device, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 }

@@ -56,9 +56,9 @@ namespace vulkan_utils
 	 * PHYSICAL DEVICE
 	 */
 	
-	queue_family_indices find_device_queue_families(VkSurfaceKHR surface, VkPhysicalDevice device)
+	QueueFamilyIndices find_device_queue_families(VkSurfaceKHR surface, VkPhysicalDevice device)
 	{
-		queue_family_indices indices;
+		QueueFamilyIndices indices;
 
 		uint32_t queueFamilyCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
@@ -97,9 +97,9 @@ namespace vulkan_utils
 		return indices;
 	}
 
-	swapchain_support_details get_swapchain_support_details(VkSurfaceKHR surface, VkPhysicalDevice device)
+	SwapchainSupportDetails get_swapchain_support_details(VkSurfaceKHR surface, VkPhysicalDevice device)
 	{
-		swapchain_support_details details;
+		SwapchainSupportDetails details;
 
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
@@ -143,14 +143,14 @@ namespace vulkan_utils
 	}
 
 	bool is_physical_device_suitable(VkSurfaceKHR surface, VkPhysicalDevice device) {
-		queue_family_indices indices = find_device_queue_families(surface, device);
+		QueueFamilyIndices indices = find_device_queue_families(surface, device);
 
 		bool bAreExtensionSupported = CheckDeviceExtensionSupport(device);
 
 
 		bool swapChainAdequate = false;
 		if (bAreExtensionSupported) {
-			swapchain_support_details swapChainSupport = get_swapchain_support_details(surface, device);
+			SwapchainSupportDetails swapChainSupport = get_swapchain_support_details(surface, device);
 			swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.present_modes.empty();
 		}
 
@@ -273,6 +273,22 @@ namespace vulkan_utils
 
 			return actualExtent;
 		}
+	}
+
+
+	uint32_t find_memory_type(VkPhysicalDevice physical_device, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+	{
+		VkPhysicalDeviceMemoryProperties memProperties;
+		vkGetPhysicalDeviceMemoryProperties(physical_device, &memProperties);
+
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+				return i;
+			}
+		}
+
+		logger::error("Failed to find desired memory type");
+		return -1;
 	}
 
 }
