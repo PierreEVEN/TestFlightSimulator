@@ -22,7 +22,9 @@ Swapchain::~Swapchain()
 
 void Swapchain::resize_swapchain(VkExtent2D extend, const bool force_rebuild, const bool safe_resize)
 {
-	if (safe_resize) extend = vulkan_utils::choose_swapchain_extend(surface_window->swapchain_support_details.capabilities, extend);
+	logger::log("resize swapchain ( %d x %d )", extend.width, extend.height);
+	
+	//if (safe_resize) extend = vulkan_utils::choose_swapchain_extend(surface_window->swapchain_support_details.capabilities, extend);
 
 	if (extend.height != swapchain_extend.height || extend.height != swapchain_extend.width || force_rebuild)
 	{

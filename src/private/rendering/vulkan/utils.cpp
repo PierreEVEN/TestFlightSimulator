@@ -39,7 +39,7 @@ namespace vulkan_utils
 			nullptr,
 			0,
 			VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
 			validation_layer_debug_callback,
 	};
 	
@@ -79,7 +79,7 @@ namespace vulkan_utils
 				indices.transfert_family = i;
 			}
 			VkBool32 presentSupport = false;
-			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+			VK_ENSURE(vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport), "failed to get physical device present support");
 			if (presentSupport) {
 				indices.present_family = i;
 			}
@@ -89,6 +89,10 @@ namespace vulkan_utils
 			}
 
 			i++;
+		}
+		if (!indices.is_complete())
+		{
+			logger::fail("queue family indices are not complete");
 		}
 		return indices;
 	}

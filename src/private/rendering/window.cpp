@@ -57,6 +57,7 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	if (!window_map.empty()) {
 		logger::log("use context from '%s' window", window_map.begin()->second->window_name);
 		context = window_map.begin()->second->context;
+		vulkan_utils::find_device_queue_families(surface, context->physical_device);
 	}
 	else {
 		logger::log("create new vulkan context");
@@ -68,7 +69,7 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	setup_swapchain_property();
 	create_or_recreate_render_pass();
 
-	//swapchain = new Swapchain(VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) }, this);
+	swapchain = new Swapchain(VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) }, this);
 	
 	window_map[window_handle] = this;
 	
@@ -80,7 +81,7 @@ Window::~Window() {
 	window_map.erase(window_map.find(window_handle));
 	glfwDestroyWindow(window_handle);
 
-	//delete swapchain;
+	delete swapchain;
 	destroy_render_pass();
 	delete command_pool;
 	context = nullptr;
@@ -107,6 +108,8 @@ void Window::setup_swapchain_property()
 void Window::resize_window(const int res_x, const int res_y) {
 	window_width = res_x;
 	window_height = res_y;
+
+	swapchain->resize_swapchain(VkExtent2D{ static_cast<uint32_t>(res_x),(uint32_t)res_y });
 }
 
 bool Window::begin_frame()
