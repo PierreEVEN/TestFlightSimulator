@@ -14,10 +14,10 @@ namespace capabilities
 {
 	void check_all()
 	{
-		logger::log("checking vulkan support");
+		logger_log("checking vulkan support");
 		check_vk_extensions();
 		if (config::use_validation_layers) check_validation_layer_support();
-		logger::validate("vulkan is fully supported !");
+		logger_validate("vulkan is fully supported !");
 	}
 
 	void check_vk_extensions()
@@ -35,7 +35,7 @@ namespace capabilities
 
 		std::vector<const char*> required_extensions = vulkan_utils::get_required_extensions();
 
-		logger::log(log.c_str());
+		logger_log(log.c_str());
 
 		for (const auto& required_ext : required_extensions)
 		{
@@ -48,9 +48,9 @@ namespace capabilities
 					break;
 				}
 			}
-			if (!found_extension) logger::error("extension '%s' is required but cannot be found.", required_ext);
+			if (!found_extension) logger_error("extension '%s' is required but cannot be found.", required_ext);
 		}
-		logger::log("all required extensions are supported !");
+		logger_log("all required extensions are supported !");
 	}
 
 	void check_validation_layer_support()
@@ -70,8 +70,8 @@ namespace capabilities
 				}
 			}
 
-			if (!found_layer) logger::warning("failed to enable required validation layer '%s'", layer_name);
+			if (!found_layer) logger_warning("failed to enable required validation layer '%s'", layer_name);
 		}
-		logger::log("validation layers are supported");
+		logger_log("validation layers are supported");
 	}
 }

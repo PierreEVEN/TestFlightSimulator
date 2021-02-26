@@ -17,18 +17,18 @@ namespace vulkan_utils
 	VKAPI_ATTR VkBool32 VKAPI_CALL validation_layer_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data)
 	{
 		if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
-			logger::log("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
+			logger_log("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
 		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-			logger::validate("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
+			logger_validate("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
 		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-			logger::warning("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
+			logger_warning("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
 		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 		{
-			logger::fail("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
+			logger_fail("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
 		}
 		else
 		{
-			logger::error("VULKAN VALIDATION LAYER - UNKOWN VERBOSITY : %s", callback_data->pMessage);
+			logger_error("VULKAN VALIDATION LAYER - UNKOWN VERBOSITY : %s", callback_data->pMessage);
 		}
 
 		return VK_FALSE;
@@ -92,7 +92,7 @@ namespace vulkan_utils
 		}
 		if (!indices.is_complete())
 		{
-			logger::fail("queue family indices are not complete");
+			logger_fail("queue family indices are not complete");
 		}
 		return indices;
 	}
@@ -172,8 +172,8 @@ namespace vulkan_utils
 
 		VkSurfaceFormatKHR format;
 
-		// If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
-		// there is no preferered format, so we assume VK_FORMAT_B8G8R8A8_UNORM
+		// If the surface log_format list only includes one entry with VK_FORMAT_UNDEFINED,
+		// there is no preferered log_format, so we assume VK_FORMAT_B8G8R8A8_UNORM
 		if ((formatCount == 1) && (surfaceFormats[0].format == VK_FORMAT_UNDEFINED))
 		{
 			format.format = VK_FORMAT_B8G8R8A8_UNORM;
@@ -181,7 +181,7 @@ namespace vulkan_utils
 		}
 		else
 		{
-			// iterate over the list of available surface format and
+			// iterate over the list of available surface log_format and
 			// check for the presence of VK_FORMAT_B8G8R8A8_UNORM
 			bool found_B8G8R8A8_UNORM = false;
 			for (auto&& surfaceFormat : surfaceFormats)
@@ -196,7 +196,7 @@ namespace vulkan_utils
 			}
 
 			// in case VK_FORMAT_B8G8R8A8_UNORM is not available
-			// select the first available color format
+			// select the first available color log_format
 			if (!found_B8G8R8A8_UNORM)
 			{
 				format.format = surfaceFormats[0].format;
@@ -256,7 +256,7 @@ namespace vulkan_utils
 			}
 		}
 
-		logger::error("cannot support required format");
+		logger_error("cannot support required log_format");
 		exit(EXIT_FAILURE);
 	}
 
@@ -287,7 +287,7 @@ namespace vulkan_utils
 			}
 		}
 
-		logger::error("Failed to find desired memory type");
+		logger_error("Failed to find desired memory type");
 		return -1;
 	}
 

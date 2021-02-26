@@ -22,7 +22,7 @@ Swapchain::~Swapchain()
 
 void Swapchain::set_size(VkExtent2D extend, const bool force_rebuild, const bool safe_resize)
 {
-	logger::log("resize swapchain ( %d x %d )", extend.width, extend.height);
+	logger_log("resize swapchain ( %d x %d )", extend.width, extend.height);
 	
 	//if (safe_resize) extend = vulkan_utils::choose_swapchain_extend(surface_window->SwapchainSupportDetails.capabilities, extend);
 
@@ -47,7 +47,7 @@ void Swapchain::create_or_recreate()
 	create_info.imageFormat = surface_window->get_surface_format().format;
 	create_info.imageColorSpace = surface_window->get_surface_format().colorSpace;
 
-	//LOG_ASSERT(ToString((int)G_SWAPCHAIN_SURFACE_FORMAT.format));
+	//LOG_ASSERT(ToString((int)G_SWAPCHAIN_SURFACE_FORMAT.log_format));
 
 	create_info.imageExtent = swapchain_extend;
 	create_info.imageArrayLayers = 1;
@@ -68,7 +68,7 @@ void Swapchain::create_or_recreate()
 
 
 	VkCompositeAlphaFlagBitsKHR alpha_composite = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	// Select the first composite alpha format available
+	// Select the first composite alpha log_format available
 	std::vector<VkCompositeAlphaFlagBitsKHR> compositeAlphaFlags = {
 		VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 		VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
@@ -100,7 +100,7 @@ void Swapchain::create_or_recreate()
 	create_info.clipped = VK_TRUE;
 	create_info.oldSwapchain = VK_NULL_HANDLE;
 
-	logger::log("create swapchain ( %d x %d ) / sharing mode : %d", swapchain_extend.width, swapchain_extend.height, create_info.imageSharingMode);
+	logger_log("create swapchain ( %d x %d ) / sharing mode : %d", swapchain_extend.width, swapchain_extend.height, create_info.imageSharingMode);
 	VK_ENSURE(vkCreateSwapchainKHR(surface_window->get_context()->logical_device, &create_info, vulkan_common::allocation_callback, &swapchain), "Failed to create swap chain");
 
 	VK_CHECK(swapchain, "Invalid swapchain reference");
@@ -119,7 +119,7 @@ void Swapchain::create_or_recreate()
 
 void Swapchain::destroy()
 {
-	logger::log("Destroy swapChain");	
+	logger_log("Destroy swapChain");
 	vkDestroySwapchainKHR(surface_window->get_context()->logical_device, swapchain, vulkan_common::allocation_callback);
 	swapchain = VK_NULL_HANDLE;
 }

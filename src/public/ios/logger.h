@@ -2,6 +2,17 @@
 #include <memory>
 #include <string>
 
+#define logger_log(format, ...) logger::log_print("I", logger::ConsoleColor::CONSOLE_DISPLAY, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__)
+#define logger_validate(format, ...) logger::log_print("V", logger::ConsoleColor::CONSOLE_VALIDATE, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__)
+#define logger_warning(format, ...) logger::log_print("W", logger::ConsoleColor::CONSOLE_WARNING, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__)
+#define logger_error(format, ...) logger::log_print("E", logger::ConsoleColor::CONSOLE_FAIL, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__)
+#if _DEBUG
+#define logger_fail(format, ...) { logger::log_print("F", logger::ConsoleColor::CONSOLE_ASSERT, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); __debugbreak(); exit(EXIT_FAILURE); }
+#else
+#define logger_fail(format, ...) { logger::log_print("F", logger::ConsoleColor::CONSOLE_ASSERT, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); exit(EXIT_FAILURE); ]
+#endif
+
+
 namespace logger
 {
 	enum ConsoleColor {
@@ -29,7 +40,7 @@ namespace logger
 	};
 	
 	template<typename... Params>
-	std::string format(const char* format, Params... args) {
+	std::string log_format(const char* format, Params... args) {
 		const int size = snprintf(nullptr, 0, format, args...) + 1;
 		if (size <= 0) return format;
 		const std::unique_ptr<char[]> buffer(new char[size]);
@@ -38,31 +49,31 @@ namespace logger
 
 	}
 	
-	void log_print(int color, const std::string& message);
+	void log_print(const char* type, int color, const std::string& message, const char* function = nullptr, size_t line = 0, const char* file = nullptr);
 
 	template<typename... Params>
 	void log(const char* format, Params... args)	{
-		log_print(CONSOLE_DISPLAY, logger::format(format, std::forward<Params>(args)...));
+		log_print("I", CONSOLE_DISPLAY, logger::log_format(format, std::forward<Params>(args)...));
 	}
 	
 	template<typename... Params>
 	void validate(const char* format, Params... args) {
-		log_print(CONSOLE_VALIDATE, logger::format(format, std::forward<Params>(args)...));
+		log_print("V", CONSOLE_VALIDATE, logger::log_format(format, std::forward<Params>(args)...));
 	}
 	
 	template<typename... Params>
 	void warning(const char* format, Params... args) {
-		log_print(CONSOLE_WARNING, logger::format(format, std::forward<Params>(args)...));
+		log_print("W", CONSOLE_WARNING, logger::log_format(format, std::forward<Params>(args)...));
 	}
 		
 	template<typename... Params>
 	void error(const char* format, Params... args) {
-		log_print(CONSOLE_FAIL, logger::format(format, std::forward<Params>(args)...));
+		log_print("E", CONSOLE_FAIL, logger::log_format(format, std::forward<Params>(args)...));
 	}
 
 	template<typename... Params>
 	void fail(const char* format, Params... args) {
-		log_print(CONSOLE_ASSERT, logger::format(format, std::forward<Params>(args)...));
+		log_print("F", CONSOLE_ASSERT, logger::log_format(format, std::forward<Params>(args)...));
 #if _DEBUG
 		__debugbreak();
 #endif

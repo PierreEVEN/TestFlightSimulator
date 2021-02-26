@@ -32,7 +32,7 @@ WindowContext::WindowContext(GLFWwindow* handle, VkSurfaceKHR surface)
 
 WindowContext::~WindowContext()
 {
-	logger::log("destroy window window");
+	logger_log("destroy window window");
 
 	destroy_vma_allocators();
 	destroy_logical_device();
@@ -48,7 +48,7 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 
 	// Create window handle
 	window_handle = glfwCreateWindow(res_x, res_y, name, nullptr, nullptr);
-	if (!window_handle) logger::fail("failed to create glfw Window");
+	if (!window_handle) logger_fail("failed to create glfw Window");
 	glfwSetFramebufferSizeCallback(window_handle, framebuffer_size_callback);
 
 	// Create window surface
@@ -56,12 +56,12 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 
 	// Get vulkan window from existing window or create a new one
 	if (!window_map.empty()) {
-		logger::log("use window from '%s' window", window_map.begin()->second->window_name);
+		logger_log("use window from '%s' window", window_map.begin()->second->window_name);
 		context = window_map.begin()->second->context;
 		vulkan_utils::find_device_queue_families(surface, context->physical_device);
 	}
 	else {
-		logger::log("create new vulkan window");
+		logger_log("create new vulkan window");
 		context = std::make_shared<WindowContext>(window_handle, surface);
 	}
 
@@ -76,7 +76,7 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	
 	window_map[window_handle] = this;
 	
-	logger::validate("created Window '%s' ( %d x %d )", name, res_x, res_y);
+	logger_validate("created Window '%s' ( %d x %d )", name, res_x, res_y);
 }
 
 Window::~Window() {
@@ -93,7 +93,7 @@ Window::~Window() {
 	delete command_pool;
 	context = nullptr;
 	destroy_window_surface();
-	logger::validate("successfully destroyed window");
+	logger_validate("successfully destroyed window");
 }
 
 void Window::setup_swapchain_property()
@@ -104,11 +104,11 @@ void Window::setup_swapchain_property()
 	swapchain_image_count = swapchain_support_details.capabilities.minImageCount + 1;
 	max_msaa_sample_count = vulkan_utils::get_max_usable_sample_count(context->physical_device);
 	msaa_sample_count = max_msaa_sample_count;
-	logger::log("swapchain details : \n\
+	logger_log("swapchain details : \n\
 		\t-max samples : %d\n\
 		\t-image count : %d\n\
 		\t-present mode : %d\n\
-		\t-surface format : %d\
+		\t-surface log_format : %d\
 		", max_msaa_sample_count, swapchain_image_count, swapchain_present_mode, swapchain_surface_format);
 }
 
@@ -140,7 +140,7 @@ void Window::create_window_surface()
 {
 	VK_ENSURE(glfwCreateWindowSurface(vulkan_common::instance, window_handle, nullptr, &surface) != VK_SUCCESS, "Failed to create Window surface");
 	VK_CHECK(surface, "VkSurfaceKHR is null");
-	logger::log("Create Window surface");
+	logger_log("Create Window surface");
 }
 
 void WindowContext::submit_graphic_queue(const VkSubmitInfo& submit_infos, VkFence& submit_fence)
@@ -160,7 +160,7 @@ void WindowContext::select_physical_device(VkSurfaceKHR surface)
 	// Get devices
 	uint32_t device_count = 0;
 	vkEnumeratePhysicalDevices(vulkan_common::instance, &device_count, nullptr);
-	if (device_count == 0) logger::fail("No graphical device found.");
+	if (device_count == 0) logger_fail("No graphical device found.");
 	std::vector<VkPhysicalDevice> devices(device_count);
 	vkEnumeratePhysicalDevices(vulkan_common::instance, &device_count, devices.data());
 
@@ -171,7 +171,7 @@ void WindowContext::select_physical_device(VkSurfaceKHR surface)
 		vkGetPhysicalDeviceProperties(device, &pProperties);
 		PhysLog += "\t-" + std::string(pProperties.deviceName) + " (driver version : " + std::to_string(pProperties.driverVersion) + ")\n";
 	}
-	logger::log(PhysLog.c_str());
+	logger_log(PhysLog.c_str());
 
 	// Pick desired device
 	for (const auto& device : devices) {
@@ -185,12 +185,12 @@ void WindowContext::select_physical_device(VkSurfaceKHR surface)
 
 	VkPhysicalDeviceProperties selected_device_properties;
 	vkGetPhysicalDeviceProperties(physical_device, &selected_device_properties);
-	logger::log("Picking physical device %d (%s)", selected_device_properties.deviceID, selected_device_properties.deviceName);
+	logger_log("Picking physical device %d (%s)", selected_device_properties.deviceID, selected_device_properties.deviceName);
 }
 
 void WindowContext::create_logical_device(VkSurfaceKHR surface)
 {
-	logger::log("Create logical device");
+	logger_log("Create logical device");
 
 	queue_families = vulkan_utils::find_device_queue_families(surface, physical_device);
 
@@ -240,7 +240,7 @@ void WindowContext::create_logical_device(VkSurfaceKHR surface)
 
 void WindowContext::create_vma_allocator()
 {
-	logger::log("Create memory allocators");
+	logger_log("Create memory allocators");
 	VmaAllocatorCreateInfo allocatorInfo = {};
 	allocatorInfo.physicalDevice = physical_device;
 	allocatorInfo.device = logical_device;
@@ -251,13 +251,13 @@ void WindowContext::create_vma_allocator()
 
 void WindowContext::destroy_vma_allocators()
 {
-	logger::log("Destroy memory allocators");
+	logger_log("Destroy memory allocators");
 	vmaDestroyAllocator(vulkan_memory_allocator);
 }
 
 void WindowContext::destroy_logical_device()
 {
-	logger::log("Destroy logical device");
+	logger_log("Destroy logical device");
 	vkDestroyDevice(logical_device, vulkan_common::allocation_callback);
 }
 
@@ -267,7 +267,7 @@ void Window::create_or_recreate_render_pass()
 		destroy_render_pass();
 	}
 
-	logger::log("Create render pass");
+	logger_log("Create render pass");
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = swapchain_surface_format.format;
 	colorAttachment.samples = msaa_sample_count;
@@ -364,7 +364,7 @@ void Window::create_or_recreate_render_pass()
 
 void Window::create_command_buffer()
 {
-	logger::log("create command buffers");
+	logger_log("create command buffers");
 	command_buffers.resize(swapchain_image_count);
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -377,7 +377,7 @@ void Window::create_command_buffer()
 
 void Window::create_fences_and_semaphores()
 {
-	logger::log("create fence and semaphores\n\t-in flight fence : %d\n\t-images in flight : %d", config::max_frame_in_flight, swapchain_image_count);
+	logger_log("create fence and semaphores\n\t-in flight fence : %d\n\t-images in flight : %d", config::max_frame_in_flight, swapchain_image_count);
 	image_acquire_semaphore.resize(config::max_frame_in_flight);
 	render_finished_semaphores.resize(config::max_frame_in_flight);
 	in_flight_fences.resize(config::max_frame_in_flight);
@@ -419,7 +419,7 @@ void Window::render()
 		return;
 	}
 	if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-		logger::error("Failed to acquire image from the swapchain");
+		logger_error("Failed to acquire image from the swapchain");
 		return;
 	}
 
@@ -440,7 +440,7 @@ void Window::render()
 	begin_info.flags = 0; // Optional
 	begin_info.pInheritanceInfo = nullptr; // Optional
 	
-	if (vkBeginCommandBuffer(current_command_buffer, &begin_info) != VK_SUCCESS) { logger::fail("Failed to create command buffer #%d", image_index); }
+	if (vkBeginCommandBuffer(current_command_buffer, &begin_info) != VK_SUCCESS) { logger_fail("Failed to create command buffer #%d", image_index); }
 
 	std::array<VkClearValue, 2> clear_values{};
 	clear_values[0].color = { 0.6f, 0.9f, 1.f, 1.0f };
@@ -500,7 +500,7 @@ void Window::render()
 
 
 	/**
-	 * Present stuffs
+	 * Present to swapchain
 	 */
 	
 	VkPresentInfoKHR presentInfo{};
@@ -521,13 +521,13 @@ void Window::render()
 		resize_window(width, height);
 	}
 	else if (result != VK_SUCCESS) {
-		logger::fail("Failed to present image to swap chain");
+		logger_fail("Failed to present image to swap chain");
 	}
 }
 
 void Window::destroy_fences_and_semaphores()
 {
-	logger::log("destroy fence and semaphores");
+	logger_log("destroy fence and semaphores");
 	for (size_t i = 0; i < config::max_frame_in_flight; i++) {
 		vkDestroySemaphore(context->logical_device, render_finished_semaphores[i], vulkan_common::allocation_callback);
 		vkDestroySemaphore(context->logical_device, image_acquire_semaphore[i], vulkan_common::allocation_callback);
@@ -537,19 +537,19 @@ void Window::destroy_fences_and_semaphores()
 
 void Window::destroy_command_buffer()
 {
-	logger::log("free command buffers");
+	logger_log("free command buffers");
 	vkFreeCommandBuffers(context->logical_device, command_pool->get(), static_cast<uint32_t>(command_buffers.size()), command_buffers.data());
 }
 
 void Window::destroy_render_pass()
 {
-	logger::log("Destroy Render pass");
+	logger_log("Destroy Render pass");
 	vkDestroyRenderPass(context->logical_device, render_pass, vulkan_common::allocation_callback);
 	render_pass = VK_NULL_HANDLE;
 }
 
 void Window::destroy_window_surface()
 {
-	logger::log("Destroy window surface");
+	logger_log("Destroy window surface");
 	vkDestroySurfaceKHR(vulkan_common::instance, surface, vulkan_common::allocation_callback);
 }

@@ -11,13 +11,13 @@
 Framebuffer::Framebuffer(Window* window_context, VkExtent2D size)
 	: window(window_context)
 {
-	logger::log("create framebuffer ( %d x %d )", size.width, size.height);
+	logger_log("create framebuffer ( %d x %d )", size.width, size.height);
 	set_size(size, true);
 }
 
 Framebuffer::~Framebuffer()
 {
-	logger::log("destroy framebuffer");
+	logger_log("destroy framebuffer");
 	delete swapchain;
 	destroy_framebuffer();
 	destroy_framebuffer_images();

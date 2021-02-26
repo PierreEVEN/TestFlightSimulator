@@ -38,7 +38,7 @@ namespace command_pool
 		: context_logical_device(logical_device), context_queue(queue)
 	{
 		command_pool_count = job_system::Worker::get_worker_count();
-		logger::log("create command pool for %d workers", command_pool_count);
+		logger_log("create command pool for %d workers", command_pool_count);
 		command_pools = static_cast<CommandPool*>(std::malloc(command_pool_count * sizeof(CommandPool)));
 		for (int i = 0; i < job_system::Worker::get_worker_count(); ++i)
 		{
@@ -48,7 +48,7 @@ namespace command_pool
 
 	Container::~Container()
 	{
-		logger::log("destroy command pools");
+		logger_log("destroy command pools");
 		for (int i = 0; i < command_pool_count; ++i)
 		{
 			command_pools[i].destroy();
@@ -65,7 +65,7 @@ namespace command_pool
 				return pool.get();
 			}
 		}
-		logger::fail("no command pool is available on current thread");
+		logger_fail("no command pool is available on current thread");
 		exit(EXIT_FAILURE);
 	}
 }

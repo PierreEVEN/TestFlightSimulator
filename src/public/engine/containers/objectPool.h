@@ -35,7 +35,7 @@ public:
 		std::lock_guard lock(pool_lock);
 		if ((pool_bottom + 1) % NUMBER_OF_JOBS == pool_top)
 		{
-			logger::fail("job pool overflow : %d", NUMBER_OF_JOBS);
+			logger_fail("job pool overflow : %d", NUMBER_OF_JOBS);
 		}
 		
 		pool[pool_bottom] = object;		

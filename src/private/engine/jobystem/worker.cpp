@@ -17,12 +17,12 @@ namespace job_system {
     int jobs = 0;
 
     void Worker::create_workers(int desired_worker_count) {
-        if (workers) logger::fail("cannot add more workers");
+        if (workers) logger_fail("cannot add more workers");
 
         // Create one worker per CPU thread
         if (desired_worker_count <= 0) desired_worker_count = static_cast<int>(std::thread::hardware_concurrency());
 
-        logger::log("create %d workers over %u CPU threads", desired_worker_count, std::thread::hardware_concurrency());
+        logger_log("create %d workers over %u CPU threads", desired_worker_count, std::thread::hardware_concurrency());
 
         // Allocate workers memory
         workers = static_cast<Worker *>(malloc(desired_worker_count * sizeof(Worker)));
@@ -39,7 +39,7 @@ namespace job_system {
                 return workers[i];
             }
         }
-        logger::fail("failed to find worker on current thread");
+        logger_fail("failed to find worker on current thread");
         exit(EXIT_FAILURE);
     }
 
