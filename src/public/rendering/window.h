@@ -27,8 +27,7 @@ public:
 	VkResult submit_present_queue(const VkPresentInfoKHR& present_infos);
 private:
 
-	std::mutex graphic_queue_lock;
-	std::mutex present_queue_lock;
+	std::mutex queue_access_lock;
 	VkQueue graphic_queue = VK_NULL_HANDLE;
 	VkQueue transfert_queue = VK_NULL_HANDLE;
 	VkQueue present_queue = VK_NULL_HANDLE;
@@ -62,7 +61,7 @@ public:
 
 	[[nodiscard]] uint32_t get_msaa_sample_count() const { return msaa_sample_count; }
 	[[nodiscard]] uint32_t get_max_msaa_sample_count() const { return max_msaa_sample_count; }
-	
+
 private:
 
 
@@ -78,7 +77,7 @@ private:
 	uint32_t swapchain_image_count;
 
 
-	std::vector<VkSemaphore> image_available_semaphores;
+	std::vector<VkSemaphore> image_acquire_semaphore;
 	std::vector<VkSemaphore> render_finished_semaphores;
 	std::vector<VkFence> in_flight_fences;
 	std::vector<VkFence> images_in_flight;

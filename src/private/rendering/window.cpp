@@ -84,6 +84,8 @@ Window::~Window() {
 	window_map.erase(window_map.find(window_handle));
 	glfwDestroyWindow(window_handle);
 
+	vkDeviceWaitIdle(context->logical_device);
+	
 	destroy_fences_and_semaphores();
 	destroy_command_buffer();
 	delete back_buffer;
@@ -114,6 +116,8 @@ void Window::resize_window(const int res_x, const int res_y) {
 	window_width = res_x;
 	window_height = res_y;
 
+	vkDeviceWaitIdle(context->logical_device);
+
 	back_buffer->set_size(VkExtent2D{ static_cast<uint32_t>(res_x),static_cast<uint32_t>(res_y) });
 }
 
@@ -141,13 +145,13 @@ void Window::create_window_surface()
 
 void WindowContext::submit_graphic_queue(const VkSubmitInfo& submit_infos, VkFence& submit_fence)
 {
-	std::lock_guard<std::mutex> lock(graphic_queue_lock);
+	std::lock_guard<std::mutex> lock(queue_access_lock);
 	VK_ENSURE(vkQueueSubmit(graphic_queue, 1, &submit_infos, submit_fence), "Failed to submit graphic queue");
 }
 
 VkResult WindowContext::submit_present_queue(const VkPresentInfoKHR& present_infos)
 {
-	std::lock_guard<std::mutex> lock(present_queue_lock);
+	std::lock_guard<std::mutex> lock(queue_access_lock);
 	return vkQueuePresentKHR(present_queue, &present_infos);
 }
 
@@ -191,15 +195,14 @@ void WindowContext::create_logical_device(VkSurfaceKHR surface)
 	queue_families = vulkan_utils::find_device_queue_families(surface, physical_device);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-	std::set<uint32_t> uniqueQueueFamilies = { queue_families.graphic_family.value(), queue_families.present_family.value() };
-	float queuePriority = 1.0f;
-
-	for (uint32_t queueFamily : uniqueQueueFamilies) {
+	std::set<uint32_t> unique_queue_families = { queue_families.graphic_family.value(), queue_families.present_family.value() };
+	float queue_priorities = 1.0f;
+	for (uint32_t queueFamily : unique_queue_families) {
 		VkDeviceQueueCreateInfo queueCreateInfo{};
 		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 		queueCreateInfo.queueFamilyIndex = queueFamily;
 		queueCreateInfo.queueCount = 1;
-		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfo.pQueuePriorities = &queue_priorities;
 		queueCreateInfos.push_back(queueCreateInfo);
 	}
 
@@ -375,7 +378,7 @@ void Window::create_command_buffer()
 void Window::create_fences_and_semaphores()
 {
 	logger::log("create fence and semaphores\n\t-in flight fence : %d\n\t-images in flight : %d", config::max_frame_in_flight, swapchain_image_count);
-	image_available_semaphores.resize(config::max_frame_in_flight);
+	image_acquire_semaphore.resize(config::max_frame_in_flight);
 	render_finished_semaphores.resize(config::max_frame_in_flight);
 	in_flight_fences.resize(config::max_frame_in_flight);
 	images_in_flight.resize(swapchain_image_count, VK_NULL_HANDLE);
@@ -388,7 +391,7 @@ void Window::create_fences_and_semaphores()
 	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 	for (size_t i = 0; i < config::max_frame_in_flight; i++) {
-		VK_ENSURE(vkCreateSemaphore(context->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &image_available_semaphores[i]), "Failed to create image available semaphore #%d" + i);
+		VK_ENSURE(vkCreateSemaphore(context->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &image_acquire_semaphore[i]), "Failed to create image available semaphore #%d" + i);
 		VK_ENSURE(vkCreateSemaphore(context->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &render_finished_semaphores[i]), "Failed to create render finnished semaphore #%d" + i)
 		VK_ENSURE(vkCreateFence(context->logical_device, &fenceInfo, vulkan_common::allocation_callback, &in_flight_fences[i]), "Failed to create fence #%d" + i);
 	}
@@ -396,6 +399,10 @@ void Window::create_fences_and_semaphores()
 
 void Window::render()
 {
+	/**
+	 * Select available handles for next image
+	 */
+	
 	// Select next image
 	current_frame_id = (current_frame_id + 1) % config::max_frame_in_flight;
 	
@@ -404,13 +411,15 @@ void Window::render()
 
 	// Retrieve the next available image ID
 	uint32_t image_index;
-	VkResult result = vkAcquireNextImageKHR(context->logical_device, back_buffer->get_swapchain()->get(), UINT64_MAX, image_available_semaphores[current_frame_id], VK_NULL_HANDLE, &image_index);
+	VkResult result = vkAcquireNextImageKHR(context->logical_device, back_buffer->get_swapchain()->get(), UINT64_MAX, image_acquire_semaphore[current_frame_id], VK_NULL_HANDLE, &image_index);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-		//@TODO resize
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(window_handle, &width, &height);
+		resize_window(width, height);
 		return;
 	}
-	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-		logger::error("Failed to present image to swap chain");
+	if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+		logger::error("Failed to acquire image from the swapchain");
 		return;
 	}
 
@@ -422,27 +431,31 @@ void Window::render()
 	
 
 
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = 0; // Optional
-	beginInfo.pInheritanceInfo = nullptr; // Optional
+	/**
+	 * Build command queues
+	 */
 
-	std::array<VkClearValue, 2> clearValues{};
-	clearValues[0].color = { 0.6f, 0.9f, 1.f, 1.0f };
-	clearValues[1].depthStencil = { 1.0f, 0 };
+	VkCommandBufferBeginInfo begin_info{};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begin_info.flags = 0; // Optional
+	begin_info.pInheritanceInfo = nullptr; // Optional
+	
+	if (vkBeginCommandBuffer(current_command_buffer, &begin_info) != VK_SUCCESS) { logger::fail("Failed to create command buffer #%d", image_index); }
 
-	VkRenderPassBeginInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = render_pass;
-	renderPassInfo.framebuffer = current_framebuffer;
-	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = VkExtent2D{ window_width, window_height };
-	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	renderPassInfo.pClearValues = clearValues.data();
-
-
-	if (vkBeginCommandBuffer(current_command_buffer, &beginInfo) != VK_SUCCESS) { logger::fail("Failed to create command buffer #%d", image_index); }
-	vkCmdBeginRenderPass(current_command_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	std::array<VkClearValue, 2> clear_values{};
+	clear_values[0].color = { 0.6f, 0.9f, 1.f, 1.0f };
+	clear_values[1].depthStencil = { 1.0f, 0 };
+	
+	VkRenderPassBeginInfo render_pass_info{};
+	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	render_pass_info.renderPass = render_pass;
+	render_pass_info.framebuffer = current_framebuffer;
+	render_pass_info.renderArea.offset = { 0, 0 };
+	render_pass_info.renderArea.extent = VkExtent2D{ window_width, window_height };
+	render_pass_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
+	render_pass_info.pClearValues = clear_values.data();
+	
+	vkCmdBeginRenderPass(current_command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
 	// Set viewport and scissor params
 	VkViewport viewport;
@@ -461,30 +474,39 @@ void Window::render()
 	vkCmdEndRenderPass(current_command_buffer);
 	VK_ENSURE(vkEndCommandBuffer(current_command_buffer), "Failed to register command buffer #d", image_index);
 
+
+	/**
+	 * Submit queues
+	 */
+	
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	VkSemaphore waitSemaphores[] = { image_available_semaphores[current_frame_id] };
-	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	VkSemaphore acquire_wait_semaphore[] = { image_acquire_semaphore[current_frame_id] };
+	VkPipelineStageFlags wait_stage[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = waitSemaphores;
-	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.pWaitSemaphores = acquire_wait_semaphore;
+	submitInfo.pWaitDstStageMask = wait_stage;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &current_command_buffer;
 
-	VkSemaphore signalSemaphores[] = { render_finished_semaphores[current_frame_id] };
+	VkSemaphore finished_semaphore[] = { render_finished_semaphores[current_frame_id] }; // This fence is used to tell when the gpu can present the submitted data
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = signalSemaphores;
+	submitInfo.pSignalSemaphores = finished_semaphore;
 
 	/** Submit command buffers */
 	vkResetFences(context->logical_device, 1, &in_flight_fences[current_frame_id]);
-
 	context->submit_graphic_queue(submitInfo, in_flight_fences[current_frame_id]); // Pass fence to know when all the data are submitted
 
+
+	/**
+	 * Present stuffs
+	 */
+	
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = signalSemaphores;
+	presentInfo.pWaitSemaphores = finished_semaphore;
 
 	VkSwapchainKHR swapChains[] = { back_buffer->get_swapchain()->get() };
 	presentInfo.swapchainCount = 1;
@@ -493,15 +515,14 @@ void Window::render()
 	presentInfo.pResults = nullptr; // Optional
 
 	result = context->submit_present_queue(presentInfo);
-
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || bHasViewportBeenResized) {
-		//@TODO resize
-		//ResizeViewport();
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(window_handle, &width, &height);
+		resize_window(width, height);
 	}
 	else if (result != VK_SUCCESS) {
 		logger::fail("Failed to present image to swap chain");
 	}
-
 }
 
 void Window::destroy_fences_and_semaphores()
@@ -509,7 +530,7 @@ void Window::destroy_fences_and_semaphores()
 	logger::log("destroy fence and semaphores");
 	for (size_t i = 0; i < config::max_frame_in_flight; i++) {
 		vkDestroySemaphore(context->logical_device, render_finished_semaphores[i], vulkan_common::allocation_callback);
-		vkDestroySemaphore(context->logical_device, image_available_semaphores[i], vulkan_common::allocation_callback);
+		vkDestroySemaphore(context->logical_device, image_acquire_semaphore[i], vulkan_common::allocation_callback);
 		vkDestroyFence(context->logical_device, in_flight_fences[i], vulkan_common::allocation_callback);
 	}
 }
