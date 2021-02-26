@@ -10,7 +10,8 @@ namespace job_system {
 
     TObjectPool<IJobTask, 2048> job_pool;
     std::counting_semaphore<> workers_release_semaphore(0);
-    std::binary_semaphore workers_free_semaphore(0);
+    std::binary_semaphore workers_complete_semaphore(0);
+    std::atomic_int destroy_counter = 0;
 
     std::condition_variable wake_up_worker_condition_variable;
 
@@ -51,15 +52,18 @@ namespace job_system {
 
     void Worker::wait_job_completion() {
         while (!job_pool.is_empty() || jobs > 0) {
-            workers_free_semaphore.acquire();
+            workers_complete_semaphore.acquire();
         }
     }
 
     void Worker::destroy_workers() {
+        logger::log("destroy workers");
         for (int i = 0; i < worker_count; ++i) {
             workers[i].run = false;
+            ++destroy_counter;
         }
         wake_up_worker_condition_variable.notify_all();
+    	while (destroy_counter > 0) {}
         free(workers);
     }
 
@@ -75,13 +79,14 @@ namespace job_system {
             worker = &get();
             worker->next_task();
         } while (worker->run);
+        --destroy_counter;
     }) {}
 
     void Worker::next_task() {
         if (IJobTask *found_job = job_pool.pop()) {
             found_job->execute();
             jobs--;
-            workers_free_semaphore.release();
+            workers_complete_semaphore.release();
 
         } else {
             std::unique_lock<std::mutex> WakeUpWorkerLock(WaitNewJobMutex);
