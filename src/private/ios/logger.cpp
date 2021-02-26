@@ -30,7 +30,7 @@ namespace logger
 		SetConsoleTextAttribute(h_console_out, color);
 #endif
 
-		if (function) std::cout << log_format("[%s] [%s] %s::%d : %s", time_buffer, type, function, line, message.c_str());
+		if (function) std::cout << log_format("[%s  %x] [%s] %s::%d : %s", time_buffer, std::this_thread::get_id(), type, function, line, message.c_str());
 		else std::cout << log_format("[%s] [%s] : %s", time_buffer, type, message.c_str());
 
 		if (file) std::cout << log_format("\n\t=>%s", file);

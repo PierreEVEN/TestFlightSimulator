@@ -66,6 +66,5 @@ namespace command_pool
 			}
 		}
 		logger_fail("no command pool is available on current thread");
-		exit(EXIT_FAILURE);
 	}
 }

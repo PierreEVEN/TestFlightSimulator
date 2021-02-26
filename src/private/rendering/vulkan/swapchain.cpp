@@ -22,17 +22,19 @@ Swapchain::~Swapchain()
 
 void Swapchain::set_size(VkExtent2D extend, const bool force_rebuild, const bool safe_resize)
 {
-	logger_log("resize swapchain ( %d x %d )", extend.width, extend.height);
-	
 	//if (safe_resize) extend = vulkan_utils::choose_swapchain_extend(surface_window->SwapchainSupportDetails.capabilities, extend);
 
-	if (extend.height != swapchain_extend.height || extend.height != swapchain_extend.width || force_rebuild)
+	if (extend.height != swapchain_extend.height || extend.width != swapchain_extend.width || force_rebuild)
 	{
+		logger_log("resize swapchain ( %d x %d )", extend.width, extend.height);
+
 		swapchain_extend = extend;
 
 		create_or_recreate();
 	}
 }
+
+size_t test = 0;
 
 void Swapchain::create_or_recreate()
 {
@@ -79,7 +81,7 @@ void Swapchain::create_or_recreate()
 		if (surface_window->get_support_details().capabilities.supportedCompositeAlpha & compositeAlphaFlag) {
 			alpha_composite = compositeAlphaFlag;
 			break;
-		};
+		}
 	}
 
 	// Find the transformation of the surface
@@ -101,8 +103,8 @@ void Swapchain::create_or_recreate()
 	create_info.oldSwapchain = VK_NULL_HANDLE;
 
 	logger_log("create swapchain ( %d x %d ) / sharing mode : %d", swapchain_extend.width, swapchain_extend.height, create_info.imageSharingMode);
-	VK_ENSURE(vkCreateSwapchainKHR(surface_window->get_context()->logical_device, &create_info, vulkan_common::allocation_callback, &swapchain), "Failed to create swap chain");
 
+	VK_ENSURE(vkCreateSwapchainKHR(surface_window->get_context()->logical_device, &create_info, vulkan_common::allocation_callback, &swapchain), "Failed to create swap chain");
 	VK_CHECK(swapchain, "Invalid swapchain reference");
 
 	viewport.x = 0.f;

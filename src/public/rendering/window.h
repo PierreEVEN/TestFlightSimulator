@@ -25,8 +25,8 @@ public:
 
 	void submit_graphic_queue(const VkSubmitInfo& submit_infos, VkFence& submit_fence);
 	VkResult submit_present_queue(const VkPresentInfoKHR& present_infos);
+	void wait_device();
 private:
-
 	std::mutex queue_access_lock;
 	VkQueue graphic_queue = VK_NULL_HANDLE;
 	VkQueue transfert_queue = VK_NULL_HANDLE;

@@ -23,8 +23,8 @@ namespace job_system {
         // Create one worker per CPU thread
         if (desired_worker_count <= 0) desired_worker_count = static_cast<int>(std::thread::hardware_concurrency());
 
-        logger_log("create %d workers over %u CPU threads", desired_worker_count, std::thread::hardware_concurrency());
-
+        logger_log("create %d workers over %u CPU threads from thread %x", desired_worker_count, std::thread::hardware_concurrency(), std::this_thread::get_id());
+        
         // Allocate workers memory
         workers = static_cast<Worker *>(malloc(desired_worker_count * sizeof(Worker)));
 
@@ -57,7 +57,7 @@ namespace job_system {
     }
 
     void Worker::destroy_workers() {
-        logger::log("destroy workers");
+        logger_log("destroy workers");
         for (int i = 0; i < worker_count; ++i) {
             workers[i].run = false;
             ++destroy_counter;
@@ -74,6 +74,7 @@ namespace job_system {
     Worker::Worker()
             : worker_thread([]() {
         workers_release_semaphore.acquire();
+        logger_log("create worker on thread %x", std::this_thread::get_id());
         Worker *worker;
         do {
             worker = &get();

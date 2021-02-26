@@ -82,9 +82,8 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 Window::~Window() {
 	std::lock_guard<std::mutex> lock(window_map_lock);
 	window_map.erase(window_map.find(window_handle));
-	glfwDestroyWindow(window_handle);
 
-	vkDeviceWaitIdle(context->logical_device);
+	context->wait_device();
 	
 	destroy_fences_and_semaphores();
 	destroy_command_buffer();
@@ -93,6 +92,8 @@ Window::~Window() {
 	delete command_pool;
 	context = nullptr;
 	destroy_window_surface();
+	
+	glfwDestroyWindow(window_handle);
 	logger_validate("successfully destroyed window");
 }
 
@@ -113,10 +114,12 @@ void Window::setup_swapchain_property()
 }
 
 void Window::resize_window(const int res_x, const int res_y) {
+	logger_log("resize window");
+	
 	window_width = res_x;
 	window_height = res_y;
 
-	vkDeviceWaitIdle(context->logical_device);
+	context->wait_device();
 
 	back_buffer->set_size(VkExtent2D{ static_cast<uint32_t>(res_x),static_cast<uint32_t>(res_y) });
 }
@@ -129,10 +132,7 @@ bool Window::begin_frame()
 
 bool Window::end_frame()
 {
-
 	render();
-	
-	//glfwSwapBuffers(window_handle);
 	return !glfwWindowShouldClose(window_handle);
 }
 
@@ -153,6 +153,12 @@ VkResult WindowContext::submit_present_queue(const VkPresentInfoKHR& present_inf
 {
 	std::lock_guard<std::mutex> lock(queue_access_lock);
 	return vkQueuePresentKHR(present_queue, &present_infos);
+}
+
+void WindowContext::wait_device()
+{
+	std::lock_guard<std::mutex> queue_lock(queue_access_lock);
+	vkDeviceWaitIdle(logical_device);
 }
 
 void WindowContext::select_physical_device(VkSurfaceKHR surface)
