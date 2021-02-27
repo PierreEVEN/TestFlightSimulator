@@ -29,12 +29,73 @@ class Window;
 
 // Called by user code
 
+// Reusable buffers used for rendering 1 current in-flight frame, for ImGui_ImplVulkan_RenderDrawData()
+// [Please zero-clear before use!]
+struct ImGui_ImplVulkanH_FrameRenderBuffers
+{
+	VkDeviceMemory      VertexBufferMemory = VK_NULL_HANDLE;
+	VkDeviceMemory      IndexBufferMemory = VK_NULL_HANDLE;
+	VkDeviceSize        VertexBufferSize = VK_NULL_HANDLE;
+	VkDeviceSize        IndexBufferSize = VK_NULL_HANDLE;
+	VkBuffer            VertexBuffer = VK_NULL_HANDLE;
+	VkBuffer            IndexBuffer = VK_NULL_HANDLE;
+};
+
+// Each viewport will hold 1 ImGui_ImplVulkanH_WindowRenderBuffers
+// [Please zero-clear before use!]
+struct ImGui_ImplVulkanH_WindowRenderBuffers
+{
+	uint32_t            Index;
+	uint32_t            Count;
+	ImGui_ImplVulkanH_FrameRenderBuffers* FrameRenderBuffers = nullptr;
+};
+
+class ImGuiInstance {
+
+public:
+	void     ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer command_buffer);
+	explicit ImGuiInstance(Window* context);
+	~ImGuiInstance();
+private:
+
+	void ImGui_ImplVulkanH_DestroyFrameRenderBuffers(VkDevice device, ImGui_ImplVulkanH_FrameRenderBuffers* buffers,
+		const VkAllocationCallbacks* allocator);
+	void ImGui_ImplVulkanH_DestroyWindowRenderBuffers(VkDevice device, ImGui_ImplVulkanH_WindowRenderBuffers* buffers,
+		const VkAllocationCallbacks* allocator);
+	bool     ImGui_ImplVulkan_Init(Window* info);
+	void     ImGui_ImplVulkan_Shutdown();
+	void CreateOrResizeBuffer(VkBuffer& buffer, VkDeviceMemory& buffer_memory, VkDeviceSize& p_buffer_size,
+		size_t new_size, VkBufferUsageFlagBits usage);
+	void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkCommandBuffer command_buffer,
+		ImGui_ImplVulkanH_FrameRenderBuffers* rb, int fb_width,
+		int fb_height);
+	bool     ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer);
+	bool ImGui_ImplVulkan_CreateDeviceObjects();
+	void     ImGui_ImplVulkan_DestroyFontUploadObjects();
+	void ImGui_ImplVulkan_DestroyDeviceObjects();
+	void     ImGui_ImplVulkan_SetMinImageCount(uint32_t min_image_count); // To override MinImageCount after initialization (e.g. if swap chain is recreated)
+	ImTextureID    ImGui_ImplVulkan_AddTexture(VkSampler sampler, VkImageView image_view, VkImageLayout image_layout);
 
 
-bool     ImGui_ImplVulkan_Init(Window* info, VkDescriptorPool desc_pool, VkRenderPass render_pass);
-void     ImGui_ImplVulkan_Shutdown();
-void     ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer command_buffer);
-bool     ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer);
-void     ImGui_ImplVulkan_DestroyFontUploadObjects();
-void     ImGui_ImplVulkan_SetMinImageCount(uint32_t min_image_count); // To override MinImageCount after initialization (e.g. if swap chain is recreated)
-ImTextureID    ImGui_ImplVulkan_AddTexture(VkSampler sampler, VkImageView image_view, VkImageLayout image_layout);
+	// Vulkan data
+
+	Window* g_window_context = {};
+	VkPipelineCache g_pipeline_cache = VK_NULL_HANDLE;
+	VkDescriptorPool g_descriptor_pool = VK_NULL_HANDLE;
+	VkDeviceSize             g_BufferMemoryAlignment = 256;
+	VkPipelineCreateFlags    g_PipelineCreateFlags = 0x00;
+	VkDescriptorSetLayout    g_DescriptorSetLayout = VK_NULL_HANDLE;
+	VkPipelineLayout         g_PipelineLayout = VK_NULL_HANDLE;
+	VkPipeline               g_Pipeline = VK_NULL_HANDLE;
+
+	// Font data
+	VkSampler                g_FontSampler = VK_NULL_HANDLE;
+	VkDeviceMemory           g_FontMemory = VK_NULL_HANDLE;
+	VkImage                  g_FontImage = VK_NULL_HANDLE;
+	VkImageView              g_FontView = VK_NULL_HANDLE;
+	VkDeviceMemory           g_UploadBufferMemory = VK_NULL_HANDLE;
+	VkBuffer                 g_UploadBuffer = VK_NULL_HANDLE;
+
+	// Render buffers
+	ImGui_ImplVulkanH_WindowRenderBuffers    g_MainWindowRenderBuffers;
+};

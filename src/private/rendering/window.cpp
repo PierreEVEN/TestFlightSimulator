@@ -14,8 +14,8 @@
 #include "rendering/vulkan/swapchain.h"
 #include "ui/imgui/imgui_impl_glfw.h"
 #include "ui/imgui/imgui_impl_vulkan.h"
-#include "ui/imgui/imgui_instance.h"
 
+std::mutex test;
 std::mutex window_map_lock;
 std::unordered_map<GLFWwindow*, Window*> window_map;
 
@@ -41,8 +41,8 @@ WindowContext::~WindowContext()
 	destroy_logical_device();
 }
 
-Window::Window(const int res_x, const int res_y, const char* name, bool fullscreen)
-	: window_width(res_x), window_height(res_y), window_name(name)
+Window::Window(const int res_x, const int res_y, const char* name, bool fullscreen, bool img_context)
+	: window_width(res_x), window_height(res_y), window_name(name), has_imgui_context(img_context)
 {
 	std::lock_guard<std::mutex> lock(window_map_lock);
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -77,7 +77,7 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	create_command_buffer();
 	create_fences_and_semaphores();
 
-	imgui_instance = new ImGuiInstance(this);
+	if (has_imgui_context) imgui_instance = new ImGuiInstance(this);
 	
 	window_map[window_handle] = this;
 	
@@ -89,9 +89,9 @@ Window::~Window() {
 	window_map.erase(window_map.find(window_handle));
 
 	context->wait_device();
-
-
-	delete imgui_instance;
+	
+	if (has_imgui_context) delete imgui_instance;
+	
 	destroy_fences_and_semaphores();
 	destroy_command_buffer();
 	delete back_buffer;
@@ -409,7 +409,6 @@ void Window::create_fences_and_semaphores()
 		VK_ENSURE(vkCreateFence(context->logical_device, &fenceInfo, vulkan_common::allocation_callback, &in_flight_fences[i]), "Failed to create fence #%d" + i);
 	}
 }
-
 void Window::render()
 {
 	/**
@@ -442,7 +441,6 @@ void Window::render()
 	const VkCommandBuffer current_command_buffer = command_buffers[image_index];
 	const VkFramebuffer current_framebuffer = back_buffer->get(image_index);
 	
-
 
 	/**
 	 * Build command queues
@@ -487,15 +485,7 @@ void Window::render()
 
 
 
-
-
-
-
-
-
-
-
-
+	
 
 
 
@@ -504,8 +494,8 @@ void Window::render()
 	/************************************************************************/
 	/* Begin imgui draw stuff                                               */
 	/************************************************************************/
-
-	{
+	
+	if (has_imgui_context) {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		//ImGui::PushFont(G_IMGUI_DEFAULT_FONT);
@@ -522,9 +512,9 @@ void Window::render()
 
 		ImGui::Render();
 		ImDrawData* draw_data = ImGui::GetDrawData();
-		ImGui_ImplVulkan_RenderDrawData(draw_data, current_command_buffer);
+		imgui_instance->ImGui_ImplVulkan_RenderDrawData(draw_data, current_command_buffer);
 	}
-
+	
 	/************************************************************************/
 	/* End imgui draw stuff                                                 */
 	/************************************************************************/
@@ -532,15 +522,7 @@ void Window::render()
 
 
 
-
-
-
-
-
-
-
-
-
+	
 
 
 

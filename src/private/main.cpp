@@ -5,9 +5,10 @@
 #include "misc/capabilities.h"
 #include "rendering/window.h"
 
-void window_test()
+void window_test(bool imgui_context)
 {
-	Window game_window(800, 600, config::application_name);
+	
+	Window game_window(800, 600, config::application_name, false, imgui_context);
 
 	while (game_window.begin_frame()) {
 		game_window.end_frame();
@@ -26,8 +27,8 @@ int main(int argc, char* argv[])
 	vulkan_common::vulkan_init();
 
 	// Create two test windows
-	job_system::new_job(window_test);
-	//job_system::new_job(window_test);
+	job_system::new_job([] {window_test(true); });
+	job_system::new_job([] {window_test(false); });
 
 	// Wait remaining job completion
 	logger_log("waiting remaining jobs...");

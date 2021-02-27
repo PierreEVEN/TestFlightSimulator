@@ -16,56 +16,12 @@
 #include "ui/imgui/imgui.h"
 #include "ui/imgui/imgui_impl_vulkan.h"
 
+#include <array>
+
 #include "rendering/window.h"
+#include "ui/imgui/imgui_impl_glfw.h"
 
-// Reusable buffers used for rendering 1 current in-flight frame, for ImGui_ImplVulkan_RenderDrawData()
-// [Please zero-clear before use!]
-struct ImGui_ImplVulkanH_FrameRenderBuffers
-{
-    VkDeviceMemory      VertexBufferMemory;
-    VkDeviceMemory      IndexBufferMemory;
-    VkDeviceSize        VertexBufferSize;
-    VkDeviceSize        IndexBufferSize;
-    VkBuffer            VertexBuffer;
-    VkBuffer            IndexBuffer;
-};
-
-// Each viewport will hold 1 ImGui_ImplVulkanH_WindowRenderBuffers
-// [Please zero-clear before use!]
-struct ImGui_ImplVulkanH_WindowRenderBuffers
-{
-    uint32_t            Index;
-    uint32_t            Count;
-    ImGui_ImplVulkanH_FrameRenderBuffers*   FrameRenderBuffers;
-};
-
-// Vulkan data
-
-static Window* g_window_context = {};
-static VkPipelineCache g_pipeline_cache;
-static VkDescriptorPool g_descriptor_pool;
-static VkDeviceSize             g_BufferMemoryAlignment = 256;
-static VkPipelineCreateFlags    g_PipelineCreateFlags = 0x00;
-static VkDescriptorSetLayout    g_DescriptorSetLayout = VK_NULL_HANDLE;
-static VkPipelineLayout         g_PipelineLayout = VK_NULL_HANDLE;
-static VkPipeline               g_Pipeline = VK_NULL_HANDLE;
-
-// Font data
-static VkSampler                g_FontSampler = VK_NULL_HANDLE;
-static VkDeviceMemory           g_FontMemory = VK_NULL_HANDLE;
-static VkImage                  g_FontImage = VK_NULL_HANDLE;
-static VkImageView              g_FontView = VK_NULL_HANDLE;
-static VkDeviceMemory           g_UploadBufferMemory = VK_NULL_HANDLE;
-static VkBuffer                 g_UploadBuffer = VK_NULL_HANDLE;
-
-// Render buffers
-static ImGui_ImplVulkanH_WindowRenderBuffers    g_MainWindowRenderBuffers;
-
-// Forward Declarations
-bool ImGui_ImplVulkan_CreateDeviceObjects();
-void ImGui_ImplVulkan_DestroyDeviceObjects();
-void ImGui_ImplVulkanH_DestroyFrameRenderBuffers(VkDevice device, ImGui_ImplVulkanH_FrameRenderBuffers* buffers, const VkAllocationCallbacks* allocator);
-void ImGui_ImplVulkanH_DestroyWindowRenderBuffers(VkDevice device, ImGui_ImplVulkanH_WindowRenderBuffers* buffers, const VkAllocationCallbacks* allocator);
+static uint32_t instance_count = 0;
 
 //-----------------------------------------------------------------------------
 // SHADERS
@@ -180,7 +136,7 @@ static uint32_t __glsl_shader_frag_spv[] =
 // FUNCTIONS
 //-----------------------------------------------------------------------------
 
-static void CreateOrResizeBuffer(VkBuffer& buffer, VkDeviceMemory& buffer_memory, VkDeviceSize& p_buffer_size, size_t new_size, VkBufferUsageFlagBits usage)
+void ImGuiInstance::CreateOrResizeBuffer(VkBuffer& buffer, VkDeviceMemory& buffer_memory, VkDeviceSize& p_buffer_size, size_t new_size, VkBufferUsageFlagBits usage)
 {
     Window* v = g_window_context;
     VkResult err;
@@ -213,7 +169,7 @@ static void CreateOrResizeBuffer(VkBuffer& buffer, VkDeviceMemory& buffer_memory
     p_buffer_size = new_size;
 }
 
-static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkCommandBuffer command_buffer, ImGui_ImplVulkanH_FrameRenderBuffers* rb, int fb_width, int fb_height)
+void ImGuiInstance::ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkCommandBuffer command_buffer, ImGui_ImplVulkanH_FrameRenderBuffers* rb, int fb_width, int fb_height)
 {
     // Bind pipeline:
     {
@@ -256,7 +212,7 @@ static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkCommandBu
 
 // Render function
 // (this used to be set in io.RenderDrawListsFn and called by ImGui::Render(), but you can now call this directly from your main loop)
-void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer command_buffer)
+void ImGuiInstance::ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer command_buffer)
 {
     // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
     int fb_width = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
@@ -272,9 +228,11 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
     {
         wrb->Index = 0;
         wrb->Count = v->get_image_count();
-        wrb->FrameRenderBuffers = (ImGui_ImplVulkanH_FrameRenderBuffers*)IM_ALLOC(sizeof(ImGui_ImplVulkanH_FrameRenderBuffers) * wrb->Count);
+        wrb->FrameRenderBuffers = static_cast<ImGui_ImplVulkanH_FrameRenderBuffers*>(IM_ALLOC(sizeof(ImGui_ImplVulkanH_FrameRenderBuffers) * wrb->Count));
         memset(wrb->FrameRenderBuffers, 0, sizeof(ImGui_ImplVulkanH_FrameRenderBuffers) * wrb->Count);
     }
+
+	
     IM_ASSERT(wrb->Count == v->get_image_count());
     wrb->Index = (wrb->Index + 1) % wrb->Count;
     ImGui_ImplVulkanH_FrameRenderBuffers* rb = &wrb->FrameRenderBuffers[wrb->Index];
@@ -383,7 +341,7 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
     }
 }
 
-bool ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer)
+bool ImGuiInstance::ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer)
 {
     Window* v = g_window_context;
     ImGuiIO& io = ImGui::GetIO();
@@ -522,7 +480,7 @@ bool ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer)
     return true;
 }
 
-bool ImGui_ImplVulkan_CreateDeviceObjects()
+bool ImGuiInstance::ImGui_ImplVulkan_CreateDeviceObjects()
 {
     Window* v = g_window_context;
     VkResult err;
@@ -701,7 +659,7 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
     return true;
 }
 
-void    ImGui_ImplVulkan_DestroyFontUploadObjects()
+void    ImGuiInstance::ImGui_ImplVulkan_DestroyFontUploadObjects()
 {
     Window* v = g_window_context;
     if (g_UploadBuffer)
@@ -716,7 +674,7 @@ void    ImGui_ImplVulkan_DestroyFontUploadObjects()
     }
 }
 
-void    ImGui_ImplVulkan_DestroyDeviceObjects()
+void    ImGuiInstance::ImGui_ImplVulkan_DestroyDeviceObjects()
 {
     Window* v = g_window_context;
     ImGui_ImplVulkanH_DestroyWindowRenderBuffers(v->get_context()->logical_device, &g_MainWindowRenderBuffers, vulkan_common::allocation_callback);
@@ -731,7 +689,7 @@ void    ImGui_ImplVulkan_DestroyDeviceObjects()
     if (g_Pipeline)             { vkDestroyPipeline(v->get_context()->logical_device, g_Pipeline, vulkan_common::allocation_callback); g_Pipeline = VK_NULL_HANDLE; }
 }
 
-bool    ImGui_ImplVulkan_Init(Window* info, VkDescriptorPool desc_pool, VkRenderPass render_pass)
+bool    ImGuiInstance::ImGui_ImplVulkan_Init(Window* info)
 {
     // Setup back-end capabilities flags
     ImGuiIO& io = ImGui::GetIO();
@@ -740,24 +698,22 @@ bool    ImGui_ImplVulkan_Init(Window* info, VkDescriptorPool desc_pool, VkRender
     IM_ASSERT(vulkan_common::instance != VK_NULL_HANDLE);
     IM_ASSERT(info->get_context()->physical_device != VK_NULL_HANDLE);
     IM_ASSERT(info->get_context()->logical_device!= VK_NULL_HANDLE);
-    IM_ASSERT(desc_pool != VK_NULL_HANDLE);
+    IM_ASSERT(g_descriptor_pool != VK_NULL_HANDLE);
     IM_ASSERT(info->get_image_count() >= 2);
     IM_ASSERT(info->get_image_count() >= info->get_image_count());
-    IM_ASSERT(render_pass != VK_NULL_HANDLE);
 
-    g_descriptor_pool = desc_pool;
     g_window_context = info;
     ImGui_ImplVulkan_CreateDeviceObjects();
 
     return true;
 }
 
-void ImGui_ImplVulkan_Shutdown()
+void ImGuiInstance::ImGui_ImplVulkan_Shutdown()
 {
     ImGui_ImplVulkan_DestroyDeviceObjects();
 }
 
-void ImGui_ImplVulkan_SetMinImageCount(uint32_t min_image_count)
+void ImGuiInstance::ImGui_ImplVulkan_SetMinImageCount(uint32_t min_image_count)
 {
     IM_ASSERT(min_image_count >= 2);
     if (g_window_context->get_image_count() == min_image_count)
@@ -798,7 +754,7 @@ int ImGui_ImplVulkanH_GetMinImageCountFromPresentMode(VkPresentModeKHR present_m
     return 1;
 }
 
-void ImGui_ImplVulkanH_DestroyFrameRenderBuffers(VkDevice device, ImGui_ImplVulkanH_FrameRenderBuffers* buffers, const VkAllocationCallbacks* allocator)
+void ImGuiInstance::ImGui_ImplVulkanH_DestroyFrameRenderBuffers(VkDevice device, ImGui_ImplVulkanH_FrameRenderBuffers* buffers, const VkAllocationCallbacks* allocator)
 {
     if (buffers->VertexBuffer) { vkDestroyBuffer(device, buffers->VertexBuffer, allocator); buffers->VertexBuffer = VK_NULL_HANDLE; }
     if (buffers->VertexBufferMemory) { vkFreeMemory(device, buffers->VertexBufferMemory, allocator); buffers->VertexBufferMemory = VK_NULL_HANDLE; }
@@ -808,7 +764,7 @@ void ImGui_ImplVulkanH_DestroyFrameRenderBuffers(VkDevice device, ImGui_ImplVulk
     buffers->IndexBufferSize = 0;
 }
 
-void ImGui_ImplVulkanH_DestroyWindowRenderBuffers(VkDevice device, ImGui_ImplVulkanH_WindowRenderBuffers* buffers, const VkAllocationCallbacks* allocator)
+void ImGuiInstance::ImGui_ImplVulkanH_DestroyWindowRenderBuffers(VkDevice device, ImGui_ImplVulkanH_WindowRenderBuffers* buffers, const VkAllocationCallbacks* allocator)
 {
     for (uint32_t n = 0; n < buffers->Count; n++)
         ImGui_ImplVulkanH_DestroyFrameRenderBuffers(device, &buffers->FrameRenderBuffers[n], allocator);
@@ -818,7 +774,7 @@ void ImGui_ImplVulkanH_DestroyWindowRenderBuffers(VkDevice device, ImGui_ImplVul
     buffers->Count = 0;
 }
 
-ImTextureID ImGui_ImplVulkan_AddTexture(VkSampler sampler, VkImageView image_view, VkImageLayout image_layout){
+ImTextureID ImGuiInstance::ImGui_ImplVulkan_AddTexture(VkSampler sampler, VkImageView image_view, VkImageLayout image_layout){
     VkResult err;
 
     Window* v = g_window_context;
@@ -850,4 +806,92 @@ ImTextureID ImGui_ImplVulkan_AddTexture(VkSampler sampler, VkImageView image_vie
     }
 
     return (ImTextureID)descriptor_set;
+}
+
+ImGuiInstance::ImGuiInstance(Window* context)
+	: g_window_context(context)
+{
+    if (instance_count > 0)
+    {
+        logger::fail("multiple imgui instance are not supported yet");
+    }
+    instance_count++;
+	
+    logger_log("Initialize imgui ressources");
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowRounding = 0;
+    style.ScrollbarRounding = 0;
+    style.TabRounding = 0;
+    style.WindowBorderSize = 1;
+    style.PopupBorderSize = 1;
+    style.WindowTitleAlign.x = 0.5f;
+    style.FramePadding.x = 6.f;
+    style.FramePadding.y = 6.f;
+    style.WindowPadding.x = 4.f;
+    style.WindowPadding.y = 4.f;
+    style.GrabMinSize = 16.f;
+    style.ScrollbarSize = 20.f;
+    style.IndentSpacing = 30.f;
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    //@TODO set font
+    //G_IMGUI_DEFAULT_FONT = io.Fonts->AddFontFromFileTTF(G_DEFAULT_FONT_PATH.GetValue().GetData(), 20.f);
+
+
+    const size_t descPoolCount = 20;
+
+    std::array<VkDescriptorPoolSize, 11> pool_sizes;
+    pool_sizes[0] = { VK_DESCRIPTOR_TYPE_SAMPLER, descPoolCount };
+    pool_sizes[1] = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, descPoolCount };
+    pool_sizes[2] = { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, descPoolCount };
+    pool_sizes[3] = { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descPoolCount };
+    pool_sizes[4] = { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, descPoolCount };
+    pool_sizes[5] = { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, descPoolCount };
+    pool_sizes[6] = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descPoolCount };
+    pool_sizes[7] = { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descPoolCount };
+    pool_sizes[8] = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, descPoolCount };
+    pool_sizes[9] = { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, descPoolCount };
+    pool_sizes[10] = { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, descPoolCount };
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+    poolInfo.pPoolSizes = pool_sizes.data();
+    poolInfo.maxSets = static_cast<uint32_t>(context->get_image_count());
+
+    VK_ENSURE(vkCreateDescriptorPool(context->get_context()->logical_device, &poolInfo, vulkan_common::allocation_callback, &g_descriptor_pool), "Failed to create imgui descriptor pool");
+
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForVulkan(context->get_handle(), true);
+
+    ImGui_ImplVulkan_Init(context);
+
+    // Upload Fonts
+    {
+        VkCommandBuffer command_buffer = vulkan_utils::begin_single_time_commands(context);
+        ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+        vulkan_utils::end_single_time_commands(context, command_buffer);
+    }
+}
+
+ImGuiInstance::~ImGuiInstance()
+{
+    logger_log("cleaning up ImGui ressources");
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+
+    vkDestroyDescriptorPool(g_window_context->get_context()->logical_device, g_descriptor_pool, vulkan_common::allocation_callback);
+    instance_count--;
 }

@@ -45,7 +45,7 @@ private:
 class Window
 {
 public:
-	Window(int res_x, int res_y, const char* name, bool fullscreen = false);
+	Window(int res_x, int res_y, const char* name, bool fullscreen = false, bool img_context = false);
 	virtual ~Window();
 	
 	bool begin_frame();	
@@ -67,7 +67,7 @@ public:
 
 private:
 
-
+	bool has_imgui_context;
 	std::shared_ptr<WindowContext> context;
 	
 	GLFWwindow* window_handle;
