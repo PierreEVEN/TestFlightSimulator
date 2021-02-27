@@ -7,6 +7,8 @@
 
 #include "config.h"
 #include "ios/logger.h"
+#include "rendering/window.h"
+#include "rendering/vulkan/commandPool.h"
 
 namespace vulkan_utils
 {
@@ -291,4 +293,47 @@ namespace vulkan_utils
 		return -1;
 	}
 
+
+	VkCommandBuffer begin_single_time_commands(Window* context)
+	{
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = context->get_command_pool();
+		allocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		vkAllocateCommandBuffers(context->get_context()->logical_device, &allocInfo, &commandBuffer);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+		return commandBuffer;
+	}
+
+	void end_single_time_commands(Window* context, VkCommandBuffer commandBuffer)
+	{
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		VkFenceCreateInfo fenceInfo{};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+		VkFence submitFence = VK_NULL_HANDLE;
+		vkCreateFence(context->get_context()->logical_device, &fenceInfo, vulkan_common::allocation_callback, &submitFence);
+
+		vkResetFences(context->get_context()->logical_device, 1, &submitFence);
+		{
+			context->get_context()->submit_graphic_queue(submitInfo, submitFence);
+		}
+		vkWaitForFences(context->get_context()->logical_device, 1, &submitFence, VK_TRUE, UINT64_MAX);
+		vkDestroyFence(context->get_context()->logical_device, submitFence, vulkan_common::allocation_callback);
+		vkFreeCommandBuffers(context->get_context()->logical_device, context->get_command_pool(), 1, &commandBuffer);
+	}
 }

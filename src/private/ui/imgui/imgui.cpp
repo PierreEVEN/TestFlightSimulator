@@ -712,13 +712,13 @@ CODE
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "UI/imgui.h"
+#include "ui/imgui/imgui.h"
 #ifndef IMGUI_DISABLE
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
-#include "UI/imgui_internal.h"
+#include "ui/imgui/imgui_internal.h"
 
 // System includes
 #include <ctype.h>      // toupper

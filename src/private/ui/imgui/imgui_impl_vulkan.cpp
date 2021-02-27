@@ -43,8 +43,8 @@
 //  2016-10-18: Vulkan: Add location decorators & change to use structs as in/out in glsl, update embedded spv (produced with glslangValidator -x). Null the released resources.
 //  2016-08-27: Vulkan: Fix Vulkan example for use when a depth buffer is active.
 
-#include "UI/imgui.h"
-#include "UI/imgui_impl_vulkan.h"
+#include "ui/imgui/imgui.h"
+#include "ui/imgui/imgui_impl_vulkan.h"
 #include <stdio.h>
 
 // Reusable buffers used for rendering 1 current in-flight frame, for ImGui_ImplVulkan_RenderDrawData()
@@ -790,7 +790,7 @@ bool    ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkRenderPass rend
     IM_ASSERT(info->Instance != VK_NULL_HANDLE);
     IM_ASSERT(info->PhysicalDevice != VK_NULL_HANDLE);
     IM_ASSERT(info->Device != VK_NULL_HANDLE);
-    IM_ASSERT(info->Queue != VK_NULL_HANDLE);
+    //IM_ASSERT(info->Queue != VK_NULL_HANDLE); // @TEST QUEUE IS NULL
     IM_ASSERT(info->DescriptorPool != VK_NULL_HANDLE);
     IM_ASSERT(info->MinImageCount >= 2);
     IM_ASSERT(info->ImageCount >= info->MinImageCount);

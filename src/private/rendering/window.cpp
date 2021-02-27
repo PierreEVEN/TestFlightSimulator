@@ -12,6 +12,7 @@
 #include "rendering/vulkan/commandPool.h"
 #include "rendering/vulkan/framebuffer.h"
 #include "rendering/vulkan/swapchain.h"
+#include "ui/imgui/imgui_instance.h"
 
 std::mutex window_map_lock;
 std::unordered_map<GLFWwindow*, Window*> window_map;
@@ -73,6 +74,8 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	back_buffer = new Framebuffer(this, VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) });
 	create_command_buffer();
 	create_fences_and_semaphores();
+
+	imgui_instance = new ImGuiInstance(this);
 	
 	window_map[window_handle] = this;
 	
@@ -84,7 +87,9 @@ Window::~Window() {
 	window_map.erase(window_map.find(window_handle));
 
 	context->wait_device();
-	
+
+
+	delete imgui_instance;
 	destroy_fences_and_semaphores();
 	destroy_command_buffer();
 	delete back_buffer;
