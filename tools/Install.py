@@ -120,18 +120,30 @@ RunSubProcess("git submodule update --init --recursive")
 
 RunSubProcess("mkdir -p " + INSTALL_DIR)
 
+# SHADERC
+LogInfo("updating shaderc dependencies...")
+os.chdir(ENGINE_PATH + "/third_party/shaderc")
+RunSubProcess("python ./utils/git-sync-deps")
+
+BuildModule(
+	"shaderc",
+	"libshaderc/shaderc.vcxproj",
+	"-DSHADERC_ENABLE_SHARED_CRT=true -DSHADERC_ENABLE_SPVC=ON",
+	"libshaderc/shaderc.a")
+
+
 # Assimp
-#if IsWindows():
-#	BuildModule(
-#		"assimp",
-#		"code/assimp.vcxproj",
-#		"-DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_TESTS=OFF -DASSIMP_NO_EXPORT=ON")
-#else:
-#	BuildModule(
-#		"assimp",
-#		"code/assimp.vcxproj",
-#		"-DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_TESTS=OFF",
-#		"lib/libassimp.a")
+if IsWindows():
+	BuildModule(
+		"assimp",
+		"code/assimp.vcxproj",
+		"-DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_TESTS=OFF -DASSIMP_NO_EXPORT=ON")
+else:
+	BuildModule(
+		"assimp",
+		"code/assimp.vcxproj",
+		"-DBUILD_SHARED_LIBS=OFF -DASSIMP_BUILD_TESTS=OFF",
+		"lib/libassimp.a")
 
 # Glfw
 BuildModule(
@@ -139,6 +151,10 @@ BuildModule(
 	"src/glfw.vcxproj",
 	"",
 	"src/libglfw3.a")
+
+
+
+
 
 os.chdir(ENGINE_PATH)
 LogSuccess("Install complete !")
