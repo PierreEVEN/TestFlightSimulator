@@ -74,20 +74,8 @@ void ImGuiInstance::init()
 
 	// Setup Platform/Renderer bindings
 	ImGui_ImplGlfw_InitForVulkan(context->get_handle(), true);
-	ImGui_ImplVulkan_InitInfo init_info = {};
-	init_info.Instance = vulkan_common::instance;
-	init_info.PhysicalDevice = context->get_context()->physical_device;
-	init_info.Device = context->get_context()->logical_device;
-	init_info.QueueFamily = context->get_context()->queue_families.graphic_family.value();
-	//init_info.Queue = ;
-	init_info.PipelineCache = VK_NULL_HANDLE;
-	init_info.DescriptorPool = descriptor_pool;
-	init_info.MSAASamples = static_cast<VkSampleCountFlagBits>(context->get_msaa_sample_count());
-	init_info.Allocator = nullptr;
-	init_info.MinImageCount = static_cast<uint32_t>(context->get_image_count());
-	init_info.ImageCount = static_cast<uint32_t>(context->get_image_count());
-	init_info.CheckVkResultFn = ImGuiVkResultDelegate;
-	ImGui_ImplVulkan_Init(&init_info, context->get_render_pass());
+
+	ImGui_ImplVulkan_Init(context, descriptor_pool, context->get_render_pass());
 
 	// Upload Fonts
 	{

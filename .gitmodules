@@ -7,3 +7,6 @@
 [submodule "third_party/assimp"]
 	path = third_party/assimp
 	url = https://github.com/assimp/assimp
+[submodule "third_party/SPIRV-Cross"]
+	path = third_party/SPIRV-Cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross

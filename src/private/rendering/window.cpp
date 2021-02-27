@@ -12,6 +12,8 @@
 #include "rendering/vulkan/commandPool.h"
 #include "rendering/vulkan/framebuffer.h"
 #include "rendering/vulkan/swapchain.h"
+#include "ui/imgui/imgui_impl_glfw.h"
+#include "ui/imgui/imgui_impl_vulkan.h"
 #include "ui/imgui/imgui_instance.h"
 
 std::mutex window_map_lock;
@@ -482,6 +484,73 @@ void Window::render()
 	vkCmdSetViewport(current_command_buffer, 0, 1, &viewport);
 	vkCmdSetScissor(current_command_buffer, 0, 1, &scissor);
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/************************************************************************/
+	/* Begin imgui draw stuff                                               */
+	/************************************************************************/
+
+	{
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		//ImGui::PushFont(G_IMGUI_DEFAULT_FONT);
+
+		if (ImGui::BeginMainMenuBar())
+		{
+			ImGui::EndMainMenuBar();
+		}
+
+		ImGui::ShowDemoWindow();
+		
+		//ImGui::PopFont();
+		ImGui::EndFrame();
+
+		ImGui::Render();
+		ImDrawData* draw_data = ImGui::GetDrawData();
+		ImGui_ImplVulkan_RenderDrawData(draw_data, current_command_buffer);
+	}
+
+	/************************************************************************/
+	/* End imgui draw stuff                                                 */
+	/************************************************************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
 	vkCmdEndRenderPass(current_command_buffer);
 	VK_ENSURE(vkEndCommandBuffer(current_command_buffer), "Failed to register command buffer #d", image_index);
 

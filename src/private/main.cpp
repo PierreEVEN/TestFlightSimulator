@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 
 	// Create two test windows
 	job_system::new_job(window_test);
-	job_system::new_job(window_test);
+	//job_system::new_job(window_test);
 
 	// Wait remaining job completion
 	logger_log("waiting remaining jobs...");

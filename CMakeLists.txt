@@ -32,22 +32,6 @@ set(INTERMEDIATES_DIR ${PROJECT_ROOT}/temp) # Intermediates dir
 set(VULKAN_PATH $ENV{VULKAN_SDK})
 message("vulkan sdk : " ${VULKAN_PATH})
 
-add_library(vulkan INTERFACE)
-target_include_directories(vulkan INTERFACE ${VULKAN_PATH}/Include)
-IF (WIN32)
-	target_link_libraries(vulkan INTERFACE ${VULKAN_PATH}/Lib/vulkan-1.lib)
-ELSE()
-	target_link_libraries(vulkan INTERFACE -lvulkan)
-ENDIF()
-
-add_library(glfw3 INTERFACE)
-target_include_directories(glfw3 INTERFACE ${PROJECT_ROOT}/third_party/glfw/include)
-IF (WIN32)
-	target_link_libraries(glfw3 INTERFACE ${PROJECT_ROOT}/temp/third_party/glfw3.lib)
-ELSE()
-	target_link_libraries(glfw3 INTERFACE ${PROJECT_ROOT}/temp/third_party/libglfw3.a)
-	target_link_libraries(glfw3 INTERFACE -ldl -lpthread)
-ENDIF()
 
 file(GLOB_RECURSE SOURCES src/private/*.cpp src/public/*.h)
 add_executable(TestFlightSimulator ${SOURCES})
@@ -61,7 +45,44 @@ target_compile_features(TestFlightSimulator PUBLIC cxx_std_20)
 set_target_properties(TestFlightSimulator PROPERTIES CXX_EXTENSIONS OFF)
 source_group(TREE ${PROJECT_ROOT}/src FILES ${SOURCES})
 
+IF (WIN32)
+ELSE ()
+	target_link_libraries(TestFlightSimulator -ldl -lpthread)
+ENDIF()
+
+# ASSIMP
+target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/assimp/include)
+IF (WIN32)
+	target_link_libraries(TestFlightSimulator ${PROJECT_ROOT}/temp/third_party/assimp-vc142-mt.lib)
+ELSE()
+	target_link_libraries(TestFlightSimulator ${PROJECT_ROOT}/temp/third_party/assimp-vc142-mt.a)
+ENDIF()
+
+# SPIRV-CROSS
+target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/SPIRV-cross)
+IF (WIN32)
+	target_link_libraries(TestFlightSimulator ${PROJECT_ROOT}/temp/third_party/spirv-cross-core.lib)
+	target_link_libraries(TestFlightSimulator ${PROJECT_ROOT}/temp/third_party/spirv-cross-glsl.lib)
+ELSE()
+	target_link_libraries(TestFlightSimulator ${PROJECT_ROOT}/temp/third_party/spirv-cross-core.a)
+	target_link_libraries(TestFlightSimulator ${PROJECT_ROOT}/temp/third_party/spirv-cross-glsl.a)
+ENDIF()
+
+# VMA
 target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/VulkanMemoryAllocator/src)
 
-target_link_libraries(TestFlightSimulator vulkan)
-target_link_libraries(TestFlightSimulator glfw3)
+# VULKAN
+target_include_directories(TestFlightSimulator PUBLIC ${VULKAN_PATH}/Include)
+IF (WIN32)
+	target_link_libraries(TestFlightSimulator ${VULKAN_PATH}/Lib/vulkan-1.lib)
+ELSE()
+	target_link_libraries(TestFlightSimulator -lvulkan)
+ENDIF()
+
+# GLFW
+target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/glfw/include)
+IF (WIN32)
+	target_link_libraries(TestFlightSimulator ${PROJECT_ROOT}/temp/third_party/glfw3.lib)
+ELSE()
+	target_link_libraries(TestFlightSimulator ${PROJECT_ROOT}/temp/third_party/libglfw3.a)
+ENDIF()

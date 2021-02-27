@@ -17,7 +17,7 @@ if IsWindows():
 ENGINE_PATH = os.getcwd()
 
 THIRD_PARTY_PATH = ENGINE_PATH + "/third_party/"
-INSTALL_DIR = ENGINE_PATH + "/temp/third_party"
+INSTALL_DIR = ENGINE_PATH + "/temp/third_party/"
 
 class bcolors:
     HEADER = '\033[95m'
@@ -120,17 +120,12 @@ RunSubProcess("git submodule update --init --recursive")
 
 RunSubProcess("mkdir -p " + INSTALL_DIR)
 
-# SHADERC
-LogInfo("updating shaderc dependencies...")
-os.chdir(ENGINE_PATH + "/third_party/shaderc")
-RunSubProcess("python ./utils/git-sync-deps")
-
+# Spirv-cross
 BuildModule(
-	"shaderc",
-	"libshaderc/shaderc.vcxproj",
-	"-DSHADERC_ENABLE_SHARED_CRT=true -DSHADERC_ENABLE_SPVC=ON",
-	"libshaderc/shaderc.a")
-
+	"SPIRV-Cross",
+	"spirv-cross-glsl.vcxproj",
+	"",
+	"")
 
 # Assimp
 if IsWindows():
