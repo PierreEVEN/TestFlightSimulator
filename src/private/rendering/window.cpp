@@ -8,6 +8,7 @@
 #include <array>
 
 #include "config.h"
+#include "assets/GraphicResource.h"
 #include "ios/logger.h"
 #include "rendering/vulkan/commandPool.h"
 #include "rendering/vulkan/framebuffer.h"
@@ -76,7 +77,9 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	back_buffer = new Framebuffer(this, VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) });
 	create_command_buffer();
 	create_fences_and_semaphores();
-
+	
+	resource_manager = new GraphicResourceManager();
+	
 	if (has_imgui_context) imgui_instance = new ImGuiInstance(this);
 	
 	window_map[window_handle] = this;
@@ -89,9 +92,11 @@ Window::~Window() {
 	window_map.erase(window_map.find(window_handle));
 
 	context->wait_device();
-	
+
 	if (has_imgui_context) delete imgui_instance;
-	
+
+	delete resource_manager;
+
 	destroy_fences_and_semaphores();
 	destroy_command_buffer();
 	delete back_buffer;

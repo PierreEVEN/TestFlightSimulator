@@ -89,8 +89,11 @@ def BuildModule(ModuleName, BuildProj = "ALL_BUILD.vcxproj", CMakeOptions = "", 
 		RunSubProcess("cmake -S " + LibPath + " -B " + BuildPath + " " + CMakeOptions)
 		
 		# Compile module
-		LogInfo("compiling ... ")
-		RunSubProcess(VsPath[0] + " " + VcxProjPath + " /t:build /p:Configuration=\"Release\" /p:Platform=\"x64\" /p:BuildInParallel=true /p:OutDir=" + INSTALL_DIR)
+		LogInfo("compiling [debug] ... ")
+		RunSubProcess(VsPath[0] + " " + VcxProjPath + " /t:build /p:Configuration=\"Debug\" /p:Platform=\"x64\" /p:BuildInParallel=true /p:OutDir=" + INSTALL_DIR + "/debug/")
+
+		LogInfo("compiling [release] ... ")
+		RunSubProcess(VsPath[0] + " " + VcxProjPath + " /t:build /p:Configuration=\"Release\" /p:Platform=\"x64\" /p:BuildInParallel=true /p:OutDir=" + INSTALL_DIR + "/release/")
 		LogSuccess("Success !")
 	if IsLinux():
 		LibPath = THIRD_PARTY_PATH + ModuleName
@@ -120,6 +123,15 @@ RunSubProcess("git submodule update --init --recursive")
 
 RunSubProcess("mkdir -p " + INSTALL_DIR)
 
+# SHADERC
+LogInfo("updating shaderc dependencies")
+RunSubProcess("python " + THIRD_PARTY_PATH + "/shaderc/utils/git-sync-deps")
+BuildModule(
+	"shaderc",
+	"libshaderc/shaderc.vcxproj",
+	"-DSHADERC_ENABLE_SHARED_CRT=true",
+	"")
+    
 # Spirv-cross
 BuildModule(
 	"SPIRV-Cross",
@@ -146,7 +158,6 @@ BuildModule(
 	"src/glfw.vcxproj",
 	"",
 	"src/libglfw3.a")
-
 
 
 

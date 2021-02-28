@@ -9,7 +9,7 @@
 #if _DEBUG
 #define logger_fail(format, ...) { logger::log_print("F", logger::ConsoleColor::CONSOLE_ASSERT, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); __debugbreak(); exit(EXIT_FAILURE); }
 #else
-#define logger_fail(format, ...) { logger::log_print("F", logger::ConsoleColor::CONSOLE_ASSERT, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); exit(EXIT_FAILURE); ]
+#define logger_fail(format, ...) { logger::log_print("F", logger::ConsoleColor::CONSOLE_ASSERT, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); exit(EXIT_FAILURE); }
 #endif
 
 

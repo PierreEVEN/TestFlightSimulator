@@ -1566,7 +1566,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
             SetNextWindowPos(pos);
         }
 
-    // We don't use BeginPopupEx() solely because we have a custom name string, which we could make an argument to BeginPopupEx()
+    // We don't use BeginPopupEx() solely because we have a custom asset_name string, which we could make an argument to BeginPopupEx()
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove;
 
     // Horizontally align ourselves with the framed text
@@ -3180,7 +3180,7 @@ bool ImGui::InputFloat4(const char* label, float v[4], int decimal_precision, Im
 
 bool ImGui::InputInt(const char* label, int* v, int step, int step_fast, ImGuiInputTextFlags flags)
 {
-    // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
+    // Hexadecimal input provided as a convenience but the flag asset_name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
     const char* format = (flags & ImGuiInputTextFlags_CharsHexadecimal) ? "%08X" : "%d";
     return InputScalar(label, ImGuiDataType_S32, (void*)v, (void*)(step > 0 ? &step : NULL), (void*)(step_fast > 0 ? &step_fast : NULL), format, flags);
 }
@@ -6911,7 +6911,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
         tab_bar->ScrollingSpeed = 0.0f;
     }
 
-    // Clear name buffers
+    // Clear asset_name buffers
     if ((tab_bar->Flags & ImGuiTabBarFlags_DockNode) == 0)
         tab_bar->TabsNames.Buf.resize(0);
 
@@ -7242,7 +7242,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     tab->Flags = flags;
     tab->Window = docked_window;
 
-    // Append name with zero-terminator
+    // Append asset_name with zero-terminator
     if (tab_bar->Flags & ImGuiTabBarFlags_DockNode)
     {
         IM_ASSERT(tab->Window != NULL);
@@ -7252,7 +7252,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
     {
         IM_ASSERT(tab->Window == NULL);
         tab->NameOffset = tab_bar->TabsNames.size();
-        tab_bar->TabsNames.append(label, label + strlen(label) + 1); // Append name _with_ the zero-terminator.
+        tab_bar->TabsNames.append(label, label + strlen(label) + 1); // Append asset_name _with_ the zero-terminator.
     }
 
     // If we are not reorderable, always reset offset based on submission order.
@@ -7784,7 +7784,7 @@ ImGuiID ImGui::GetColumnsID(const char* str_id, int columns_count)
 {
     ImGuiWindow* window = GetCurrentWindow();
 
-    // Differentiate column ID with an arbitrary prefix for cases where users name their columns set the same as another widget.
+    // Differentiate column ID with an arbitrary prefix for cases where users asset_name their columns set the same as another widget.
     // In addition, when an identifier isn't explicitly provided we include the number of columns in the hash to make it uniquer.
     PushID(0x11223347 + (str_id ? 0 : columns_count));
     ImGuiID id = window->GetID(str_id ? str_id : "columns");
