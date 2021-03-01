@@ -17,28 +17,21 @@ void window_test(bool imgui_context)
 {	
 	Window game_window(800, 600, config::application_name, false, imgui_context);
 
-	job_system::new_job([&] {load_assets(game_window); });
+	auto* task = job_system::new_job([&] {load_assets(game_window); });
 
 
-	auto* root = new Node();
-
-	auto* child = new Node(root);
-
-	delete child;
-
-	delete root;
-	
-	
 	while (game_window.begin_frame()) {
 		game_window.end_frame();
 	}
+
+	task->wait();
 }
 
 int main(int argc, char* argv[])
 {
 	// Create workers
 	job_system::Worker::create_workers();
-
+	
 	// Initialize rendering window
 	logger_log("initialize rendering");
 	glfwInit();
@@ -55,7 +48,6 @@ int main(int argc, char* argv[])
 	// Destroy rendering window
 	vulkan_common::vulkan_shutdown();
 	glfwTerminate();
-	
 	job_system::Worker::destroy_workers();
 	logger_validate("process complete !");
 }

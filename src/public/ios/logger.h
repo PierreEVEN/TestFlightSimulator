@@ -2,13 +2,17 @@
 #include <memory>
 #include <string>
 
+#if _DEBUG && false
 #define logger_log(format, ...) logger::log_print("I", logger::ConsoleColor::CONSOLE_DISPLAY, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__)
 #define logger_validate(format, ...) logger::log_print("V", logger::ConsoleColor::CONSOLE_VALIDATE, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__)
 #define logger_warning(format, ...) logger::log_print("W", logger::ConsoleColor::CONSOLE_WARNING, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__)
 #define logger_error(format, ...) logger::log_print("E", logger::ConsoleColor::CONSOLE_FAIL, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__)
-#if _DEBUG
 #define logger_fail(format, ...) { logger::log_print("F", logger::ConsoleColor::CONSOLE_ASSERT, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); __debugbreak(); exit(EXIT_FAILURE); }
 #else
+#define logger_log(format, ...) logger::log_print("I", logger::ConsoleColor::CONSOLE_DISPLAY, logger::log_format(format, __VA_ARGS__))
+#define logger_validate(format, ...) logger::log_print("V", logger::ConsoleColor::CONSOLE_VALIDATE, logger::log_format(format, __VA_ARGS__))
+#define logger_warning(format, ...) logger::log_print("W", logger::ConsoleColor::CONSOLE_WARNING, logger::log_format(format, __VA_ARGS__))
+#define logger_error(format, ...) logger::log_print("E", logger::ConsoleColor::CONSOLE_FAIL, logger::log_format(format, __VA_ARGS__))
 #define logger_fail(format, ...) { logger::log_print("F", logger::ConsoleColor::CONSOLE_ASSERT, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__, ##__FILE__); exit(EXIT_FAILURE); }
 #endif
 
