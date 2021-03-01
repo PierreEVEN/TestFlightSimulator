@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -11,7 +12,7 @@ class Window;
 class AssetRef
 {
 public:
-	AssetRef(const size_t id_val) : id(id_val) {}
+	AssetRef(const size_t id_val);
 	explicit AssetRef(const std::string& name);
 	AssetRef(const char* name) : AssetRef(std::string(name)) {}
 
@@ -19,7 +20,7 @@ public:
 	std::string to_string() const;
 private:
 	const size_t id;
-#if _DEBUG
+#ifdef _DEBUG
 	std::string asset_name;
 #endif
 };
@@ -38,18 +39,15 @@ class GraphicResourceManager final
 {
 public:
 	GraphicResourceManager() = default;
-	~GraphicResourceManager()
-	{
-		for (const auto& resource : resources)
-		{
-			delete resource;
-		}
+
+	void register_resource(GraphicResource* resource) {
+		std::lock_guard<std::mutex> lock(resource_manager_lock);
+		resources.push_back(resource);
 	}
 
-	void register_resource(GraphicResource* resource) { resources.push_back(resource); }
+	void clean();
 
 private:
-
+	std::mutex resource_manager_lock;
 	std::vector<GraphicResource*> resources;
-
 };

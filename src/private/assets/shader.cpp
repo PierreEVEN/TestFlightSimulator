@@ -15,5 +15,5 @@ Shader::Shader(Window* context, const AssetRef& asset_ref, const std::filesystem
 	geometry_module(std::make_shared<ShaderModule>(context->get_context()->logical_device, geometry_shader_path, shaderc_geometry_shader)),
 	GraphicResource(context, asset_ref)
 {
-	logger_log("create shader %d", asset_ref.to_string());
+	logger_log("create shader %s", asset_ref.to_string().c_str());
 }

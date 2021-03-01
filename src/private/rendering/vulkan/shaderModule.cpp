@@ -64,7 +64,7 @@ std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name
 
 	Options.SetTargetEnvironment(shaderc_target_env_vulkan, 0);
 
-#ifdef _DEBUG
+#if _DEBUG
 	Options.SetOptimizationLevel(optimize ?
 		shaderc_optimization_level_size : shaderc_optimization_level_zero);
 #else

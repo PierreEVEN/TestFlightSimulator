@@ -78,8 +78,6 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	create_command_buffer();
 	create_fences_and_semaphores();
 	
-	resource_manager = new GraphicResourceManager();
-	
 	if (has_imgui_context) imgui_instance = new ImGuiInstance(this);
 	
 	window_map[window_handle] = this;
@@ -95,8 +93,8 @@ Window::~Window() {
 
 	if (has_imgui_context) delete imgui_instance;
 
-	delete resource_manager;
-
+	resource_manager.clean();
+		
 	destroy_fences_and_semaphores();
 	destroy_command_buffer();
 	delete back_buffer;

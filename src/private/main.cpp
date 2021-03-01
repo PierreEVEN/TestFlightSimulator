@@ -8,7 +8,7 @@
 
 void load_assets(Window& context)
 {
-	new Shader(&context, "shader_Test", "data/test.vs.glsl", "data/test.fs.glsl", "data/test.gs.glsl");
+	context.get_resource_manager().register_resource(new Shader(&context, "shader_Test", "data/test.vs.glsl", "data/test.fs.glsl", "data/test.gs.glsl"));
 }
 
 
@@ -22,8 +22,6 @@ void window_test(bool imgui_context)
 		game_window.end_frame();
 	}
 }
-
-
 
 int main(int argc, char* argv[])
 {
