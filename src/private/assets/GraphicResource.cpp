@@ -24,10 +24,7 @@ std::string AssetRef::to_string() const
 }
 
 GraphicResource::GraphicResource(Window* context, const AssetRef& asset_reference)
-	: asset_ref(asset_reference)
-{
-	//context->get_resource_manager().register_resource(this);
-}
+	: asset_ref(asset_reference) {}
 
 void GraphicResourceManager::clean()
 {
@@ -35,8 +32,11 @@ void GraphicResourceManager::clean()
 	std::lock_guard<std::mutex> lock(resource_manager_lock);
 	for (GraphicResource* resource : resources)
 	{
-		logger_log("test");
 		delete resource;
-		logger_log("test2");
 	}
+}
+
+void GraphicResourceManager::register_resource_static(Window* context, GraphicResource* resource)
+{
+	context->get_resource_manager().register_resource(resource);
 }

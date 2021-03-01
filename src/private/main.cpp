@@ -5,10 +5,11 @@
 #include "ios/logger.h"
 #include "misc/capabilities.h"
 #include "rendering/window.h"
+#include "scene/node.h"
 
 void load_assets(Window& context)
 {
-	context.get_resource_manager().register_resource(new Shader(&context, "shader_Test", "data/test.vs.glsl", "data/test.fs.glsl", "data/test.gs.glsl"));
+	GraphicResource::create<Shader>(&context, "shader_Test", "data/test.vs.glsl", "data/test.fs.glsl", "data/test.gs.glsl");
 }
 
 
@@ -17,6 +18,16 @@ void window_test(bool imgui_context)
 	Window game_window(800, 600, config::application_name, false, imgui_context);
 
 	job_system::new_job([&] {load_assets(game_window); });
+
+
+	auto* root = new Node();
+
+	auto* child = new Node(root);
+
+	delete child;
+
+	delete root;
+	
 	
 	while (game_window.begin_frame()) {
 		game_window.end_frame();

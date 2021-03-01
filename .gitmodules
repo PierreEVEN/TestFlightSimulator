@@ -13,3 +13,6 @@
 [submodule "third_party/shaderc"]
 	path = third_party/shaderc
 	url = https://github.com/google/shaderc
+[submodule "third_party/glm"]
+	path = third_party/glm
+	url = https://github.com/g-truc/glm

@@ -77,6 +77,9 @@ ELSE()
 	target_link_libraries(TestFlightSimulator -lvulkan)
 ENDIF()
 
+# GLM
+target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/glm)
+
 # GLFW
 target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/glfw/include)
 IF (WIN32)
