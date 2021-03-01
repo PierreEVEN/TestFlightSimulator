@@ -17,7 +17,7 @@ void window_test(bool imgui_context)
 {	
 	Window game_window(800, 600, config::application_name, false, imgui_context);
 
-	auto* task = job_system::new_job([&] {load_assets(game_window); });
+	auto task = job_system::new_job([&] {load_assets(game_window); });
 
 
 	while (game_window.begin_frame()) {

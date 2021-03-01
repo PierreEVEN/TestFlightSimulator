@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <vector>
 #include "ios/logger.h"
 
 static const unsigned int NUMBER_OF_JOBS = 4096;
@@ -11,8 +12,8 @@ class IObjectPool
 public:
 	virtual ~IObjectPool() = default;
 private:
-	virtual void push(ObjectType* object) = 0;
-	virtual ObjectType* pop() = 0;
+	virtual void push(std::shared_ptr<ObjectType> object) = 0;
+	virtual std::shared_ptr<ObjectType> pop() = 0;
 };
 
 template<typename ObjectType, size_t PoolSize>
@@ -20,17 +21,13 @@ class TObjectPool : public IObjectPool<ObjectType>
 {
 public:
 
-	TObjectPool()
-		: mask(PoolSize - 1)
-	{
-		pool = static_cast<ObjectType**>(std::malloc(sizeof(ObjectType*) * PoolSize));
+	TObjectPool() {
+		pool.resize(PoolSize);
 	}
 
-	virtual ~TObjectPool() {
-		std::free(pool);
-	}
+	virtual ~TObjectPool() {}
 	
-	virtual void push(ObjectType* object)
+	virtual void push(std::shared_ptr<ObjectType> object)
 	{
 		std::lock_guard lock(pool_lock);
 		if ((pool_bottom + 1) % NUMBER_OF_JOBS == pool_top)
@@ -38,16 +35,16 @@ public:
 			logger_fail("job pool overflow : %d", NUMBER_OF_JOBS);
 		}
 		
-		pool[pool_bottom] = object;		
+		pool[pool_bottom] = object;
 		pool_bottom = (pool_bottom + 1) % NUMBER_OF_JOBS;
 	}
 
-	virtual ObjectType* pop()
+	virtual std::shared_ptr<ObjectType> pop()
 	{
 		std::lock_guard lock(pool_lock);
 		if (is_empty()) return nullptr;
 
-		ObjectType* object = pool[pool_top];
+		std::shared_ptr<ObjectType> object = pool[pool_top];
 		pool_top = (pool_top + 1) % NUMBER_OF_JOBS;
 		
 		return object;
@@ -57,9 +54,9 @@ public:
 
 private:
 
-	ObjectType** pool = nullptr;
+	std::vector<std::shared_ptr<ObjectType>> pool;
+	//std::shared_ptr<ObjectType>* pool = nullptr;
 	std::mutex pool_lock;
 	long pool_top = 0;
 	long pool_bottom = 0;
-	const size_t mask;
 };

@@ -45,7 +45,7 @@ namespace job_system {
         return nullptr;
     }
 
-    void Worker::push_orphan_job(IJobTask *newTask) {
+    void Worker::push_orphan_job(std::shared_ptr<IJobTask> newTask) {
         job_pool.push(newTask);
         wake_up_worker_condition_variable.notify_one();
     }
@@ -92,7 +92,7 @@ namespace job_system {
     }) {}
 
     void Worker::next_task() {
-        if (IJobTask *found_job = steal_or_get_task()) {
+        if (auto found_job = steal_or_get_task()) {
             jobs++;
             MEMORY_BARRIER();
             current_task = found_job;
@@ -110,12 +110,12 @@ namespace job_system {
         }
     }
 
-    IJobTask* Worker::steal_or_get_task()
+    std::shared_ptr<IJobTask> Worker::steal_or_get_task()
     {
         for (size_t i = 0; i < worker_count; ++i)
         {
             if (!workers[i].current_task) continue;
-            if (auto* task = workers[i].current_task->pop_child_task())
+            if (auto task = workers[i].current_task->pop_child_task())
             {
                 return task;
             }        	

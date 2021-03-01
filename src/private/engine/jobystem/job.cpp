@@ -4,7 +4,7 @@
 
 namespace job_system {
 
-	IJobTask* IJobTask::find_current_parent_task()
+	std::shared_ptr<IJobTask> IJobTask::find_current_parent_task()
 	{
 		if (Worker* worker = Worker::get())
 		{
