@@ -100,7 +100,7 @@ std::optional<VkShaderModule> create_shader_module(VkDevice logical_device, cons
 	return shader_module;
 }
 
-ShaderModule::ShaderModule(VkDevice logical_device, const std::string& file_name, const std::string& shader_code,
+ShaderModule::ShaderModule(VkDevice logical_device, std::string file_name, const std::string& shader_code,
 	shaderc_shader_kind shader_kind)
 	: device(logical_device)
 {
@@ -113,7 +113,7 @@ ShaderModule::ShaderModule(VkDevice logical_device, const std::string& file_name
 	}
 }
 
-ShaderModule::ShaderModule(VkDevice logical_device, const std::filesystem::path& source_path, shaderc_shader_kind shader_kind)
+ShaderModule::ShaderModule(VkDevice logical_device, std::filesystem::path source_path, shaderc_shader_kind shader_kind)
 	: device(logical_device)
 {
 	auto shader_data = read_shader_file(source_path);

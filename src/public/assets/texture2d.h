@@ -4,14 +4,19 @@
 #include <vulkan/vulkan_core.h>
 
 
-#include "GraphicResource.h"
+
+#include "assetBase.h"
 #include "ui/imgui/imgui.h"
 
 
-class Texture2d : public GraphicResource
+namespace job_system {
+	class IJobTask;
+}
+
+class Texture2d : public AssetBase
 {
 public:
-	Texture2d(Window* context, const AssetRef& asset_reference, uint8_t* data, size_t width, size_t height, uint8_t channel_count);
+	Texture2d(uint8_t* data, size_t width, size_t height, uint8_t channel_count);
 	void create_image_descriptors();
 	virtual ~Texture2d();
 	
@@ -35,5 +40,7 @@ private:
 
 	VkDescriptorSetLayout image_descriptor_layout = VK_NULL_HANDLE;
 	std::vector<VkDescriptorSet> image_descriptors;
+
+	std::shared_ptr<job_system::IJobTask> creation_job;
 };
 

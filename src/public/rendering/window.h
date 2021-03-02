@@ -3,12 +3,9 @@
 #include <memory>
 #include <mutex>
 
-
-
-#include "assets/GraphicResource.h"
 #include "vulkan/commandPool.h"
-#include "vulkan/common.h"
 
+class AssetManager;
 class DescriptorPool;
 class ImGuiInstance;
 class Framebuffer;
@@ -64,7 +61,7 @@ public:
 	[[nodiscard]] VkSurfaceFormatKHR get_surface_format() const { return swapchain_surface_format;  }
 	[[nodiscard]] VkPresentModeKHR get_present_mode() const { return swapchain_present_mode; }
 	[[nodiscard]] VkRenderPass get_render_pass() const { return render_pass; }
-	[[nodiscard]] GraphicResourceManager& get_resource_manager() { return resource_manager; }
+	[[nodiscard]] AssetManager* get_asset_manager() { return asset_manager; }
 
 	[[nodiscard]] uint32_t get_msaa_sample_count() const { return msaa_sample_count; }
 	[[nodiscard]] uint32_t get_max_msaa_sample_count() const { return max_msaa_sample_count; }
@@ -84,7 +81,7 @@ private:
 	uint32_t swapchain_image_count;
 
 	DescriptorPool* descriptor_pool;
-	GraphicResourceManager resource_manager;
+	AssetManager* asset_manager;
 	ImGuiInstance* imgui_instance = nullptr;	
 
 	std::vector<VkSemaphore> image_acquire_semaphore;

@@ -4,8 +4,6 @@
 #include <vector>
 #include "ios/logger.h"
 
-static const unsigned int NUMBER_OF_JOBS = 4096;
-
 template<typename ObjectType>
 class IObjectPool
 {
@@ -26,17 +24,26 @@ public:
 	}
 
 	virtual ~TObjectPool() {}
+
+	void for_each(void(*function)(std::shared_ptr<ObjectType>))
+	{
+		for (size_t i = pool_bottom; i != pool_top; i = (i + 1) % PoolSize)
+		{
+			function(pool[i]);
+		}
+	}
+
 	
 	virtual void push(std::shared_ptr<ObjectType> object)
 	{
 		std::lock_guard lock(pool_lock);
-		if ((pool_bottom + 1) % NUMBER_OF_JOBS == pool_top)
+		if ((pool_bottom + 1) % PoolSize == pool_top)
 		{
-			logger_fail("job pool overflow : %d", NUMBER_OF_JOBS);
+			logger_fail("job pool overflow : %d", PoolSize);
 		}
 		
 		pool[pool_bottom] = object;
-		pool_bottom = (pool_bottom + 1) % NUMBER_OF_JOBS;
+		pool_bottom = (pool_bottom + 1) % PoolSize;
 	}
 
 	virtual std::shared_ptr<ObjectType> pop()
@@ -46,13 +53,13 @@ public:
 
 		std::shared_ptr<ObjectType> object = pool[pool_top];
 		pool[pool_top] = nullptr;
-		pool_top = (pool_top + 1) % NUMBER_OF_JOBS;
+		pool_top = (pool_top + 1) % PoolSize;
 		
 		return object;
 	}
 
 	[[nodiscard]] bool is_empty() const { return pool_top == pool_bottom; }
-
+	
 private:
 
 	std::vector<std::shared_ptr<ObjectType>> pool;

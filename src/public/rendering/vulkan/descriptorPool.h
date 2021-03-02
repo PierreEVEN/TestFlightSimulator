@@ -17,13 +17,11 @@ private:
 	DescriptorPoolItem(Window* context, VkDescriptorSetAllocateInfo& allocInfos);
 	~DescriptorPoolItem();
 	
-	explicit operator bool() const { return std::this_thread::get_id() == pool_thread_id; }
-
-
+	explicit operator bool() const;
+	
 	[[nodiscard]] bool has_space_for(const uint32_t& required_space) const { return space_left >= required_space; }
 
 	void bind_alloc_infos(VkDescriptorSetAllocateInfo& allocInfos);
-
 
 	VkDescriptorPool pool = VK_NULL_HANDLE;
 	uint32_t space_left = 0;

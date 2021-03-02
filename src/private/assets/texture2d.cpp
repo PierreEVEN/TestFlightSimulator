@@ -6,21 +6,27 @@
 #include <cmath>
 
 
+
+#include "engine/jobSystem/job.h"
+#include "engine/jobSystem/job_system.h"
 #include "rendering/vulkan/descriptorPool.h"
 #include "rendering/vulkan/texture.h"
 
-Texture2d::Texture2d(Window* context, const AssetRef& asset_reference, uint8_t* data, size_t width,
-                     size_t height, uint8_t channel_count)
-	: texture_data(data), texture_width(width), texture_height(height), texture_channels(4), GraphicResource(context, asset_reference)
+Texture2d::Texture2d(uint8_t* data, size_t width,
+	size_t height, uint8_t channel_count)
+	: texture_data(data), texture_width(width), texture_height(height), texture_channels(4)
 {
-	logger_log("create texture 2d %s", asset_reference.to_string().c_str());
-	create_image();
-	create_image_sampler();	
-	create_image_descriptors();
+	creation_job = job_system::new_job([&] {
+		create_image();
+		create_image_sampler();
+		create_image_descriptors();
+		logger_log("created texture 2d %s", asset_id->to_string().c_str());
+		});
 }
 
 Texture2d::~Texture2d()
 {
+	creation_job->wait();
 
 	if (image_sampler != VK_NULL_HANDLE) vkDestroySampler(window_context->get_context()->logical_device, image_sampler, vulkan_common::allocation_callback);
 	if (image_view != VK_NULL_HANDLE) vkDestroyImageView(window_context->get_context()->logical_device, image_view, vulkan_common::allocation_callback);

@@ -13,7 +13,7 @@ void DescriptorPool::alloc_memory(VkDescriptorSetAllocateInfo& alloc_infos)
 	}
 	for (auto& pool : context_pools)
 	{
-		if (pool && pool->has_space_for(alloc_infos.descriptorSetCount)) {
+		if (*pool && pool->has_space_for(alloc_infos.descriptorSetCount)) {
 			pool->bind_alloc_infos(alloc_infos);
 			return;
 		}
@@ -69,4 +69,9 @@ DescriptorPoolItem::DescriptorPoolItem(Window* context, VkDescriptorSetAllocateI
 DescriptorPoolItem::~DescriptorPoolItem()
 {
 	vkDestroyDescriptorPool(window_context->get_context()->logical_device, pool, vulkan_common::allocation_callback);
+}
+
+DescriptorPoolItem::operator bool() const
+{
+	return std::this_thread::get_id() == pool_thread_id;
 }

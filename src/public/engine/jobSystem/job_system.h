@@ -23,5 +23,4 @@ namespace job_system {
 		
 		return job;
 	}
-	
 }

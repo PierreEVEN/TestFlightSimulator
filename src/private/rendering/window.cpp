@@ -8,6 +8,7 @@
 #include <array>
 
 #include "config.h"
+#include "assets/assetBase.h"
 #include "assets/GraphicResource.h"
 #include "ios/logger.h"
 #include "rendering/vulkan/commandPool.h"
@@ -17,7 +18,6 @@
 #include "ui/imgui/imgui_impl_glfw.h"
 #include "ui/imgui/imgui_impl_vulkan.h"
 
-std::mutex test;
 std::mutex window_map_lock;
 std::unordered_map<GLFWwindow*, Window*> window_map;
 
@@ -79,6 +79,8 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	create_command_buffer();
 	create_fences_and_semaphores();
 	descriptor_pool = new DescriptorPool(this);
+
+	asset_manager = new AssetManager(this);
 	
 	if (has_imgui_context) imgui_instance = new ImGuiInstance(this);
 	
@@ -95,7 +97,7 @@ Window::~Window() {
 
 	if (has_imgui_context) delete imgui_instance;
 
-	resource_manager.clean();
+	delete asset_manager;
 
 	delete descriptor_pool;
 	destroy_fences_and_semaphores();

@@ -1,8 +1,8 @@
 #pragma once
 #include <filesystem>
 
-#include "GraphicResource.h"
 
+#include "assetBase.h"
 #include "glm/glm.hpp"
 
 struct VertexGroup
@@ -15,10 +15,10 @@ struct VertexGroup
 	std::vector<glm::vec3> bitang;
 };
 
-class StaticMesh : public GraphicResource
+class StaticMesh : public AssetBase
 {
 public:
-	StaticMesh(Window* context, const AssetRef& asset_reference, const VertexGroup& in_vertices, const std::vector<uint32_t>& in_triangles);
+	StaticMesh(const VertexGroup& in_vertices, const std::vector<uint32_t>& in_triangles);
 
 private:
 

@@ -15,12 +15,12 @@ namespace job_system {
 		void push_child_task(std::shared_ptr<IJobTask> child)
 		{
 			++child_count;
-			child_tasks.push(child);
+			children_pool.push(child);
 			Worker::wake_up_worker();
 		}
 
 		std::shared_ptr<IJobTask> pop_child_task() {
-			return child_tasks.pop();
+			return children_pool.pop();
 		}
 
 		void wait()
@@ -35,7 +35,7 @@ namespace job_system {
 		static std::shared_ptr<IJobTask> find_current_parent_task();
 
 		std::shared_ptr<IJobTask> parent_task = nullptr;
-		TObjectPool<IJobTask, 256> child_tasks;
+		TObjectPool<IJobTask, 256> children_pool;
 		std::counting_semaphore<> child_wait_semaphore = std::counting_semaphore<>(0);
 		int32_t child_count = 0;
 		std::atomic_bool is_complete = false;
