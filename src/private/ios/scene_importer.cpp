@@ -13,6 +13,9 @@
 #include "rendering/window.h"
 #include "scene/node.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 
 SceneImporter::SceneImporter(Window* context, const std::filesystem::path& source_file)
 	: window_context(context)
@@ -73,22 +76,31 @@ Node* SceneImporter::create_node(aiNode* context, Node* parent)
 
 std::shared_ptr<AssetRef> SceneImporter::process_texture(aiTexture* texture)
 {
-	const uint8_t channels = 4;
-
-	size_t pixel_count = texture->mWidth * texture->mHeight;
-
-	auto* data = new uint8_t[pixel_count * channels];
-
-	for (size_t i = 0; i < pixel_count; ++i)
-	{
-		data[i * channels] = texture->pcData[i].r;
-		if (channels > 1) data[i * channels + 1] = texture->pcData[i].g;
-		if (channels > 2) data[i * channels + 2] = texture->pcData[i].b;
-		if (channels > 3) data[i * channels + 3] = texture->pcData[i].a;
+	int width = texture->mWidth;
+	int height = texture->mHeight;
+	int channels = 4;
+	uint8_t* data = nullptr;
+	if (height == 0) {
+		data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(texture->pcData), texture->mWidth, &width, &height, &channels, channels);
 	}
-
+	else
+	{
+		size_t pixel_count = texture->mWidth * texture->mHeight;
+		data = new uint8_t[pixel_count * channels];
+		for (size_t i = 0; i < pixel_count; ++i)
+		{
+			data[i * channels] = texture->pcData[i].r;
+			if (channels > 1) data[i * channels + 1] = texture->pcData[i].g;
+			if (channels > 2) data[i * channels + 2] = texture->pcData[i].b;
+			if (channels > 3) data[i * channels + 3] = texture->pcData[i].a;
+		}
+	}
+	
 	std::shared_ptr<AssetRef> ref = std::make_shared<AssetRef>(object_name + "-mesh-" + texture->mFilename.data);
-	GraphicResource::create<Texture2d>(window_context, *ref, data, texture->mWidth, texture->mHeight, channels);
+
+	GraphicResource::create<Texture2d>(window_context, *ref, data, width, height, channels);
+
+	std::free(data);
 	return ref;
 }
 

@@ -81,6 +81,9 @@ ENDIF()
 # GLM
 target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/glm)
 
+# STB
+target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/stb)
+
 # GLFW
 target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/glfw/include)
 IF (WIN32)
@@ -104,3 +107,4 @@ IF (WIN32)
 	
 ELSE()
 ENDIF()
+

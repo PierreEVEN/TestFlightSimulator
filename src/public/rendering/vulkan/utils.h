@@ -13,6 +13,7 @@
 #define VK_ENSURE(condition, ...) if ((condition) != VK_SUCCESS) { logger_fail("VK_ERROR %d : %s", condition, __VA_ARGS__); }
 #define VK_CHECK(object, ...) if ((object) == VK_NULL_HANDLE) { logger_fail("VK_ERROR_NULL_HANDLE %d : %s", object, __VA_ARGS__); }
 
+class WindowContext;
 class Window;
 
 namespace vulkan_utils
@@ -50,4 +51,6 @@ namespace vulkan_utils
 	uint32_t find_memory_type(VkPhysicalDevice physical_device, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	VkCommandBuffer begin_single_time_commands(Window* context);
 	void end_single_time_commands(Window* context, VkCommandBuffer commandBuffer);
+	void create_buffer(WindowContext* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void copy_buffer(Window* context, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 }

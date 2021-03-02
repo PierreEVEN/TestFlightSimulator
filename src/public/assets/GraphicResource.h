@@ -64,6 +64,9 @@ public:
 		GraphicResourceManager::register_resource_static(context, resource);
 		return resource;
 	}
+protected:
+	Window* window_context;
+
 private:
 	const AssetRef asset_ref;
 };

@@ -24,7 +24,7 @@ std::string AssetRef::to_string() const
 }
 
 GraphicResource::GraphicResource(Window* context, const AssetRef& asset_reference)
-	: asset_ref(asset_reference) {}
+	: window_context(context), asset_ref(asset_reference) {}
 
 void GraphicResourceManager::clean()
 {

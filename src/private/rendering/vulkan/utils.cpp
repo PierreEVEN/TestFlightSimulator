@@ -336,4 +336,45 @@ namespace vulkan_utils
 		vkDestroyFence(context->get_context()->logical_device, submitFence, vulkan_common::allocation_callback);
 		vkFreeCommandBuffers(context->get_context()->logical_device, context->get_command_pool(), 1, &commandBuffer);
 	}
+
+
+	void create_buffer(WindowContext* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+	{
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = size;
+		bufferInfo.usage = usage;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		if (vkCreateBuffer(context->logical_device, &bufferInfo, vulkan_common::allocation_callback, &buffer) != VK_SUCCESS) {
+			logger_fail("Failed to create buffer");
+		}
+
+		VkMemoryRequirements memRequirements;
+		vkGetBufferMemoryRequirements(context->logical_device, buffer, &memRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = find_memory_type(context->physical_device, memRequirements.memoryTypeBits, properties);
+
+		if (vkAllocateMemory(context->logical_device, &allocInfo, vulkan_common::allocation_callback, &bufferMemory) != VK_SUCCESS) {
+			logger_fail("Failled to allocate buffer memory");
+		}
+
+		vkBindBufferMemory(context->logical_device, buffer, bufferMemory, 0);
+	}
+
+	void copy_buffer(Window* context, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+	{
+		const VkCommandBuffer commandBuffer = begin_single_time_commands(context);
+
+		VkBufferCopy copyRegion{};
+		copyRegion.size = size;
+		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+		end_single_time_commands(context, commandBuffer);
+	}
+
+	
 }

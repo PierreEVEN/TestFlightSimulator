@@ -16,7 +16,7 @@ void window_test(bool imgui_context)
 
 	auto task = job_system::new_job([&]
 	{
-			//GraphicResource::create<Shader>(&game_window, "shader_Test", "data/test.vs.glsl", "data/test.fs.glsl", "data/test.gs.glsl");
+			GraphicResource::create<Shader>(&game_window, "shader_Test", "data/test.vs.glsl", "data/test.fs.glsl", "data/test.gs.glsl");
 	});
 	auto task2 = job_system::new_job([&]
 	{
