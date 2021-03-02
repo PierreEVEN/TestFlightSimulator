@@ -2,7 +2,7 @@
 #include <memory>
 #include <string>
 
-#if _DEBUG && false
+#if _DEBUG
 #define logger_log(format, ...) logger::log_print("I", logger::ConsoleColor::CONSOLE_DISPLAY, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__)
 #define logger_validate(format, ...) logger::log_print("V", logger::ConsoleColor::CONSOLE_VALIDATE, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__)
 #define logger_warning(format, ...) logger::log_print("W", logger::ConsoleColor::CONSOLE_WARNING, logger::log_format(format, __VA_ARGS__), ##__FUNCTION__, __LINE__)

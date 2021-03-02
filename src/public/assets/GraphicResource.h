@@ -19,8 +19,9 @@ public:
 
 	size_t operator()() const { return id; }
 	std::string to_string() const;
+	
 private:
-	const size_t id;
+	size_t id;
 #ifdef _DEBUG
 	std::string asset_name;
 #endif

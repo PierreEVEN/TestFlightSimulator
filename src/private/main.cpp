@@ -3,28 +3,32 @@
 #include "assets/shader.h"
 #include "engine/jobSystem/job_system.h"
 #include "ios/logger.h"
+#include "ios/scene_importer.h"
 #include "misc/capabilities.h"
 #include "rendering/window.h"
 #include "scene/node.h"
 
-void load_assets(Window& context)
-{
-	GraphicResource::create<Shader>(&context, "shader_Test", "data/test.vs.glsl", "data/test.fs.glsl", "data/test.gs.glsl");
-}
 
 
 void window_test(bool imgui_context)
 {	
 	Window game_window(800, 600, config::application_name, false, imgui_context);
 
-	auto task = job_system::new_job([&] {load_assets(game_window); });
-
-
+	auto task = job_system::new_job([&]
+	{
+			//GraphicResource::create<Shader>(&game_window, "shader_Test", "data/test.vs.glsl", "data/test.fs.glsl", "data/test.gs.glsl");
+	});
+	auto task2 = job_system::new_job([&]
+	{
+			SceneImporter importer(&game_window, "data/F-16_b.glb");
+	});
+	
 	while (game_window.begin_frame()) {
 		game_window.end_frame();
 	}
 
 	task->wait();
+	task2->wait();
 }
 
 int main(int argc, char* argv[])

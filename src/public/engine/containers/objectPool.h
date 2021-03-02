@@ -45,6 +45,7 @@ public:
 		if (is_empty()) return nullptr;
 
 		std::shared_ptr<ObjectType> object = pool[pool_top];
+		pool[pool_top] = nullptr;
 		pool_top = (pool_top + 1) % NUMBER_OF_JOBS;
 		
 		return object;

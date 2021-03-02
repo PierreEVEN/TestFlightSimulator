@@ -52,6 +52,7 @@ ENDIF()
 
 # ASSIMP
 target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/assimp/include)
+target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/assimp/Build/include)
 IF (WIN32)
 	target_link_libraries(TestFlightSimulator $<$<CONFIG:Release>:${PROJECT_ROOT}/temp/third_party/release/assimp-vc142-mt.lib> $<$<CONFIG:Debug>:${PROJECT_ROOT}/temp/third_party/debug/assimp-vc142-mtd.lib>)
 	target_link_libraries(TestFlightSimulator $<$<CONFIG:Release>:${PROJECT_ROOT}/temp/third_party/release/zlibstatic.lib> $<$<CONFIG:Debug>:${PROJECT_ROOT}/temp/third_party/debug/zlibstaticd.lib>)

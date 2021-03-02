@@ -1,48 +1,19 @@
 #pragma once
-#include <filesystem>
+
 #include <cstdint>
 
 #include "GraphicResource.h"
 
 
-class ITexture2dBase : public GraphicResource
-{
-	
-};
-
-struct PixelWB
-{
-	uint8_t r;
-};
-
-struct PixelRGB
-{
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-};
-
-struct PixelRGBA
-{
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-	uint8_t a;
-};
-
-template <typename ChannelType>
-class Texture2d : public ITexture2dBase
+class Texture2d : public GraphicResource
 {
 public:
-	Texture2d(const AssetRef& asset_ref, const std::filesystem::path& source_path) {}
-
-	
+	Texture2d(Window* context, const AssetRef& asset_reference, const uint8_t* data, size_t width, size_t height, uint8_t channel_count);
 
 private:
-
-	ChannelType* data = nullptr;	
+	const uint8_t* texture_data;
+	const size_t texture_width;
+	const size_t texture_height;
+	const size_t texture_channels;
 };
 
-typedef Texture2d<PixelWB> Texture2dWB;
-typedef Texture2d<PixelRGB> Texture2dRGB;
-typedef Texture2d<PixelRGBA> Texture2dRGBA;
