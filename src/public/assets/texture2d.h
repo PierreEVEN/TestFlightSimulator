@@ -11,11 +11,18 @@
 class Texture2d : public GraphicResource
 {
 public:
-	Texture2d(Window* context, const AssetRef& asset_reference, const uint8_t* data, size_t width, size_t height, uint8_t channel_count);
-	void InitializeUIObjects();
+	Texture2d(Window* context, const AssetRef& asset_reference, uint8_t* data, size_t width, size_t height, uint8_t channel_count);
+	void create_image_descriptors();
 	virtual ~Texture2d();
+	
+	ImTextureID get_texture_id(const size_t& image_index) { return static_cast<ImTextureID>(image_descriptors[image_index]); }
+
 private:
-	const uint8_t* texture_data;
+
+	void create_image();
+	void create_image_sampler();
+	
+	uint8_t* texture_data;
 	const size_t texture_width;
 	const size_t texture_height;
 	const size_t texture_channels;
@@ -26,7 +33,7 @@ private:
 	VkImageView image_view = VK_NULL_HANDLE;
 	VkSampler image_sampler = VK_NULL_HANDLE;
 
-	VkDescriptorSetLayout ui_image_layout = VK_NULL_HANDLE;
-	std::vector<VkDescriptorSet> ui_image_descriptors;
+	VkDescriptorSetLayout image_descriptor_layout = VK_NULL_HANDLE;
+	std::vector<VkDescriptorSet> image_descriptors;
 };
 

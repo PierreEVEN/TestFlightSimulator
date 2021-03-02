@@ -9,6 +9,7 @@
 #include "vulkan/commandPool.h"
 #include "vulkan/common.h"
 
+class DescriptorPool;
 class ImGuiInstance;
 class Framebuffer;
 class Swapchain;
@@ -53,6 +54,7 @@ public:
 	bool end_frame();
 
 
+	[[nodiscard]] DescriptorPool* get_descriptor_pool() const { return descriptor_pool; }
 	[[nodiscard]] VkCommandPool get_command_pool() const { return command_pool->get(); }
 	[[nodiscard]] GLFWwindow* get_handle() const { return window_handle; }
 	[[nodiscard]] WindowContext* get_context() const { return context.get(); }
@@ -81,6 +83,7 @@ private:
 	VkSampleCountFlagBits msaa_sample_count;
 	uint32_t swapchain_image_count;
 
+	DescriptorPool* descriptor_pool;
 	GraphicResourceManager resource_manager;
 	ImGuiInstance* imgui_instance = nullptr;	
 

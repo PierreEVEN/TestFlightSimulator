@@ -11,6 +11,7 @@
 #include "assets/GraphicResource.h"
 #include "ios/logger.h"
 #include "rendering/vulkan/commandPool.h"
+#include "rendering/vulkan/descriptorPool.h"
 #include "rendering/vulkan/framebuffer.h"
 #include "rendering/vulkan/swapchain.h"
 #include "ui/imgui/imgui_impl_glfw.h"
@@ -77,6 +78,7 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	back_buffer = new Framebuffer(this, VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) });
 	create_command_buffer();
 	create_fences_and_semaphores();
+	descriptor_pool = new DescriptorPool(this);
 	
 	if (has_imgui_context) imgui_instance = new ImGuiInstance(this);
 	
@@ -94,7 +96,8 @@ Window::~Window() {
 	if (has_imgui_context) delete imgui_instance;
 
 	resource_manager.clean();
-		
+
+	delete descriptor_pool;
 	destroy_fences_and_semaphores();
 	destroy_command_buffer();
 	delete back_buffer;

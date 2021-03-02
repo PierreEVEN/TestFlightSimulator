@@ -100,7 +100,6 @@ std::shared_ptr<AssetRef> SceneImporter::process_texture(aiTexture* texture)
 
 	GraphicResource::create<Texture2d>(window_context, *ref, data, width, height, channels);
 
-	std::free(data);
 	return ref;
 }
 
