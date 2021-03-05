@@ -23,4 +23,14 @@ namespace job_system {
 		
 		return job;
 	}
+
+	inline void wait_children()
+	{
+		if (auto* worker = Worker::get())
+		{
+
+
+			
+		}		
+	}
 }

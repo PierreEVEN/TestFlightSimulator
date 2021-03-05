@@ -1,8 +1,5 @@
 #pragma once
 
-#include <vector>
-#include <optional>
-
 #include "rendering/vulkan/utils.h"
 
 namespace vulkan_common {

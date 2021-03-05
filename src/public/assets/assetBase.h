@@ -43,6 +43,8 @@ public:
 		return assets.find(id) != assets.end();
 	}
 
+	[[nodiscard]] AssetBase* find(const AssetId& id) const;
+
 private:
 
 	std::mutex register_lock;
@@ -58,6 +60,12 @@ public:
 	AssetBase() {}
 
 	virtual std::string to_string() { return asset_id->to_string(); }
+
+	[[nodiscard]] const AssetId& get_id() const { return *asset_id; }
+
+	[[nodiscard]] Window* get_context() const { return window_context; }
+
+	virtual bool try_load() = 0;
 
 protected:
 	virtual ~AssetBase() { delete asset_id; }

@@ -5,6 +5,8 @@
 
 #include "vulkan/commandPool.h"
 
+class WindowBase;
+class WindowManager;
 class AssetManager;
 class DescriptorPool;
 class ImGuiInstance;
@@ -43,6 +45,7 @@ private:
 
 class Window
 {
+	friend WindowBase;
 public:
 	Window(int res_x, int res_y, const char* name, bool fullscreen = false, bool img_context = false);
 	virtual ~Window();
@@ -82,7 +85,8 @@ private:
 
 	DescriptorPool* descriptor_pool;
 	AssetManager* asset_manager;
-	ImGuiInstance* imgui_instance = nullptr;	
+	ImGuiInstance* imgui_instance = nullptr;
+	WindowManager* window_manager = nullptr;
 
 	std::vector<VkSemaphore> image_acquire_semaphore;
 	std::vector<VkSemaphore> render_finished_semaphores;

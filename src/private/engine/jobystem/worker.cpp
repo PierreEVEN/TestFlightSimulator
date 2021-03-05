@@ -3,6 +3,7 @@
 
 #include "ios/logger.h"
 #include "engine/semaphores.h"
+#include "engine/statsRecorder.h"
 
 namespace job_system {
     Worker *workers = nullptr;
@@ -45,6 +46,11 @@ namespace job_system {
         return nullptr;
     }
 
+    Worker* Worker::get_worker(size_t worker_id)
+    {
+        return workers + worker_id;
+    }
+
     void Worker::push_orphan_job(std::shared_ptr<IJobTask> newTask) {
         job_pool.push(newTask);
         wake_up_worker_condition_variable.notify_one();
@@ -59,6 +65,7 @@ namespace job_system {
     void Worker::destroy_workers() {
         logger_log("no more job - destroy workers");
         for (int i = 0; i < worker_count; ++i) {
+        	
             workers[i].run = false;
             ++destroy_counter;
         }
@@ -91,12 +98,18 @@ namespace job_system {
         --destroy_counter;
     }) {}
 
+	/**
+	 * Execute next worker loop
+	 */
     void Worker::next_task() {
         if (auto found_job = steal_or_get_task()) {
+            BEGIN_NAMED_RECORD(worker_execute_job);
             jobs++;
             MEMORY_BARRIER();
             current_task = found_job;
+            ADD_NAMED_TIMEPOINT(worker_begin_job);
             found_job->execute();
+            ADD_NAMED_TIMEPOINT(worker_complete_job);
             MEMORY_BARRIER();
             current_task = nullptr;
             MEMORY_BARRIER();
@@ -105,6 +118,7 @@ namespace job_system {
             workers_complete_semaphore.release();
 
         } else {
+        	// Wait next job order
             std::unique_lock<std::mutex> WakeUpWorkerLock(WaitNewJobMutex);
             wake_up_worker_condition_variable.wait(WakeUpWorkerLock);
         }
@@ -112,14 +126,21 @@ namespace job_system {
 
     std::shared_ptr<IJobTask> Worker::steal_or_get_task()
     {
+        if (auto task = steal_task()) return task;
+    	return job_pool.pop();
+    }
+
+    std::shared_ptr<IJobTask> Worker::steal_task()
+    {
         for (size_t i = 0; i < worker_count; ++i)
         {
             if (!workers[i].current_task) continue;
-            if (auto task = workers[i].current_task->pop_child_task())
+            if (auto task = workers[i].current_task->steal_task())
             {
+                logger_log("steal task");
                 return task;
-            }        	
+            }
         }
-    	return job_pool.pop();
+        return nullptr;
     }
 }

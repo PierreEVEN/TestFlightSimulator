@@ -1,8 +1,13 @@
 #pragma once
+#include <string>
 #include <vector>
 
 namespace config {
 
+	/**
+	 * Application
+	 */
+	
 	inline const size_t application_version_major = 1;
 	inline const size_t application_version_minor = 0;
 	inline const size_t application_version_patch = 0;
@@ -25,5 +30,12 @@ namespace config {
 
 	inline const uint32_t max_descriptor_per_pool = 64;
 	inline const uint32_t max_descriptor_per_type = 128;
+
+	/**
+	 * Engine
+	 */
+
+	inline const char* profiler_storage_path = "saved/profiler/";
+	inline const char* log_storage_path = "saved/log/";
 	
 }

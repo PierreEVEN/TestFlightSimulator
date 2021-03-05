@@ -39,7 +39,7 @@ public:
 		std::lock_guard lock(pool_lock);
 		if ((pool_bottom + 1) % PoolSize == pool_top)
 		{
-			logger_fail("job pool overflow : %d", PoolSize);
+			logger_fail("object pool overflow : max=%d", PoolSize);
 		}
 		
 		pool[pool_bottom] = object;

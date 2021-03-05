@@ -888,7 +888,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, floa
     if (bb_frame_width <= 0.0f || bb_frame_height <= 0.0f)
         return false;
 
-    // When we are too small, start hiding and disabling the grab (this reduce visual noise on very small window and facilitate using the window resize grab)
+    // When we are too small, start_time hiding and disabling the grab (this reduce visual noise on very small window and facilitate using the window resize grab)
     float alpha = 1.0f;
     if ((axis == ImGuiAxis_Y) && bb_frame_height < g.FontSize + g.Style.FramePadding.y * 2.0f)
         alpha = ImSaturate((bb_frame_height - g.FontSize) / (g.Style.FramePadding.y * 2.0f));
@@ -2872,7 +2872,7 @@ bool ImGui::VSliderInt(const char* label, const ImVec2& size, int* v, int v_min,
 // - InputDouble()
 //-------------------------------------------------------------------------
 
-// We don't use strchr() because our strings are usually very short and often start with '%'
+// We don't use strchr() because our strings are usually very short and often start_time with '%'
 const char* ImParseFormatFindStart(const char* fmt)
 {
     while (char c = fmt[0])
@@ -3376,9 +3376,9 @@ static bool STB_TEXTEDIT_INSERTCHARS(STB_TEXTEDIT_STRING* obj, int pos, const Im
 #define STB_TEXTEDIT_K_RIGHT        0x200001 // keyboard input to move cursor right
 #define STB_TEXTEDIT_K_UP           0x200002 // keyboard input to move cursor up
 #define STB_TEXTEDIT_K_DOWN         0x200003 // keyboard input to move cursor down
-#define STB_TEXTEDIT_K_LINESTART    0x200004 // keyboard input to move cursor to start of line
+#define STB_TEXTEDIT_K_LINESTART    0x200004 // keyboard input to move cursor to start_time of line
 #define STB_TEXTEDIT_K_LINEEND      0x200005 // keyboard input to move cursor to end of line
-#define STB_TEXTEDIT_K_TEXTSTART    0x200006 // keyboard input to move cursor to start of text
+#define STB_TEXTEDIT_K_TEXTSTART    0x200006 // keyboard input to move cursor to start_time of text
 #define STB_TEXTEDIT_K_TEXTEND      0x200007 // keyboard input to move cursor to end of text
 #define STB_TEXTEDIT_K_DELETE       0x200008 // keyboard input to delete selection or character under cursor
 #define STB_TEXTEDIT_K_BACKSPACE    0x200009 // keyboard input to delete selection or character left of cursor

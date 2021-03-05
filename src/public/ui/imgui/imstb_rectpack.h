@@ -132,7 +132,7 @@ STBRP_DEF void stbrp_init_target (stbrp_context *context, int width, int height,
 //    pack a rectangle that is 'width' by 'height' in dimensions
 //    using temporary storage provided by the array 'nodes', which is 'num_nodes' long
 //
-// You must call this function every time you start packing into a new target.
+// You must call this function every time you start_time packing into a new target.
 //
 // There is no "shutdown" function. The 'nodes' memory must stay valid for
 // the following stbrp_pack_rects() call (or calls), but can be freed after
@@ -478,7 +478,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, i
 
    cur = *res.prev_link;
    if (cur->x < res.x) {
-      // preserve the existing one, so start testing with the next one
+      // preserve the existing one, so start_time testing with the next one
       stbrp_node *next = cur->next;
       cur->next = node;
       cur = next;

@@ -12,6 +12,7 @@
 
 #include "spirv_glsl.hpp"
 #include "rendering/vulkan/common.h"
+#include "ui/window/windows/profiler.h"
 
 std::optional<std::string> read_shader_file(const std::filesystem::path& source_path)
 {
@@ -35,6 +36,7 @@ std::optional<std::string> read_shader_file(const std::filesystem::path& source_
 
 std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name, const std::string& shader_code, shaderc_shader_kind shader_kind, bool optimize = true)
 {
+	BEGIN_NAMED_RECORD(COMPILE_SHADER_MODULE);
 	shaderc::Compiler Compiler;
 	shaderc::CompileOptions Options;
 	std::optional<std::vector<uint32_t>> bytecode;

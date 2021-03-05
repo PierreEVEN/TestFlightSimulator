@@ -257,7 +257,7 @@ namespace ImGui
     // Main
     IMGUI_API ImGuiIO&      GetIO();                                    // access the IO structure (mouse/keyboard/gamepad inputs, time, various configuration options/flags)
     IMGUI_API ImGuiStyle&   GetStyle();                                 // access the Style structure (colors, sizes). Always use PushStyleCol(), PushStyleVar() to modify style mid-frame!
-    IMGUI_API void          NewFrame();                                 // start a new Dear ImGui frame, you can submit any command from this point until Render()/EndFrame().
+    IMGUI_API void          NewFrame();                                 // start_time a new Dear ImGui frame, you can submit any command from this point until Render()/EndFrame().
     IMGUI_API void          EndFrame();                                 // ends the Dear ImGui frame. automatically called by Render(). If you don't need to render data (skipping rendering) you may call EndFrame() without Render()... but you'll have wasted CPU already! If you don't need to render, better to not create any windows and not call NewFrame() at all!
     IMGUI_API void          Render();                                   // ends the Dear ImGui frame, finalize the draw data. You can get call GetDrawData() to obtain it and run your rendering function (up to v1.60, this used to call io.RenderDrawListsFn(). Nowadays, we allow and prefer calling your render function yourself.)
     IMGUI_API ImDrawData*   GetDrawData();                              // valid after Render() and until the next call to NewFrame(). this is what you have to render.
@@ -278,7 +278,7 @@ namespace ImGui
     IMGUI_API void          StyleColorsLight(ImGuiStyle* dst = NULL);   // best used with borders and a custom, thicker font
 
     // Windows
-    // - Begin() = push window to the stack and start appending to it. End() = pop window from the stack.
+    // - Begin() = push window to the stack and start_time appending to it. End() = pop window from the stack.
     // - Passing 'bool* p_open != NULL' shows a window-closing widget in the upper-right corner of the window,
     //   which clicking will set the boolean to false when clicked.
     // - You may append multiple times to the same window during the same frame by calling Begin()/End() pairs multiple times.
@@ -612,10 +612,10 @@ namespace ImGui
     //  - IMPORTANT: Popup identifiers are relative to the current ID stack, so OpenPopup and BeginPopup generally needs to be at the same level of the stack.
     //    This is sometimes leading to confusing mistakes. May rework this in the future.
     // Popups: begin/end functions
-    //  - BeginPopup(): query popup state, if open start appending into the window. Call EndPopup() afterwards. ImGuiWindowFlags are forwarded to the window.
+    //  - BeginPopup(): query popup state, if open start_time appending into the window. Call EndPopup() afterwards. ImGuiWindowFlags are forwarded to the window.
     //  - BeginPopupModal(): block every interactions behind the window, cannot be closed by user, add a dimming background, has a title bar.
-    IMGUI_API bool          BeginPopup(const char* str_id, ImGuiWindowFlags flags = 0);                         // return true if the popup is open, and you can start outputting to it.
-    IMGUI_API bool          BeginPopupModal(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0); // return true if the modal is open, and you can start outputting to it.
+    IMGUI_API bool          BeginPopup(const char* str_id, ImGuiWindowFlags flags = 0);                         // return true if the popup is open, and you can start_time outputting to it.
+    IMGUI_API bool          BeginPopupModal(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0); // return true if the modal is open, and you can start_time outputting to it.
     IMGUI_API void          EndPopup();                                                                         // only call EndPopup() if BeginPopupXXX() returns true!
     // Popups: open/close functions
     //  - OpenPopup(): set popup state to open. ImGuiPopupFlags are available for opening options.
@@ -679,9 +679,9 @@ namespace ImGui
 
     // Logging/Capture
     // - All text output from the interface can be captured into tty/file/clipboard. By default, tree nodes are automatically opened during logging.
-    IMGUI_API void          LogToTTY(int auto_open_depth = -1);                                 // start logging to tty (stdout)
-    IMGUI_API void          LogToFile(int auto_open_depth = -1, const char* filename = NULL);   // start logging to file
-    IMGUI_API void          LogToClipboard(int auto_open_depth = -1);                           // start logging to OS clipboard
+    IMGUI_API void          LogToTTY(int auto_open_depth = -1);                                 // start_time logging to tty (stdout)
+    IMGUI_API void          LogToFile(int auto_open_depth = -1, const char* filename = NULL);   // start_time logging to file
+    IMGUI_API void          LogToClipboard(int auto_open_depth = -1);                           // start_time logging to OS clipboard
     IMGUI_API void          LogFinish();                                                        // stop logging (close file, etc.)
     IMGUI_API void          LogButtons();                                                       // helper to display buttons for logging to tty/file/clipboard
     IMGUI_API void          LogText(const char* fmt, ...) IM_FMTARGS(1);                        // pass text data straight to log (without being displayed)

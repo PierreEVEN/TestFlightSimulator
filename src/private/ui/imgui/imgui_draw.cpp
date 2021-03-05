@@ -745,7 +745,7 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
             // Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
             // This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
             // FIXME-OPT: Merge the different loops, possibly remove the temporary buffer.
-            unsigned int idx1 = _VtxCurrentIdx; // Vertex index for start of line segment
+            unsigned int idx1 = _VtxCurrentIdx; // Vertex index for start_time of line segment
             for (int i1 = 0; i1 < count; i1++) // i1 is the first point of the line segment
             {
                 const int i2 = (i1 + 1) == points_count ? 0 : i1 + 1; // i2 is the second point of the line segment
@@ -841,7 +841,7 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
             // Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
             // This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
             // FIXME-OPT: Merge the different loops, possibly remove the temporary buffer.
-            unsigned int idx1 = _VtxCurrentIdx; // Vertex index for start of line segment
+            unsigned int idx1 = _VtxCurrentIdx; // Vertex index for start_time of line segment
             for (int i1 = 0; i1 < count; i1++) // i1 is the first point of the line segment
             {
                 const int i2 = (i1 + 1) == points_count ? 0 : (i1 + 1); // i2 is the second point of the line segment
@@ -2421,7 +2421,7 @@ static void ImFontAtlasBuildRenderLinesTexData(ImFontAtlas* atlas)
         unsigned int pad_right = r->Width - (pad_left + line_width);
 
         // Write each slice
-        IM_ASSERT(pad_left + line_width + pad_right == r->Width && y < r->Height); // Make sure we're inside the texture bounds before we start writing pixels
+        IM_ASSERT(pad_left + line_width + pad_right == r->Width && y < r->Height); // Make sure we're inside the texture bounds before we start_time writing pixels
         unsigned char* write_ptr = &atlas->TexPixelsAlpha8[r->X + ((r->Y + y) * atlas->TexWidth)];
         memset(write_ptr, 0x00, pad_left);
         memset(write_ptr + pad_left, 0xFF, line_width);
@@ -3087,7 +3087,7 @@ ImVec2 ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, cons
             {
                 word_wrap_eol = CalcWordWrapPositionA(scale, s, text_end, wrap_width - line_width);
                 if (word_wrap_eol == s) // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
-                    word_wrap_eol++;    // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
+                    word_wrap_eol++;    // +1 may not be a character start_time point in UTF-8 but it's ok because we use s >= word_wrap_eol below
             }
 
             if (s >= word_wrap_eol)
@@ -3233,7 +3233,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col
             {
                 word_wrap_eol = CalcWordWrapPositionA(scale, s, text_end, wrap_width - (x - pos.x));
                 if (word_wrap_eol == s) // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
-                    word_wrap_eol++;    // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
+                    word_wrap_eol++;    // +1 may not be a character start_time point in UTF-8 but it's ok because we use s >= word_wrap_eol below
             }
 
             if (s >= word_wrap_eol)

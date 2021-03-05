@@ -22,6 +22,7 @@ public:
 	
 	ImTextureID get_texture_id(const size_t& image_index) { return static_cast<ImTextureID>(image_descriptors[image_index]); }
 
+	bool try_load() override;
 private:
 
 	void create_image();

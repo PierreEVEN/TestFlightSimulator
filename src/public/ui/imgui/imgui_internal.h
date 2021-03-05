@@ -1018,7 +1018,7 @@ enum ImGuiColumnsFlags_
 
 struct ImGuiColumnData
 {
-    float               OffsetNorm;         // Column start offset, normalized 0.0 (far left) -> 1.0 (far right)
+    float               OffsetNorm;         // Column start_time offset, normalized 0.0 (far left) -> 1.0 (far right)
     float               OffsetNormBeforeResize;
     ImGuiColumnsFlags   Flags;              // Not exposed
     ImRect              ClipRect;
@@ -1663,7 +1663,7 @@ struct IMGUI_API ImGuiWindowTempData
     ImVec2                  PrevLineSize;
     float                   CurrLineTextBaseOffset; // Baseline offset (0.0f by default on a new line, generally == style.FramePadding.y when a framed item has been added).
     float                   PrevLineTextBaseOffset;
-    ImVec1                  Indent;                 // Indentation / start position from left of window (increased by TreePush/TreePop, etc.)
+    ImVec1                  Indent;                 // Indentation / start_time position from left of window (increased by TreePush/TreePop, etc.)
     ImVec1                  ColumnsOffset;          // Offset to the current column (if ColumnsCurrent > 0). FIXME: This and the above should be a stack to allow use cases like Tree->Column->Tree. Need revamp columns API.
     ImVec1                  GroupOffset;
 
@@ -1693,7 +1693,7 @@ struct IMGUI_API ImGuiWindowTempData
     ImGuiColumns*           CurrentColumns;         // Current columns set
     ImGuiLayoutType         LayoutType;
     ImGuiLayoutType         ParentLayoutType;       // Layout type of parent window at the time of Begin()
-    int                     FocusCounterRegular;    // (Legacy Focus/Tabbing system) Sequential counter, start at -1 and increase as assigned via FocusableItemRegister() (FIXME-NAV: Needs redesign)
+    int                     FocusCounterRegular;    // (Legacy Focus/Tabbing system) Sequential counter, start_time at -1 and increase as assigned via FocusableItemRegister() (FIXME-NAV: Needs redesign)
     int                     FocusCounterTabStop;    // (Legacy Focus/Tabbing system) Same, but only count widgets which you can Tab through.
 
     // Local parameters stacks

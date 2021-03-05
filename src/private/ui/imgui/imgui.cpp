@@ -201,7 +201,7 @@ CODE
      // Application main loop
      while (true)
      {
-         // Feed inputs to dear imgui, start new frame
+         // Feed inputs to dear imgui, start_time new frame
          ImGui_ImplDX11_NewFrame();
          ImGui_ImplWin32_NewFrame();
          ImGui::NewFrame();
@@ -3514,7 +3514,7 @@ void ImGui::UpdateMouseMovingWindowEndFrame()
     if (g.NavWindow && g.NavWindow->Appearing)
         return;
 
-    // Click on void to focus window and start moving
+    // Click on void to focus window and start_time moving
     // (after we're done with all our widgets, so e.g. clicking on docking tab-bar which have set HoveredId already and not get us here!)
     if (g.IO.MouseClicked[0])
     {
@@ -4022,7 +4022,7 @@ void ImGui::NewFrame()
     // Docking
     DockContextUpdateDocking(&g);
 
-    // [DEBUG] Item picker tool - start with DebugStartItemPicker() - useful to visually select an item and break into its call-stack.
+    // [DEBUG] Item picker tool - start_time with DebugStartItemPicker() - useful to visually select an item and break into its call-stack.
     UpdateDebugToolItemPicker();
 
     // Create implicit/fallback window - which we will only render it if the user has added something to it.
@@ -4038,7 +4038,7 @@ void ImGui::NewFrame()
 #endif
 }
 
-// [DEBUG] Item picker tool - start with DebugStartItemPicker() - useful to visually select an item and break into its call-stack.
+// [DEBUG] Item picker tool - start_time with DebugStartItemPicker() - useful to visually select an item and break into its call-stack.
 void ImGui::UpdateDebugToolItemPicker()
 {
     ImGuiContext& g = *GImGui;
@@ -6534,7 +6534,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         if (window->AutoFitFramesY > 0)
             window->AutoFitFramesY--;
 
-        // Apply focus (we need to call FocusWindow() AFTER setting DC.CursorStartPos so our initial navigation reference rectangle can start around there)
+        // Apply focus (we need to call FocusWindow() AFTER setting DC.CursorStartPos so our initial navigation reference rectangle can start_time around there)
         if (want_focus)
         {
             FocusWindow(window);
@@ -10082,7 +10082,7 @@ void ImGui::EndDragDropSource()
     g.DragDropWithinSource = false;
 }
 
-// Use 'cond' to choose to submit payload on drag start or every frame
+// Use 'cond' to choose to submit payload on drag start_time or every frame
 bool ImGui::SetDragDropPayload(const char* type, const void* data, size_t data_size, ImGuiCond cond)
 {
     ImGuiContext& g = *GImGui;

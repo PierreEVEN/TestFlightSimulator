@@ -16,14 +16,15 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "engine/jobSystem/job_system.h"
+#include "ui/window/windows/profiler.h"
 
 
 SceneImporter::SceneImporter(Window* context, const std::filesystem::path& source_file, const std::string& desired_asset_name)
 	: window_context(context), object_name(desired_asset_name)
 {
 	creation_job = job_system::new_job([&, source_file] {
-		Assimp::Importer importer;
 
+		BEGIN_NAMED_RECORD(IMPORT_SCENE_DATA);
 		const aiScene* scene = importer.ReadFile(source_file.string(),
 			aiProcess_CalcTangentSpace |
 			aiProcess_Triangulate |
@@ -84,8 +85,8 @@ Node* SceneImporter::create_node(aiNode* context, Node* parent)
 
 std::shared_ptr<AssetId> SceneImporter::process_texture(aiTexture* texture, size_t id)
 {
-	int width = texture->mWidth;
-	int height = texture->mHeight;
+	int width = static_cast<int>(texture->mWidth);
+	int height = static_cast<int>(texture->mHeight);
 	int channels = 4;
 	uint8_t* data = nullptr;
 	if (height == 0) {
@@ -123,45 +124,17 @@ std::shared_ptr<AssetId> SceneImporter::process_mesh(aiMesh* mesh, size_t id)
 {
 	VertexGroup vertex_group;
 
-	// Get vertices
-	vertex_group.pos.resize(mesh->mNumVertices);
+
+	vertex_group.vertices.resize(mesh->mNumVertices);
 	for (size_t i = 0; i < mesh->mNumVertices; ++i) {
-		vertex_group.pos[i] = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
-	}
-
-	// Uvs
-	if (mesh->HasTextureCoords(0))
-	{
-		vertex_group.uv.resize(mesh->mNumVertices);
-		for (size_t i = 0; i < mesh->mNumVertices; ++i) {
-			vertex_group.uv[i] = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
-		}
-	}
-	
-	// Get normals
-	if (mesh->HasNormals()) {
-		vertex_group.norm.resize(mesh->mNumVertices);
-		for (size_t i = 0; i < mesh->mNumVertices; ++i) {
-			vertex_group.pos[i] = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
-		}
-	}
-
-	// Colors
-	if (mesh->HasVertexColors(0)) {
-		vertex_group.col.resize(mesh->mNumVertices);
-		for (size_t i = 0; i < mesh->mNumVertices; ++i) {
-			vertex_group.col[i] = glm::vec4(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b, mesh->mColors[0][i].a);
-		}
-	}
-
-	// Tangents
-	if (mesh->HasTangentsAndBitangents()) 
-	{
-		vertex_group.tang.resize(mesh->mNumVertices);
-		vertex_group.bitang.resize(mesh->mNumVertices);
-		for (size_t i = 0; i < mesh->mNumVertices; ++i) {
-			vertex_group.tang[i] = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
-			vertex_group.bitang[i] = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+		vertex_group.vertices[i].pos = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+		if (mesh->HasTextureCoords(0)) vertex_group.vertices[i].uv = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+		if (mesh->HasNormals()) vertex_group.vertices[i].pos = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+		if (mesh->HasVertexColors(0)) vertex_group.vertices[i].col = glm::vec4(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b, mesh->mColors[0][i].a);
+		if (mesh->HasTangentsAndBitangents())
+		{
+			vertex_group.vertices[i].tang = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
+			vertex_group.vertices[i].bitang = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);			
 		}
 	}
 

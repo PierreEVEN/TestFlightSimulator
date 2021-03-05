@@ -17,6 +17,8 @@
 #include "rendering/vulkan/swapchain.h"
 #include "ui/imgui/imgui_impl_glfw.h"
 #include "ui/imgui/imgui_impl_vulkan.h"
+#include "ui/window/windowBase.h"
+#include "ui/window/windows/profiler.h"
 
 std::mutex window_map_lock;
 std::unordered_map<GLFWwindow*, Window*> window_map;
@@ -80,6 +82,7 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	create_fences_and_semaphores();
 	descriptor_pool = new DescriptorPool(this);
 
+	window_manager = new WindowManager();
 	asset_manager = new AssetManager(this);
 	
 	if (has_imgui_context) imgui_instance = new ImGuiInstance(this);
@@ -98,6 +101,7 @@ Window::~Window() {
 	if (has_imgui_context) delete imgui_instance;
 
 	delete asset_manager;
+	delete window_manager;
 
 	delete descriptor_pool;
 	destroy_fences_and_semaphores();
@@ -129,12 +133,15 @@ void Window::setup_swapchain_property()
 }
 
 void Window::resize_window(const int res_x, const int res_y) {
+	BEGIN_NAMED_RECORD(RESIZE_WINDOW);
 	logger_log("resize window");
 	
 	window_width = res_x;
 	window_height = res_y;
 
+	BEGIN_NAMED_RECORD(WAIT_DEVICE);
 	context->wait_device();
+	END_NAMED_RECORD(WAIT_DEVICE);
 
 	back_buffer->set_size(VkExtent2D{ static_cast<uint32_t>(res_x),static_cast<uint32_t>(res_y) });
 }
@@ -197,6 +204,10 @@ void WindowContext::select_physical_device(VkSurfaceKHR surface)
 	// Pick desired device
 	for (const auto& device : devices) {
 		if (vulkan_utils::is_physical_device_suitable(surface, device)) {
+			VkPhysicalDeviceProperties pProperties;
+			vkGetPhysicalDeviceProperties(device, &pProperties);
+			if (pProperties.deviceName[0] == 'G') continue;
+			
 			physical_device = device;
 			break;
 		}
@@ -419,6 +430,7 @@ void Window::create_fences_and_semaphores()
 }
 void Window::render()
 {
+	BEGIN_NAMED_RECORD(RENDER_LOOP);
 	/**
 	 * Select available handles for next image
 	 */
@@ -493,16 +505,12 @@ void Window::render()
 
 
 
-	
-
-
-
-
 
 	/************************************************************************/
 	/* Begin imgui draw stuff                                               */
 	/************************************************************************/
-	
+
+	BEGIN_NAMED_RECORD(IMGUI_DRAW);
 	if (has_imgui_context) {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -510,10 +518,17 @@ void Window::render()
 
 		if (ImGui::BeginMainMenuBar())
 		{
+			if (ImGui::BeginMenu("misc"))
+			{
+				if (ImGui::MenuItem("demo window")) new DemoWindow(this, "demo window");
+				if (ImGui::MenuItem("profiler")) new ProfilerWindow(this, "profiler");
+				ImGui::EndMenu();
+			}
+			
 			ImGui::EndMainMenuBar();
 		}
 
-		ImGui::ShowDemoWindow();
+		window_manager->draw();
 		
 		//ImGui::PopFont();
 		ImGui::EndFrame();
@@ -522,18 +537,11 @@ void Window::render()
 		ImDrawData* draw_data = ImGui::GetDrawData();
 		imgui_instance->ImGui_ImplVulkan_RenderDrawData(draw_data, current_command_buffer);
 	}
+	END_NAMED_RECORD(IMGUI_DRAW);
 	
 	/************************************************************************/
 	/* End imgui draw stuff                                                 */
 	/************************************************************************/
-
-
-
-
-	
-
-
-
 
 
 

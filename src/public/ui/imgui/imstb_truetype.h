@@ -90,7 +90,7 @@
 //   To make the implementation private to the file that generates the implementation,
 //      #define STBTT_STATIC
 //
-//   Simple 3D API (don't ship this, but it's fine for tools and quick start)
+//   Simple 3D API (don't ship this, but it's fine for tools and quick start_time)
 //           stbtt_BakeFontBitmap()               -- bake a font to a bitmap for use as texture
 //           stbtt_GetBakedQuad()                 -- compute quad to draw for a given char
 //
@@ -715,11 +715,11 @@ struct stbtt_fontinfo
 {
    void           * userdata;
    unsigned char  * data;              // pointer to .ttf file
-   int              fontstart;         // offset of start of font
+   int              fontstart;         // offset of start_time of font
 
    int numGlyphs;                     // number of glyphs, needed for range checking
 
-   int loca,head,glyf,hhea,hmtx,kern,gpos; // table locations as offset from start of .ttf
+   int loca,head,glyf,hhea,hmtx,kern,gpos; // table locations as offset from start_time of .ttf
    int index_map;                     // a cmap mapping for our chosen character encoding
    int indexToLocFormat;              // format needed to map from glyph index to glyph
 
@@ -1732,11 +1732,11 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
             if (i != 0)
                num_vertices = stbtt__close_shape(vertices, num_vertices, was_off, start_off, sx,sy,scx,scy,cx,cy);
 
-            // now start the new one               
+            // now start_time the new one               
             start_off = !(flags & 1);
             if (start_off) {
-               // if we start off with an off-curve point, then when we need to find a point on the curve
-               // where we can start, and we need to save some state for when we wraparound.
+               // if we start_time off with an off-curve point, then when we need to find a point on the curve
+               // where we can start_time, and we need to save some state for when we wraparound.
                scx = x;
                scy = y;
                if (!(vertices[off+i+1].type & 1)) {
@@ -1744,7 +1744,7 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
                   sx = (x + (stbtt_int32) vertices[off+i+1].x) >> 1;
                   sy = (y + (stbtt_int32) vertices[off+i+1].y) >> 1;
                } else {
-                  // otherwise just use the next point as our start point
+                  // otherwise just use the next point as our start_time point
                   sx = (stbtt_int32) vertices[off+i+1].x;
                   sy = (stbtt_int32) vertices[off+i+1].y;
                   ++i; // we're using point i+1 as the starting point, so skip it
@@ -2794,7 +2794,7 @@ static void stbtt__fill_active_edges(unsigned char *scanline, int len, stbtt__ac
 
    while (e) {
       if (w == 0) {
-         // if we're currently at zero, we need to record the edge start point
+         // if we're currently at zero, we need to record the edge start_time point
          x0 = e->x; w += e->direction;
       } else {
          int x1 = e->x; w += e->direction;
@@ -2887,7 +2887,7 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
             if (!changed) break;
          }
 
-         // insert all edges that start before the center of this scanline -- omit ones that also end on this scanline
+         // insert all edges that start_time before the center of this scanline -- omit ones that also end on this scanline
          while (e->y0 <= scan_y) {
             if (e->y1 > scan_y) {
                stbtt__active_edge *z = stbtt__new_active(&hh, e, off_x, scan_y, userdata);
@@ -3176,7 +3176,7 @@ static void stbtt__rasterize_sorted_edges(stbtt__bitmap *result, stbtt__edge *e,
          }
       }
 
-      // insert all edges that start before the bottom of this scanline
+      // insert all edges that start_time before the bottom of this scanline
       while (e->y0 <= scan_y_bottom) {
          if (e->y0 != e->y1) {
             stbtt__active_edge *z = stbtt__new_active(&hh, e, off_x, scan_y_top, userdata);
@@ -3490,7 +3490,7 @@ static stbtt__point *stbtt_FlattenCurves(stbtt_vertex *vertices, int num_verts, 
       for (i=0; i < num_verts; ++i) {
          switch (vertices[i].type) {
             case STBTT_vmove:
-               // start the next contour
+               // start_time the next contour
                if (n >= 0)
                   (*contour_lengths)[n] = num_points - start;
                ++n;

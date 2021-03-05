@@ -53,4 +53,5 @@ namespace vulkan_utils
 	void end_single_time_commands(Window* context, VkCommandBuffer commandBuffer);
 	void create_buffer(WindowContext* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copy_buffer(Window* context, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	void create_vma_buffer(Window* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VmaAllocation& allocation, VmaAllocationInfo& allocInfos);
 }

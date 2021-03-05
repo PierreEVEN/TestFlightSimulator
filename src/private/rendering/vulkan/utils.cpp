@@ -376,5 +376,19 @@ namespace vulkan_utils
 		end_single_time_commands(context, commandBuffer);
 	}
 
+
+	void create_vma_buffer(Window* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VmaAllocation& allocation, VmaAllocationInfo& allocInfos)
+	{
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = size;
+		bufferInfo.usage = usage;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		VmaAllocationCreateInfo vmaInfos{};
+		vmaInfos.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		vmaCreateBuffer(context->get_context()->vulkan_memory_allocator, &bufferInfo, &vmaInfos, &buffer, &allocation, &allocInfos);
+	}
+
 	
 }

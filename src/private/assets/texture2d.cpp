@@ -11,12 +11,14 @@
 #include "engine/jobSystem/job_system.h"
 #include "rendering/vulkan/descriptorPool.h"
 #include "rendering/vulkan/texture.h"
+#include "ui/window/windows/profiler.h"
 
 Texture2d::Texture2d(uint8_t* data, size_t width,
-	size_t height, uint8_t channel_count)
+                     size_t height, uint8_t channel_count)
 	: texture_data(data), texture_width(width), texture_height(height), texture_channels(4)
 {
 	creation_job = job_system::new_job([&] {
+		BEGIN_NAMED_RECORD(LOAD_TEXTURE_2D);
 		create_image();
 		create_image_sampler();
 		create_image_descriptors();
@@ -37,6 +39,11 @@ Texture2d::~Texture2d()
 	if (image_descriptor_layout != VK_NULL_HANDLE) vkDestroyDescriptorSetLayout(window_context->get_context()->logical_device, image_descriptor_layout, vulkan_common::allocation_callback);
 
 	std::free(texture_data);
+}
+
+bool Texture2d::try_load()
+{
+	return creation_job->is_complete;
 }
 
 void Texture2d::create_image()

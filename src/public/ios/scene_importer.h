@@ -1,6 +1,8 @@
 #pragma once
 #include <filesystem>
 #include <unordered_map>
+#include <assimp/Importer.hpp>
+
 
 #include "assets/GraphicResource.h"
 
@@ -37,4 +39,6 @@ private:
 	std::unordered_map<size_t, std::shared_ptr<AssetId>> meshes_refs;
 	
 	std::shared_ptr<job_system::IJobTask> creation_job;
+
+	Assimp::Importer importer;
 };
