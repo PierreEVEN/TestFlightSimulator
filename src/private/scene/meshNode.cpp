@@ -5,6 +5,11 @@
 #include "assets/shader.h"
 #include "assets/staticMesh.h"
 
+MeshNode::MeshNode(const TAssetPtr<StaticMesh>& in_mesh, const TAssetPtr<Shader>& in_material)
+	: material(in_material), mesh(in_mesh)
+{
+}
+
 void MeshNode::draw(VkCommandBuffer buffer, uint8_t image_index)
 {
 	if (!mesh.get()) return;

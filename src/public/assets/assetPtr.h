@@ -30,5 +30,9 @@ template<class AssetClass>
 class TAssetPtr final : public IAssetPtr
 {
 public:
+	TAssetPtr() : IAssetPtr() {}
+	TAssetPtr(Window* context, const AssetId& in_asset_id) : IAssetPtr(context, in_asset_id) {}
+	TAssetPtr(AssetClass* in_asset) : IAssetPtr(in_asset) {}
+
 	AssetClass* operator->() { return static_cast<AssetClass*>(get()); }
 };

@@ -6,6 +6,7 @@
 
 
 #include "assetId.h"
+#include "assetPtr.h"
 #include "engine/NonCopiable.h"
 #include "ios/logger.h"
 
@@ -20,7 +21,7 @@ public:
 	~AssetManager();
 	
 	template <class AssetClass, typename ... Args>
-	AssetClass* create(const AssetId& asset_id, Args... args) {
+	TAssetPtr<AssetClass> create(const AssetId& asset_id, Args... args) {
 		if (exists(asset_id)) {
 			logger_error("Cannot create two asset with the same id : %s", asset_id.to_string().c_str());
 			return nullptr;
@@ -35,7 +36,7 @@ public:
 		register_lock.lock();
 		assets[asset_id] = asset_ptr;
 		register_lock.unlock();
-		return asset_ptr;
+		return TAssetPtr<AssetClass>(asset_ptr);
 	}
 
 	bool exists(const AssetId& id)

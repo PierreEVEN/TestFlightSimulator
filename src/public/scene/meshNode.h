@@ -9,8 +9,8 @@ class Shader;
 class MeshNode : public Node
 {
 public:
-
-	using Node::Node;
+	
+	MeshNode(const TAssetPtr<StaticMesh>& in_mesh, const TAssetPtr<Shader>& in_material);
 
 	void draw(VkCommandBuffer buffer, uint8_t image_index) override;
 

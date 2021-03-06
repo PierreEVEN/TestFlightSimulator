@@ -16,6 +16,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "engine/jobSystem/job_system.h"
+#include "scene/meshNode.h"
 #include "ui/window/windows/profiler.h"
 
 
@@ -39,12 +40,12 @@ SceneImporter::SceneImporter(Window* context, const std::filesystem::path& sourc
 		if (object_name.empty()) object_name = scene->mName.data;
 
 		// Generate resources
-		for (size_t i = 0; i < scene->mNumTextures; ++i) meshes_refs[i] = process_texture(scene->mTextures[i], i);
-		for (size_t i = 0; i < scene->mNumMaterials; ++i) meshes_refs[i] = process_material(scene->mMaterials[i], i);
+		for (size_t i = 0; i < scene->mNumTextures; ++i) texture_refs[i] = process_texture(scene->mTextures[i], i);
+		for (size_t i = 0; i < scene->mNumMaterials; ++i) material_refs[i] = process_material(scene->mMaterials[i], i);
 		for (size_t i = 0; i < scene->mNumMeshes; ++i) meshes_refs[i] = process_mesh(scene->mMeshes[i], i);
 
 		// Build scene
-		process_node(scene->mRootNode, nullptr);
+		root_node = process_node(scene->mRootNode, nullptr);
 		});
 }
 
@@ -53,11 +54,13 @@ SceneImporter::~SceneImporter()
 	creation_job->wait();
 }
 
-void SceneImporter::process_node(aiNode* ai_node, Node* parent)
+Node* SceneImporter::process_node(aiNode* ai_node, Node* parent)
 {
 	Node* node = create_node(ai_node, parent);
 	
 	for (const auto& ai_child : std::vector<aiNode*>(ai_node->mChildren, ai_node->mChildren + ai_node->mNumChildren)) process_node(ai_child, node);
+
+	return node;
 }
 
 Node* SceneImporter::create_node(aiNode* context, Node* parent)
@@ -74,16 +77,39 @@ Node* SceneImporter::create_node(aiNode* context, Node* parent)
 	const glm::dquat rotation(ai_rot.x, ai_rot.y, ai_rot.z, ai_rot.w);
 	const glm::dvec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
 
+	Node* node = new Node(parent, position, rotation, scale);
+
+
+	if (context->mNumMeshes > 0)
+	{
+		for (size_t i = 0; i < context->mNumMeshes; ++i)
+		{
+			auto mesh = meshes_refs.find(context->mMeshes[i]);
+			auto mat = material_refs.find(context->mMeshes[i]);
+			if (mesh == meshes_refs.end())
+			{
+				logger_error("failed to find mesh");
+				continue;
+			}
+			if (mat == material_refs.end())
+			{
+				logger_error("failed to find material");
+				continue;
+			}
+			
+			MeshNode* mesh_node = new MeshNode(mesh->second, mat->second);
+			mesh_node->attach_to(node);
+		}
+	}
+	
 	//logger_log("meshes : %s / meshes : %d", context->mName.data, context->mNumMeshes);
 
-	
-	Node* node = new Node(parent, position, rotation, scale);
 	
 	return node;
 }
 
 
-std::shared_ptr<AssetId> SceneImporter::process_texture(aiTexture* texture, size_t id)
+TAssetPtr<Texture2d> SceneImporter::process_texture(aiTexture* texture, size_t id)
 {
 	int width = static_cast<int>(texture->mWidth);
 	int height = static_cast<int>(texture->mHeight);
@@ -105,22 +131,19 @@ std::shared_ptr<AssetId> SceneImporter::process_texture(aiTexture* texture, size
 		}
 	}
 	
-	std::shared_ptr<AssetId> ref = std::make_shared<AssetId>(object_name + "-texture-" + texture->mFilename.data + "_" + std::to_string(id));
+	auto asset = window_context->get_asset_manager()->create<Texture2d>(AssetId(object_name + "-texture-" + texture->mFilename.data + "_" + std::to_string(id)), data, width, height, channels);
+	
+	if (!asset.get()) std::free(data);
 
-	if (!window_context->get_asset_manager()->create<Texture2d>(*ref, data, width, height, channels))
-	{
-		std::free(data);
-	}
-
-	return ref;
+	return asset;
 }
 
-std::shared_ptr<AssetId> SceneImporter::process_material(aiMaterial* material, size_t id)
+TAssetPtr<Shader> SceneImporter::process_material(aiMaterial* material, size_t id)
 {
-	return nullptr;
+	return TAssetPtr<Shader>();
 }
 
-std::shared_ptr<AssetId> SceneImporter::process_mesh(aiMesh* mesh, size_t id)
+TAssetPtr<StaticMesh> SceneImporter::process_mesh(aiMesh* mesh, size_t id)
 {
 	VertexGroup vertex_group;
 
@@ -155,8 +178,5 @@ std::shared_ptr<AssetId> SceneImporter::process_mesh(aiMesh* mesh, size_t id)
 		triangles[face_index + 2] = mesh->mFaces[i].mIndices[2];
 	}
 	
-	std::shared_ptr<AssetId> ref = std::make_shared<AssetId>(object_name + "-mesh-" + mesh->mName.data + "_" + std::to_string(id));
-	
-	window_context->get_asset_manager()->create<StaticMesh>(*ref, vertex_group, triangles);
-	return ref;
+	return window_context->get_asset_manager()->create<StaticMesh>(AssetId(object_name + "-mesh-" + mesh->mName.data + "_" + std::to_string(id)), vertex_group, triangles);
 }
