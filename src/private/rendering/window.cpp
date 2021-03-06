@@ -18,6 +18,7 @@
 #include "ui/imgui/imgui_impl_glfw.h"
 #include "ui/imgui/imgui_impl_vulkan.h"
 #include "ui/window/windowBase.h"
+#include "ui/window/windows/contentBrowser.h"
 #include "ui/window/windows/profiler.h"
 
 std::mutex window_map_lock;
@@ -206,7 +207,7 @@ void WindowContext::select_physical_device(VkSurfaceKHR surface)
 		if (vulkan_utils::is_physical_device_suitable(surface, device)) {
 			VkPhysicalDeviceProperties pProperties;
 			vkGetPhysicalDeviceProperties(device, &pProperties);
-			if (pProperties.deviceName[0] == 'G') continue;
+			//if (pProperties.deviceName[0] == 'G') continue;
 			
 			physical_device = device;
 			break;
@@ -242,6 +243,7 @@ void WindowContext::create_logical_device(VkSurfaceKHR surface)
 	deviceFeatures.samplerAnisotropy = VK_TRUE;
 	deviceFeatures.sampleRateShading = VK_TRUE; // Sample Shading
 	deviceFeatures.fillModeNonSolid = VK_TRUE; // Wireframe
+	deviceFeatures.geometryShader = VK_TRUE;
 
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -522,6 +524,7 @@ void Window::render()
 			{
 				if (ImGui::MenuItem("demo window")) new DemoWindow(this, "demo window");
 				if (ImGui::MenuItem("profiler")) new ProfilerWindow(this, "profiler");
+				if (ImGui::MenuItem("content browser")) new ContentBrowser(this, "content browser");
 				ImGui::EndMenu();
 			}
 			

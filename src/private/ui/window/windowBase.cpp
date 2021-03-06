@@ -46,7 +46,7 @@ void WindowManager::remove_window(WindowBase* window)
 }
 
 WindowBase::WindowBase(Window* context, const std::string& name, WindowBase* parent)
-	: open(true), window_name(name)
+	: open(true), window_name(name), window_context(context)
 {
 	logger_log("open window %s", name.c_str());
 	if (!context->window_manager)

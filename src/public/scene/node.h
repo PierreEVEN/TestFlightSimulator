@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <vulkan/vulkan_core.h>
+
 
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
@@ -16,6 +18,8 @@ public:
 
 	void attach_to(Node* target, bool keep_world_transform = true);
 	void detach(bool keep_world_transform = true);
+
+	virtual void draw(VkCommandBuffer buffer, uint8_t image_index) {}
 
 private:
 	glm::dvec3 position;

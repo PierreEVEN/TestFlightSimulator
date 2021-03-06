@@ -7,65 +7,19 @@
 #include "ios/scene_importer.h"
 #include "misc/capabilities.h"
 #include "rendering/window.h"
+#include "ui/window/windows/contentBrowser.h"
 #include "ui/window/windows/profiler.h"
-
-#define SIM_DURATION 500
-#define SIM_WAIT (rand() % SIM_DURATION + SIM_DURATION)
-
-void sim_mesh()
-{
-	logger_warning("create child 2");
-	std::this_thread::sleep_for(std::chrono::milliseconds(SIM_WAIT));
-
-	job_system::new_job([]
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(SIM_WAIT));
-		});
-}
-
-void sim_text()
-{
-	logger_warning("create child 1");
-	std::this_thread::sleep_for(std::chrono::milliseconds(SIM_WAIT));
-	job_system::new_job([]
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(SIM_WAIT));
-		});
-}
-
-
-void sim_scene()
-{
-	logger_warning("create parent");
-	std::this_thread::sleep_for(std::chrono::milliseconds(SIM_WAIT));
-	job_system::new_job([]
-		{
-			for (int i = 0; i < 3; ++i) sim_text();
-		});
-	job_system::new_job([]
-		{
-			for (int i = 0; i < 10; ++i) sim_mesh();
-		});
-	job_system::wait_children();
-}
-
-
-void sim_window()
-{
-
-	for (int i = 0; i < 10; ++i) sim_scene();
-}
-
 
 void window_test(bool imgui_context)
 {	
 	Window game_window(800, 600, config::application_name, false, imgui_context);
 
-	for (int i = 0; i < 1; ++i) game_window.get_asset_manager()->create<Shader>(("shader_Test" + std::to_string(i)).c_str(), "data/test.vs.glsl", "data/test.fs.glsl", "data/test.gs.glsl");
+	for (int i = 0; i < 1; ++i) game_window.get_asset_manager()->create<Shader>(("shader_Test" + std::to_string(i)).c_str(), "data/test.vs.glsl", "data/test.fs.glsl");
 
-	for (int i = 0; i < 10; ++i) new SceneImporter (&game_window, "data/F-16_b.glb", std::to_string(i));
+	for (int i = 0; i < 1; ++i) new SceneImporter (&game_window, "data/F-16_b.glb", std::to_string(i));
 
 	new ProfilerWindow(&game_window, "profiler");
+	new ContentBrowser(&game_window, "content browser");
 	
 	
 	while (game_window.begin_frame()) {

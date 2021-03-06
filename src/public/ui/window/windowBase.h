@@ -34,6 +34,8 @@ public:
 
 	void close();
 
+	[[nodiscard]] Window* get_context() const { return window_context; }
+
 protected:
 	virtual ~WindowBase();
 
@@ -47,8 +49,8 @@ private:
 	std::string window_name;
 	size_t window_id;
 
-	Window* window_context;
-	WindowBase* parent_window;
+	Window* window_context = nullptr;
+	WindowBase* parent_window = nullptr;
 	std::vector<WindowBase*> children;	
 };
 

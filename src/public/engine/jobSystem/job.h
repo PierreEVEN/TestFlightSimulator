@@ -27,9 +27,11 @@ namespace job_system {
 		void wait()
 		{
 			if (is_complete) return;
-
+			
+			while (auto task = children_pool.pop()) {
+				task->execute();
+			}
 			task_complete_semaphore.acquire();
-			while (auto task = children_pool.pop()) task->execute();
 			
 		}
 		

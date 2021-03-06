@@ -17,6 +17,9 @@ public:
 	ShaderModule(VkDevice logical_device, std::filesystem::path source_path, shaderc_shader_kind shader_kind);
 
 	~ShaderModule();
+
+	[[nodiscard]] VkShaderModule get() const { return shader_module; }
+
 private:
 	const VkDevice device;
 	VkShaderModule shader_module = VK_NULL_HANDLE;

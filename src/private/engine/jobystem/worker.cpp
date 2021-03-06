@@ -137,7 +137,6 @@ namespace job_system {
             if (!workers[i].current_task) continue;
             if (auto task = workers[i].current_task->steal_task())
             {
-                logger_log("steal task");
                 return task;
             }
         }

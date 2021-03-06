@@ -29,8 +29,6 @@ private:
 template<class AssetClass>
 class TAssetPtr final : public IAssetPtr
 {
-
-
-
-	
+public:
+	AssetClass* operator->() { return static_cast<AssetClass*>(get()); }
 };

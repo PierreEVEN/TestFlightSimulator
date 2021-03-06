@@ -8,13 +8,68 @@
 #include "ui/window/windows/profiler.h"
 
 
+VkVertexInputBindingDescription Vertex::get_binding_description()
+{
+	VkVertexInputBindingDescription bindingDescription{};
+	bindingDescription.binding = 0;
+	bindingDescription.stride = sizeof(Vertex);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	return bindingDescription;
+}
+
+std::vector<VkVertexInputAttributeDescription> Vertex::get_attribute_descriptions()
+{
+	std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+
+	VkVertexInputAttributeDescription newAttribute;
+	uint8_t currentLocation = 0;
+	
+	newAttribute.binding = 0;
+	newAttribute.location = currentLocation++;
+	newAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+	newAttribute.offset = offsetof(Vertex, pos);
+	attributeDescriptions.push_back(newAttribute);
+	
+	newAttribute.binding = 0;
+	newAttribute.location = currentLocation++;
+	newAttribute.format = VK_FORMAT_R32G32_SFLOAT;
+	newAttribute.offset = offsetof(Vertex, uv);
+	attributeDescriptions.push_back(newAttribute);
+	
+	newAttribute.binding = 0;
+	newAttribute.location = currentLocation++;
+	newAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+	newAttribute.offset = offsetof(Vertex, col);
+	attributeDescriptions.push_back(newAttribute);
+	
+	newAttribute.binding = 0;
+	newAttribute.location = currentLocation++;
+	newAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+	newAttribute.offset = offsetof(Vertex, norm);
+	attributeDescriptions.push_back(newAttribute);
+	
+	newAttribute.binding = 0;
+	newAttribute.location = currentLocation++;
+	newAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+	newAttribute.offset = offsetof(Vertex, tang);
+	attributeDescriptions.push_back(newAttribute);
+	
+	newAttribute.binding = 0;
+	newAttribute.location = currentLocation++;
+	newAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
+	newAttribute.offset = offsetof(Vertex, bitang);
+	attributeDescriptions.push_back(newAttribute);
+	
+	return attributeDescriptions;
+}
+
 StaticMesh::StaticMesh(const VertexGroup& in_vertices, const std::vector<uint32_t>& in_triangles)
 	: vertices(in_vertices), indices(in_triangles)
 {
-	logger_warning("%d : %d", in_vertices.vertices.size(), in_triangles.size());
 	creation_job = job_system::new_job([&, in_vertices, in_triangles]
 		{
-			logger_log("create static mesh");
+			logger_log("create static mesh %s", get_id().to_string().c_str());
 			BEGIN_NAMED_RECORD(CREATE_MESH);
 			void* data;
 			VkBuffer stagin_buffer;

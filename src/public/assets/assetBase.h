@@ -43,7 +43,9 @@ public:
 		return assets.find(id) != assets.end();
 	}
 
-	[[nodiscard]] AssetBase* find(const AssetId& id) const;
+	[[nodiscard]] AssetBase* find(const AssetId& id);
+
+	std::unordered_map<AssetId, AssetBase*> get_assets();
 
 private:
 
