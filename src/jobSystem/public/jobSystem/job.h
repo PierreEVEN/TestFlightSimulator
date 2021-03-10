@@ -6,15 +6,54 @@
 #include "types/semaphores.h"
 
 namespace job_system {
+	
+	class worker_lock
+	{
+	public:
+		explicit worker_lock(const std::ptrdiff_t current = 0)
+			: val(current) {}
 
+		void count_up()
+		{
+			++val;
+		}
+
+
+		void count_down()
+		{
+			--val;
+			try_release();
+		}
+
+		void wait()
+		{
+			if (val == 0) return;
+			std::unique_lock<std::mutex> lock(wait_m);
+			wait_cv.wait(lock);
+		}
+	private:
+
+		void try_release()
+		{
+			if (val == 0) wait_cv.notify_all();
+		}
+
+		std::mutex wait_m;
+		std::condition_variable wait_cv;
+		std::atomic_ptrdiff_t val;
+	};
+
+
+	
 	class IJobTask
 	{
 	public:
+
 		virtual void execute() = 0;
 
 		void push_child_task(const std::shared_ptr<IJobTask>& child)
 		{
-			++child_count;
+			child_lock.count_up();
 			children_pool.push(child);
 			Worker::wake_up_worker();
 		}
@@ -26,32 +65,29 @@ namespace job_system {
 
 		void wait()
 		{
-			if (is_complete) return;
-			
 			while (auto task = children_pool.pop()) {
 				task->execute();
 			}
-			task_complete_semaphore.acquire();
-			
+			child_lock.wait();
 		}
 		
-		static std::shared_ptr<IJobTask> find_current_parent_task();
+		static std::shared_ptr<IJobTask> find_current_parent_task();		
+		static int64_t get_stat_total_job_count();
+		static int64_t get_stat_awaiting_job_count();
+		
+		[[nodiscard]] bool is_complete() const { return complete; }
 
 		std::shared_ptr<IJobTask> parent_task = nullptr;
 		TObjectPool<IJobTask, 4096> children_pool;
-		std::counting_semaphore<> child_wait_semaphore = std::counting_semaphore<>(0);
-		int32_t child_count = 0;
-		std::atomic_bool is_complete = false;
-		std::binary_semaphore task_complete_semaphore = std::binary_semaphore(0);
+		worker_lock child_lock;
 
-		static int64_t get_stat_total_job_count();
-		static int64_t get_stat_awaiting_job_count();
-	
 	protected:
 
 		void inc_job_count();
 		void dec_awaiting_job_count();
 		void dec_total_job_count();
+		std::atomic_bool complete = false;
+
 	};
 
 	template <typename Lambda>
@@ -64,20 +100,14 @@ namespace job_system {
 
 		virtual void execute()
 		{
-			MEMORY_BARRIER();
 			dec_awaiting_job_count(); // stats
-			MEMORY_BARRIER();
 			func(); // execute task
-			MEMORY_BARRIER();
 			dec_total_job_count(); // stats
-			MEMORY_BARRIER();
 
-			// execute remaining child tasks
-			while (std::shared_ptr<IJobTask> task = steal_task()) task->execute();
-			if (parent_task) parent_task->child_wait_semaphore.release();
-			for (int i = 0; i < child_count; ++i) child_wait_semaphore.acquire();
-			is_complete = true;
-			task_complete_semaphore.release();
+			wait();
+			
+			if (parent_task) parent_task->child_lock.count_down();
+			complete = true;
 		}
 	private:
 		Lambda func;

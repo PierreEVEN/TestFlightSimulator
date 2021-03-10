@@ -37,7 +37,7 @@ class StaticMesh : public AssetBase
 public:
 	bool try_load() override
 	{
-		return creation_job->is_complete;
+		return creation_job->is_complete();
 	}
 
 	[[nodiscard]] VkBuffer get_vertex_buffer() const { return vertex_buffer; }

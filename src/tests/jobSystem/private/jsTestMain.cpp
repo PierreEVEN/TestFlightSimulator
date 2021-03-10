@@ -1,135 +1,69 @@
 #include "jobSystem/job_system.h"
 
-#include <barrier>
-#include <latch>
-
-#define TASK for (size_t i = 0; i < 1000000000; ++i) {}
+#define TASK for (size_t i = 0; i < 1000000; ++i) {}
 
 void tests()
 {
+	for (int i = 0; i < 10; ++i) {
+		auto p1 = job_system::new_job([i]
+			{
+				logger_log("create parent A %d", i);
 
-	job_system::new_job([]
-		{
-			logger_log("create parent A");
-
-			TASK
-
-				job_system::new_job([]
+				TASK;
+				job_system::new_job([i]
 					{
-						logger_log("create child A A");
-						TASK
-							logger_log("end child A A");
+						//logger_log("create child A A %d", i);
+						TASK;
+						//logger_log("end child A A %d", i);
 					});
-			job_system::new_job([]
-				{
-					logger_log("create child A B");
-					TASK
-						logger_log("end child A B");
-				});
-
-			TASK
-
-				logger_log("end parent A");
-		});
-
-	job_system::new_job([]
-		{
-			logger_log("create parent B");
-
-			TASK
-
-				job_system::new_job([]
+				job_system::new_job([i]
 					{
-						logger_log("create child B A");
-						TASK
-							logger_log("end child B A");
+						//logger_log("create child A B %d", i);
+						TASK;
+						//logger_log("end child A B %d", i);
 					});
-			job_system::new_job([]
-				{
-					logger_log("create child B B");
-					TASK
-						logger_log("end child B B");
-				});
 
-			TASK
+				TASK;
 
-				logger_log("end parent B");
-		});
+				logger_log("end parent A %d", i);
+			});
+
+		auto p2 = job_system::new_job([i]
+			{
+				logger_log("create parent B %d", i);
+
+				TASK;
+				job_system::new_job([i]
+					{
+						//logger_log("create child B A %d", i);
+						TASK;
+						//logger_log("end child B A %d", i);
+					});
+				job_system::new_job([i]
+					{
+						//logger_log("create child B B %d", i);
+						TASK;
+						//logger_log("end child B B %d", i);
+					});
+
+				logger_log("end parent B %d", i);
+			});
+
+
+	}
 }
-
-
-class worker_lock
-{
-public:
-	explicit worker_lock(const std::ptrdiff_t current)
-		: val(current) {}
-	
-	void count_up()
-	{
-		++val;
-	}
-
-
-	void count_down()
-	{
-		--val;
-		try_release();
-	}
-
-	void wait()
-	{
-		std::unique_lock<std::mutex> lock(wait_m);
-		wait_cv.wait(lock);
-	}
-private:
-
-	void try_release()
-	{
-		if (val == 0) wait_cv.notify_one();
-	}
-	
-	std::mutex wait_m;
-	std::condition_variable wait_cv;
-	std::atomic_ptrdiff_t val;
-};
-
 
 
 int main(int argc, char* argv[]) {
 	job_system::Worker::create_workers();
-	
-	worker_lock lock(0);
-	
-	for (int i = 0; i < 200; ++i) {
-		lock.count_up();
-		job_system::new_job([&]
-			{
-				logger_warning("arrive and wait");
-				TASK
-					logger_warning("complete");
-				lock.count_down();
-			});
-		lock.count_up();
-		job_system::new_job([&]
-			{
-				logger_warning("arrive and wait");
-				TASK
-					logger_warning("complete");
-				lock.count_down();
-			});
-		lock.count_up();
-		job_system::new_job([&]
-			{
-				logger_warning("arrive and wait");
-				TASK
-					logger_warning("complete");
-				lock.count_down();
-			});
-	}
-	lock.wait();
-	logger_warning("drop");
 
-	
-	job_system::wait_children();	
+	auto p2 = job_system::new_job([]
+		{
+			tests();
+		});
+
+	p2->wait();
+	logger_log("complete");
+
 	job_system::Worker::destroy_workers();
 }

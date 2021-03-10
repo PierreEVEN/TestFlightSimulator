@@ -43,7 +43,7 @@ Texture2d::~Texture2d()
 
 bool Texture2d::try_load()
 {
-	return creation_job && creation_job->is_complete;
+	return creation_job && creation_job->is_complete();
 }
 
 void Texture2d::create_image()

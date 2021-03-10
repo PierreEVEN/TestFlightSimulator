@@ -30,7 +30,7 @@ void window_test(bool imgui_context)
 void execute()
 {
 	// Create workers
-	job_system::Worker::create_workers();
+	job_system::Worker::create_workers(2);
 
 	// Initialize rendering window
 	logger_log("initialize rendering");

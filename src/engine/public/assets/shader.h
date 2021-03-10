@@ -24,7 +24,7 @@ class Shader : public AssetBase
 public:
 	bool try_load() override
 	{
-		return shader_creation_job->is_complete;
+		return shader_creation_job->is_complete();
 	}
 
 	[[nodiscard]] VkDescriptorSet& get_descriptor_set(uint8_t image_index) { return descriptor_sets[image_index]; }

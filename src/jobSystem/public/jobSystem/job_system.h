@@ -28,9 +28,10 @@ namespace job_system {
 	{
 		if (auto* worker = Worker::get())
 		{
-
-
-			
+			if (auto task = worker->get_current_task())
+			{
+				task->wait();
+			}			
 		}		
 	}
 }

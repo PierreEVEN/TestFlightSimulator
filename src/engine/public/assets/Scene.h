@@ -22,7 +22,7 @@ public:
 
 	[[nodiscard]] Node* get_root_node() const { return root_node; }
 
-	bool try_load() override { return creation_task->is_complete; }
+	bool try_load() override { return creation_task->is_complete(); }
 
 private:
 	std::shared_ptr<SceneImporter> importer;
