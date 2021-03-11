@@ -1,13 +1,13 @@
 #include "jobSystem/job_system.h"
 
-#define TASK for (size_t i = 0; i < 1000000; ++i) {}
+#define TASK for (size_t i = 0; i < 1000; ++i) {}
 
 void tests()
 {
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 1; ++i) {
 		auto p1 = job_system::new_job([i]
 			{
-				logger_log("create parent A %d", i);
+				//logger_log("create parent A %d", i);
 
 				TASK;
 				job_system::new_job([i]
@@ -25,12 +25,12 @@ void tests()
 
 				TASK;
 
-				logger_log("end parent A %d", i);
+				//logger_log("end parent A %d", i);
 			});
 
 		auto p2 = job_system::new_job([i]
 			{
-				logger_log("create parent B %d", i);
+				//logger_log("create parent B %d", i);
 
 				TASK;
 				job_system::new_job([i]
@@ -48,14 +48,12 @@ void tests()
 
 				logger_log("end parent B %d", i);
 			});
-
-
 	}
 }
 
 
 int main(int argc, char* argv[]) {
-	job_system::Worker::create_workers();
+	job_system::Worker::create_workers(1);
 
 	auto p2 = job_system::new_job([]
 		{
