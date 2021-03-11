@@ -50,7 +50,6 @@ namespace logger
 		const std::unique_ptr<char[]> buffer(new char[size]);
 		snprintf(buffer.get(), size, format, args ...);
 		return std::string(buffer.get());
-
 	}
 	
 	void log_print(const char* type, int color, const std::string& message, const char* function = nullptr, size_t line = 0, const char* file = nullptr);
@@ -83,4 +82,7 @@ namespace logger
 #endif
 		exit(EXIT_FAILURE);
 	}
+
+
+	void set_get_worker_func(uint8_t(*getter)());
 }

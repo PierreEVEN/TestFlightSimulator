@@ -520,7 +520,7 @@ static void ImGui_ImplGlfw_WindowCloseCallback(GLFWwindow* window)
 // However: depending on the platform the callback may be invoked at different time:
 // - on Windows it appears to be called within the glfwSetWindowPos()/glfwSetWindowSize() call
 // - on Linux it is queued and invoked during glfwPollEvents()
-// Because the event doesn't always fire on glfwSetWindowXXX() we use a frame counter tag to only
+// Because the event doesn't always fire on glfwSetWindowXXX() we use a frame id tag to only
 // ignore recent glfwSetWindowXXX() calls.
 static void ImGui_ImplGlfw_WindowPosCallback(GLFWwindow* window, int, int)
 {

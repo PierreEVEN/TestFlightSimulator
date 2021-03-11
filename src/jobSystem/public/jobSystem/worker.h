@@ -23,7 +23,7 @@ namespace job_system {
 		[[nodiscard]] static size_t get_worker_count();
 
 		[[nodiscard]] std::thread::id get_thread() const { return worker_thread.get_id(); }
-
+		[[nodiscard]] uint8_t get_worker_id() const { return id; }
 		[[nodiscard]] std::shared_ptr<IJobTask> get_current_task() const { return current_task; }
 
 		static void wake_up_worker();
@@ -32,7 +32,7 @@ namespace job_system {
 	
 	private:
 
-		Worker();
+		Worker(const uint8_t worker_id);
 
 		void next_task();
 
@@ -46,5 +46,6 @@ namespace job_system {
 		const std::thread worker_thread;
 		std::mutex WaitNewJobMutex;
 		bool run = true;
+		uint8_t id;
 	};
 }

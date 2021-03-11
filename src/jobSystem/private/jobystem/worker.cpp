@@ -6,6 +6,16 @@
 #include "statsRecorder.h"
 
 namespace job_system {
+
+    uint8_t get_worker_id_internal()
+    {
+        if (auto* worker = Worker::get())
+        {
+            return worker->get_worker_id();
+        }
+        return 255;
+    }
+	
     Worker *workers = nullptr;
     size_t worker_count = 0;
 
@@ -20,6 +30,9 @@ namespace job_system {
     int jobs = 0;
 
     void Worker::create_workers(int desired_worker_count) {
+
+        logger::set_get_worker_func(&get_worker_id_internal);
+    	
         if (workers) logger_fail("cannot add more workers");
 
         // Create one worker per CPU thread
@@ -31,7 +44,7 @@ namespace job_system {
         workers = static_cast<Worker *>(malloc(desired_worker_count * sizeof(Worker)));
 
         // Create and release workers
-        for (size_t i = 0; i < desired_worker_count; ++i) new(workers + i) Worker();
+        for (size_t i = 0; i < desired_worker_count; ++i) new(workers + i) Worker(static_cast<uint8_t>(i));
         worker_count += desired_worker_count;
         for (size_t i = 0; i < desired_worker_count; ++i) workers_release_semaphore.release();
         for (size_t i = 0; i < desired_worker_count; ++i) workers_create_semaphore.acquire();
@@ -83,8 +96,8 @@ namespace job_system {
         wake_up_worker_condition_variable.notify_one();
     }
 
-    Worker::Worker()
-            : worker_thread([]() {
+    Worker::Worker(const uint8_t worker_id)
+            : id(worker_id), worker_thread([]() {
         workers_release_semaphore.acquire();
         logger_log("create worker on thread %x", std::this_thread::get_id());
         workers_create_semaphore.release();

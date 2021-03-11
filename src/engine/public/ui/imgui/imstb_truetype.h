@@ -3981,7 +3981,7 @@ static float stbtt__oversample_shift(int oversample)
    // The prefilter is a box filter of width "oversample",
    // which shifts phase by (oversample - 1)/2 pixels in
    // oversampled space. We want to shift in the opposite
-   // direction to counter this.
+   // direction to id this.
    return (float)-(oversample - 1) / (2.0f * (float)oversample);
 }
 
