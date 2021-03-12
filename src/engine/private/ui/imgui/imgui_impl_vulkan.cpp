@@ -19,6 +19,7 @@
 #include <array>
 
 #include "rendering/window.h"
+#include "rendering/vulkan/descriptorPool.h"
 #include "ui/imgui/imgui_impl_glfw.h"
 
 static uint32_t instance_count = 0;
@@ -698,7 +699,6 @@ bool    ImGuiInstance::ImGui_ImplVulkan_Init(Window* info)
     IM_ASSERT(vulkan_common::instance != VK_NULL_HANDLE);
     IM_ASSERT(info->get_context()->physical_device != VK_NULL_HANDLE);
     IM_ASSERT(info->get_context()->logical_device!= VK_NULL_HANDLE);
-    IM_ASSERT(g_descriptor_pool != VK_NULL_HANDLE);
     IM_ASSERT(info->get_image_count() >= 2);
     IM_ASSERT(info->get_image_count() >= info->get_image_count());
 
@@ -783,9 +783,12 @@ ImTextureID ImGuiInstance::ImGui_ImplVulkan_AddTexture(VkSampler sampler, VkImag
     {
         VkDescriptorSetAllocateInfo alloc_info = {};
         alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        alloc_info.descriptorPool = g_descriptor_pool;
+        alloc_info.descriptorPool = VK_NULL_HANDLE;
         alloc_info.descriptorSetCount = 1;
         alloc_info.pSetLayouts = &g_DescriptorSetLayout;
+
+        g_window_context->get_descriptor_pool()->alloc_memory(alloc_info);
+    	
         err = vkAllocateDescriptorSets(v->get_context()->logical_device, &alloc_info, &descriptor_set);
         VK_ENSURE(err);
     }
@@ -848,31 +851,7 @@ ImGuiInstance::ImGuiInstance(Window* context)
 
     //@TODO set font
     //G_IMGUI_DEFAULT_FONT = io.Fonts->AddFontFromFileTTF(G_DEFAULT_FONT_PATH.GetValue().GetData(), 20.f);
-
-
-    const size_t descPoolCount = 20;
-
-    std::array<VkDescriptorPoolSize, 11> pool_sizes;
-    pool_sizes[0] = { VK_DESCRIPTOR_TYPE_SAMPLER, descPoolCount };
-    pool_sizes[1] = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, descPoolCount };
-    pool_sizes[2] = { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, descPoolCount };
-    pool_sizes[3] = { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descPoolCount };
-    pool_sizes[4] = { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, descPoolCount };
-    pool_sizes[5] = { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, descPoolCount };
-    pool_sizes[6] = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descPoolCount };
-    pool_sizes[7] = { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descPoolCount };
-    pool_sizes[8] = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, descPoolCount };
-    pool_sizes[9] = { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, descPoolCount };
-    pool_sizes[10] = { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, descPoolCount };
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
-    poolInfo.pPoolSizes = pool_sizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(context->get_image_count());
-
-    VK_ENSURE(vkCreateDescriptorPool(context->get_context()->logical_device, &poolInfo, vulkan_common::allocation_callback, &g_descriptor_pool), "Failed to create imgui descriptor pool");
-
+    
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForVulkan(context->get_handle(), true);
 
@@ -891,7 +870,5 @@ ImGuiInstance::~ImGuiInstance()
     logger_log("cleaning up ImGui ressources");
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
-
-    vkDestroyDescriptorPool(g_window_context->get_context()->logical_device, g_descriptor_pool, vulkan_common::allocation_callback);
     instance_count--;
 }

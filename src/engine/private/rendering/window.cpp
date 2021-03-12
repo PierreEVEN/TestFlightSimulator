@@ -512,7 +512,7 @@ void Window::render()
 	/************************************************************************/
 	/* Begin imgui draw stuff                                               */
 	/************************************************************************/
-
+	
 	BEGIN_NAMED_RECORD(IMGUI_DRAW);
 	if (has_imgui_context) {
 		ImGui_ImplGlfw_NewFrame();

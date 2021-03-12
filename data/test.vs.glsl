@@ -8,5 +8,5 @@ layout(location = 4) in vec3 tang;
 layout(location = 5) in vec3 bitang;
 
 void main() {
-    gl_Position = vec4(pos, 0);
+    gl_Position = vec4(pos + vec3(0, 0, 1), 0);
 }

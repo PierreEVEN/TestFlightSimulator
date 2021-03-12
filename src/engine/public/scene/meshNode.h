@@ -17,7 +17,7 @@ public:
 private:
 
 	void bind_pipeline(VkCommandBuffer buffer, uint8_t image_index);
-	void bind_mesh(VkCommandBuffer buffer);
+	void draw_mesh(VkCommandBuffer buffer);
 	
 	TAssetPtr<Shader> material;
 	TAssetPtr<StaticMesh> mesh;

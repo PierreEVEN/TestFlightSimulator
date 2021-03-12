@@ -141,8 +141,9 @@ TAssetPtr<StaticMesh> SceneImporter::process_mesh(aiMesh* mesh, size_t id)
 	vertex_group.vertices.resize(mesh->mNumVertices);
 	for (size_t i = 0; i < mesh->mNumVertices; ++i) {
 		vertex_group.vertices[i].pos = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+
 		if (mesh->HasTextureCoords(0)) vertex_group.vertices[i].uv = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
-		if (mesh->HasNormals()) vertex_group.vertices[i].pos = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+		if (mesh->HasNormals()) vertex_group.vertices[i].norm = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
 		if (mesh->HasVertexColors(0)) vertex_group.vertices[i].col = glm::vec4(mesh->mColors[0][i].r, mesh->mColors[0][i].g, mesh->mColors[0][i].b, mesh->mColors[0][i].a);
 		if (mesh->HasTangentsAndBitangents())
 		{

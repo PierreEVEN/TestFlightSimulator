@@ -79,9 +79,8 @@ private:
 
 	// Vulkan data
 
-	Window* g_window_context = {};
-	VkPipelineCache g_pipeline_cache = VK_NULL_HANDLE;
-	VkDescriptorPool g_descriptor_pool = VK_NULL_HANDLE;
+	Window*					 g_window_context = {};
+	VkPipelineCache			 g_pipeline_cache = VK_NULL_HANDLE;
 	VkDeviceSize             g_BufferMemoryAlignment = 256;
 	VkPipelineCreateFlags    g_PipelineCreateFlags = 0x00;
 	VkDescriptorSetLayout    g_DescriptorSetLayout = VK_NULL_HANDLE;

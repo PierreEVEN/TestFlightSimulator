@@ -31,7 +31,7 @@ void IAssetPtr::set(AssetBase* in_asset)
 
 void IAssetPtr::set(Window* context, const AssetId& in_asset_id)
 {
-	if (in_asset_id == *asset_id) return;
+	if (asset_id && in_asset_id == *asset_id) return;
 	clear();
 	asset_id = std::make_shared<AssetId>(in_asset_id);
 	window_context = context;

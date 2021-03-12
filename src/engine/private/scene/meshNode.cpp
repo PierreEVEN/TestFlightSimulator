@@ -15,10 +15,9 @@ void MeshNode::draw(VkCommandBuffer buffer, uint8_t image_index)
 	Node::draw(buffer, image_index);
 	if (!mesh.get()) return;
 	if (!material.get()) return;
-
+	
 	bind_pipeline(buffer, image_index);
-	bind_mesh(buffer);
-
+	draw_mesh(buffer);	
 }
 
 void MeshNode::bind_pipeline(VkCommandBuffer buffer, uint8_t image_index)
@@ -27,7 +26,7 @@ void MeshNode::bind_pipeline(VkCommandBuffer buffer, uint8_t image_index)
 	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->get_pipeline());
 }
 
-void MeshNode::bind_mesh(VkCommandBuffer buffer)
+void MeshNode::draw_mesh(VkCommandBuffer buffer)
 {
 	VkBuffer vertexBuffers[] = { mesh->get_vertex_buffer() };
 	VkDeviceSize offsets[] = { 0 };

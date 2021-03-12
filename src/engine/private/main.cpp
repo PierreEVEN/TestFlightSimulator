@@ -16,7 +16,8 @@ void window_test(bool imgui_context)
 	Window game_window(800, 600, config::application_name, false, imgui_context);
 
 	game_window.get_asset_manager()->create<Shader>("shader_Test", "data/test.vs.glsl", "data/test.fs.glsl");
-	game_window.get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
+	//game_window.get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
+	game_window.get_asset_manager()->create<Scene>("F-16", "data/cube.fbx");
 
 	new ProfilerWindow(&game_window, "profiler");
 	new ContentBrowser(&game_window, "content browser");
@@ -30,7 +31,7 @@ void window_test(bool imgui_context)
 void execute()
 {
 	// Create workers
-	job_system::Worker::create_workers(2);
+	job_system::Worker::create_workers();
 
 	// Initialize rendering window
 	logger_log("initialize rendering");
@@ -39,11 +40,11 @@ void execute()
 	vulkan_common::vulkan_init();
 
 	// Create two test windows
-	job_system::new_job([] {window_test(true); });
+	auto main_task = job_system::new_job([] {window_test(true); });
 
 	// Wait remaining job completion
 	logger_log("waiting remaining jobs...");
-	job_system::Worker::wait_job_completion();
+	main_task->wait();
 	
 	// Destroy rendering window
 	vulkan_common::vulkan_shutdown();
