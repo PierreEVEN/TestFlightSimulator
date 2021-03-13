@@ -14,10 +14,10 @@
 void window_test(bool imgui_context)
 {	
 	Window game_window(800, 600, config::application_name, false, imgui_context);
-
+	
+	
 	game_window.get_asset_manager()->create<Shader>("shader_Test", "data/test.vs.glsl", "data/test.fs.glsl");
-	//game_window.get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
-	game_window.get_asset_manager()->create<Scene>("F-16", "data/cube.fbx");
+	game_window.get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
 
 	new ProfilerWindow(&game_window, "profiler");
 	new ContentBrowser(&game_window, "content browser");

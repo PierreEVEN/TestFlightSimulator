@@ -14,6 +14,9 @@
 #include "rendering/vulkan/common.h"
 #include "ui/window/windows/profiler.h"
 
+#define ENABLE_SHADER_LOGGING true
+
+
 std::optional<std::string> read_shader_file(const std::filesystem::path& source_path)
 {
 	std::optional<std::string> code;
@@ -102,21 +105,22 @@ std::optional<VkShaderModule> create_shader_module(VkDevice logical_device, cons
 	return shader_module;
 }
 
-ShaderModule::ShaderModule(VkDevice logical_device, std::string file_name, const std::string& shader_code,
+ShaderModule::ShaderModule(VkDevice logical_device, std::string in_file_name, const std::string& shader_code,
 	shaderc_shader_kind shader_kind)
-	: device(logical_device)
+	: device(logical_device), file_name(in_file_name)
 {
 	if (auto bytecode = compile_module(file_name, shader_code, shader_kind))
 	{
 		if (auto shader_m = create_shader_module(logical_device, bytecode.value()))
 		{
+			build_reflection_data(bytecode.value());
 			shader_module = shader_m.value();
 		}
 	}
 }
 
 ShaderModule::ShaderModule(VkDevice logical_device, std::filesystem::path source_path, shaderc_shader_kind shader_kind)
-	: device(logical_device)
+	: device(logical_device), file_name(source_path.string())
 {
 	auto shader_data = read_shader_file(source_path);
 	if (shader_data) {
@@ -124,7 +128,8 @@ ShaderModule::ShaderModule(VkDevice logical_device, std::filesystem::path source
 		{
 			if (auto shader_m = create_shader_module(logical_device, bytecode.value()))
 			{
-				shader_module = shader_m.value();				
+				build_reflection_data(bytecode.value());
+				shader_module = shader_m.value();
 			}
 		}
 	}
@@ -133,4 +138,92 @@ ShaderModule::ShaderModule(VkDevice logical_device, std::filesystem::path source
 ShaderModule::~ShaderModule()
 {
 	vkDestroyShaderModule(device, shader_module, vulkan_common::allocation_callback);
+}
+
+void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
+{
+	const spirv_cross::Compiler compiler(bytecode);
+
+#if ENABLE_SHADER_LOGGING
+	logger_log("### BUILDING SHADER ###");
+#endif
+
+	/**
+	 *  PUSH CONSTANTS
+	 */
+
+
+	const auto push_constant_buffers = compiler.get_shader_resources().push_constant_buffers;
+	
+#if ENABLE_SHADER_LOGGING
+	logger_log("push constant : %d", push_constant_buffers.size());
+	for (auto& push_constant : push_constant_buffers)
+	{
+		logger_log("\t=> #%d (%s)", push_constant.id, push_constant.name.c_str());
+	}
+#endif
+
+	push_constant_buffer_size = 0;
+	if (!push_constant_buffers.empty())
+	{
+		if (push_constant_buffers.size() != 1) logger_error("unhandled push constant buffer count");
+		
+		for (auto& buffer_range : compiler.get_active_buffer_ranges(compiler.get_shader_resources().push_constant_buffers[0].id)) {
+#if ENABLE_SHADER_LOGGING
+			logger_log("\t\t => Accessing member # % u, offset % u, size % u", buffer_range.index, buffer_range.offset, buffer_range.range);
+#endif
+			push_constant_buffer_size += static_cast<uint32_t>(buffer_range.range);
+		}
+		
+#if ENABLE_SHADER_LOGGING
+		logger_log("push constant size : %d", push_constant_buffer_size);
+#endif
+	}
+
+
+	/**
+	 *  UNIFORM BUFFERS
+	 */
+
+	const auto uniform_buffers = compiler.get_shader_resources().uniform_buffers;
+	
+#if ENABLE_SHADER_LOGGING
+	logger_log("uniform buffers : %d", uniform_buffers.size());
+#endif
+	
+	if (!uniform_buffers.empty())
+	{
+		if (uniform_buffers.size() != 1) logger_error("unhandled uniform buffer count");
+		for (auto& buffer : uniform_buffers)
+		{
+			uint32_t set = compiler.get_decoration(buffer.id, spv::DecorationDescriptorSet);
+			uniform_buffer_binding = compiler.get_decoration(buffer.id, spv::DecorationBinding);
+#if ENABLE_SHADER_LOGGING
+			logger_log("\t => Found UBO % s at set = % u, binding = % u!", buffer.name.c_str(), set, uniform_buffer_binding);
+#endif
+		}
+	}
+
+	/**
+	 *  IMAGE SAMPLERS
+	 */
+
+	const auto sampled_image = compiler.get_shader_resources().sampled_images;
+	
+#if ENABLE_SHADER_LOGGING
+	logger_log("uniform sampler : %d", sampled_image.size());
+#endif
+	
+	if (!sampled_image.empty())
+	{
+		for (auto& sampler : sampled_image)
+		{
+			uint32_t set = compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
+			uint32_t sampled_image_binding = compiler.get_decoration(sampler.id, spv::DecorationBinding);
+#if ENABLE_SHADER_LOGGING
+			logger_log("\t => Found sampled image % s at set = % u, binding = % u!", sampler.name.c_str(), set, sampled_image_binding);
+#endif
+			sampled_image_bindings.push_back(sampled_image_binding);
+		}
+	}
 }

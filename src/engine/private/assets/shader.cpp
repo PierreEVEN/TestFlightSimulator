@@ -15,6 +15,7 @@
 #include "ui/window/windows/profiler.h"
 
 
+
 Shader::Shader(const std::filesystem::path& vertex_shader_path,	const std::filesystem::path& fragment_shader_path, const std::filesystem::path& geometry_shader_path)
 {
 	shader_creation_job = job_system::new_job([&, vertex_shader_path, fragment_shader_path, geometry_shader_path] {
@@ -47,7 +48,25 @@ Shader::Shader(const std::filesystem::path& vertex_shader_path,	const std::files
 		if (shader_creation_fragment) shader_creation_fragment->wait();
 		if (shader_creation_geometry) shader_creation_geometry->wait();
 
-		create_descriptor_sets(create_layout_bindings());
+		if (vertex_module) {
+			if (vertex_module->get() == VK_NULL_HANDLE) {
+				logger_fail("invalid vertex stage : %s", asset_id->to_string().c_str());
+			}
+		}
+		
+		if (geometry_module) {
+			if (geometry_module->get() == VK_NULL_HANDLE) {
+				logger_fail("invalid geometry stage : %s", asset_id->to_string().c_str());
+			}
+		}
+		
+		if (fragment_module) {
+			if (fragment_module->get() == VK_NULL_HANDLE) {
+				logger_fail("invalid fragment stage : %s", asset_id->to_string().c_str());
+			}
+		}
+		
+		create_descriptor_sets();
 		create_pipeline();
 		
 		logger_log("loaded shader %s", asset_id->to_string().c_str());
@@ -64,61 +83,79 @@ void Shader::create_pipeline()
 {
 	/** Shader pipeline */
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+	std::vector<VkPushConstantRange> push_constants;
 
+	/**
+	 *  EXTRACT SHADER MODULE DATA
+	 */
+	
 	if (vertex_module) {
-		if (vertex_module->get() == VK_NULL_HANDLE) {
-			logger_error("invalid vertex stage : %s", asset_id->to_string().c_str());
-			return;
+		shaderStages.push_back(VkPipelineShaderStageCreateInfo{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+			.stage = VK_SHADER_STAGE_VERTEX_BIT,
+			.module = vertex_module->get(),
+			.pName = "main"
+			});
+
+		if (vertex_module->get_push_constant_size() > 0) {
+			push_constants.push_back(VkPushConstantRange{
+				.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+				.offset = 0,
+				.size = vertex_module->get_push_constant_size(),
+				});
 		}
-		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertShaderStageInfo.module = vertex_module->get();
-		vertShaderStageInfo.pName = "main";
-		shaderStages.push_back(vertShaderStageInfo);
 	}
 
-	if (geometry_module) {
-		if (geometry_module->get() == VK_NULL_HANDLE) {
-			logger_error("invalid geometry stage : %s", asset_id->to_string().c_str());
-			return;
+	if (geometry_module) {		
+		shaderStages.push_back(VkPipelineShaderStageCreateInfo{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+			.stage = VK_SHADER_STAGE_GEOMETRY_BIT,
+			.module = geometry_module->get(),
+			.pName = "main"
+			});
+
+		if (geometry_module->get_push_constant_size() > 0) {
+			push_constants.push_back(VkPushConstantRange{
+				.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT,
+				.offset = 0,
+				.size = geometry_module->get_push_constant_size(),
+				});
 		}
-		VkPipelineShaderStageCreateInfo geomShaderStageInfo{};
-		geomShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		geomShaderStageInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
-		geomShaderStageInfo.module = geometry_module->get();
-		geomShaderStageInfo.pName = "main";
-		shaderStages.push_back(geomShaderStageInfo);
 	}
 
 	if (fragment_module) {
-		if (fragment_module->get() == VK_NULL_HANDLE) {
-			logger_error("invalid fragment stage : %s", asset_id->to_string().c_str());
-			return;
+		shaderStages.push_back(VkPipelineShaderStageCreateInfo{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+			.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+			.module = fragment_module->get(),
+			.pName = "main"
+			});
+
+		if (fragment_module->get_push_constant_size() > 0) {
+			push_constants.push_back(VkPushConstantRange{
+				.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+				.offset = 0,
+				.size = fragment_module->get_push_constant_size(),
+				});
 		}
-		VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragShaderStageInfo.module = fragment_module->get();
-		fragShaderStageInfo.pName = "main";
-		shaderStages.push_back(fragShaderStageInfo);
 	}
 
-	/** Model transform */
-	VkPushConstantRange pushConstantRange;
-	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	pushConstantRange.offset = 0;
-	pushConstantRange.size = sizeof(glm::mat4);
-
-	/** Pipeline layout */
+	/**
+	 *  CREATE PIPELINE LAYOUT
+	 */
+	
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 1;
 	pipelineLayoutInfo.pSetLayouts = &descriptor_set_layout;
-	pipelineLayoutInfo.pushConstantRangeCount = 1;
-	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+	pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(push_constants.size());
+	pipelineLayoutInfo.pPushConstantRanges = push_constants.data();
 	VK_ENSURE(vkCreatePipelineLayout(get_context()->get_context()->logical_device, &pipelineLayoutInfo, nullptr, &pipeline_layout), "Failed to create pipeline layout");
 
+	/**
+	 *  DEFINE VERTEX ATTRIBUTES
+	 */
+	
 	auto bindingDescription = Vertex::get_binding_description();
 	auto attributeDescriptions = Vertex::get_attribute_descriptions();
 
@@ -129,6 +166,10 @@ void Shader::create_pipeline()
 	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
 	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
+	/**
+	 *  MISC
+	 */
+	
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -145,7 +186,7 @@ void Shader::create_pipeline()
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_NONE;// VK_CULL_MODE_FRONT_BIT;
+	rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 	rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -193,12 +234,12 @@ void Shader::create_pipeline()
 	colorBlending.blendConstants[2] = 0.0f; // Optional
 	colorBlending.blendConstants[3] = 0.0f; // Optional
 
-	VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH };
+	std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH };
 
 	VkPipelineDynamicStateCreateInfo dynamicState{};
 	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamicState.dynamicStateCount = 2;
-	dynamicState.pDynamicStates = dynamicStates;
+	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+	dynamicState.pDynamicStates = dynamicStates.data();
 
 	VkGraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -221,8 +262,79 @@ void Shader::create_pipeline()
 	VK_ENSURE(vkCreateGraphicsPipelines(get_context()->get_context()->logical_device, VK_NULL_HANDLE, 1, &pipelineInfo, vulkan_common::allocation_callback, &shader_pipeline), "Failed to create material graphic pipeline");
 }
 
-void Shader::create_descriptor_sets(std::vector<VkDescriptorSetLayoutBinding> layout_bindings)
+void Shader::create_descriptor_sets()
 {
+	std::vector<VkDescriptorSetLayoutBinding> layout_bindings;
+	if (vertex_module)
+	{
+		if (vertex_module->get_uniform_bindings() >= 0) {
+			layout_bindings.push_back(VkDescriptorSetLayoutBinding{
+					.binding = static_cast<uint32_t>(vertex_module->get_uniform_bindings()),
+					.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+					.descriptorCount = 1,
+					.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+					.pImmutableSamplers = nullptr
+				});
+		}
+		if (!vertex_module->get_sampled_image_bindings().empty()) {
+			for (auto sample_binding : vertex_module->get_sampled_image_bindings()) {
+				layout_bindings.push_back(VkDescriptorSetLayoutBinding{
+						.binding = sample_binding,
+						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+						.descriptorCount = 1,
+						.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+						.pImmutableSamplers = nullptr
+					});
+			}
+		}
+	}
+	if (geometry_module)
+	{
+		if (geometry_module->get_uniform_bindings() >= 0) {
+			layout_bindings.push_back(VkDescriptorSetLayoutBinding{
+					.binding = static_cast<uint32_t>(geometry_module->get_uniform_bindings()),
+					.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+					.descriptorCount = 1,
+					.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT,
+					.pImmutableSamplers = nullptr
+				});
+		}
+		if (!geometry_module->get_sampled_image_bindings().empty()) {
+			for (auto sample_binding : geometry_module->get_sampled_image_bindings()) {
+				layout_bindings.push_back(VkDescriptorSetLayoutBinding{
+						.binding = sample_binding,
+						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+						.descriptorCount = 1,
+						.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT,
+						.pImmutableSamplers = nullptr
+					});
+			}
+		}
+	}
+	if (fragment_module)
+	{
+		if (fragment_module->get_uniform_bindings() >= 0) {
+			layout_bindings.push_back(VkDescriptorSetLayoutBinding{
+					.binding = static_cast<uint32_t>(fragment_module->get_uniform_bindings()),
+					.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+					.descriptorCount = 1,
+					.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+					.pImmutableSamplers = nullptr
+				});
+		}
+		if (!fragment_module->get_sampled_image_bindings().empty()) {
+			for (auto sample_binding : fragment_module->get_sampled_image_bindings()) {
+				layout_bindings.push_back(VkDescriptorSetLayoutBinding{
+						.binding = sample_binding,
+						.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+						.descriptorCount = 1,
+						.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+						.pImmutableSamplers = nullptr
+					});
+			}
+		}
+	}
+	
 	/** Create descriptor set layout */
 	VkDescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -242,51 +354,6 @@ void Shader::create_descriptor_sets(std::vector<VkDescriptorSetLayoutBinding> la
 	VK_ENSURE(vkAllocateDescriptorSets(get_context()->get_context()->logical_device, &allocInfo, descriptor_sets.data()), "Failed to allocate descriptor sets");
 }
 
-std::vector<VkDescriptorSetLayoutBinding> Shader::create_layout_bindings()
-{
-	/*
-	uint32_t currentId = 0;
-	std::vector<VkDescriptorSetLayoutBinding> outBindings;
-
-	if (materialProperties.bUseGlobalUbo) {
-		VkDescriptorSetLayoutBinding uboLayoutBinding{};
-		uboLayoutBinding.binding = currentId;
-		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboLayoutBinding.descriptorCount = 1;
-		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		uboLayoutBinding.pImmutableSamplers = nullptr;
-		outBindings.push_back(uboLayoutBinding);
-		currentId++;
-	}
-
-	// Vertex textures 
-	for (uint32_t i = 0; i < materialProperties.VertexTexture2DCount; ++i) {
-		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-		samplerLayoutBinding.binding = currentId;
-		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		samplerLayoutBinding.descriptorCount = 1;
-		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		samplerLayoutBinding.pImmutableSamplers = nullptr;
-		outBindings.push_back(samplerLayoutBinding);
-		currentId++;
-	}
-
-	// Fragment textures 
-	for (uint32_t i = 0; i < materialProperties.FragmentTexture2DCount; ++i) {
-		VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-		samplerLayoutBinding.binding = currentId;
-		samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		samplerLayoutBinding.descriptorCount = 1;
-		samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		samplerLayoutBinding.pImmutableSamplers = nullptr;
-		outBindings.push_back(samplerLayoutBinding);
-		currentId++;
-	}
-	return outBindings;
-	*/
-		return {};
-}
-
 void Shader::destroy()
 {
 	if (shader_pipeline != VK_NULL_HANDLE) vkDestroyPipeline(get_context()->get_context()->logical_device, shader_pipeline, vulkan_common::allocation_callback);
@@ -296,3 +363,4 @@ void Shader::destroy()
 	pipeline_layout = VK_NULL_HANDLE;
 	descriptor_set_layout = VK_NULL_HANDLE;
 }
+ 

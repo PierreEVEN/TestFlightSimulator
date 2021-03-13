@@ -1,6 +1,5 @@
 #pragma once
 #include <filesystem>
-#include <optional>
 
 
 #include "assetBase.h"
@@ -8,6 +7,7 @@
 #include "rendering/vulkan/shaderModule.h"
 
 #include "jobSystem/job.h"
+#include "rendering/uniforms/uniformBase.h"
 
 class UniformBase;
 class Window;
@@ -31,7 +31,6 @@ public:
 	[[nodiscard]] VkPipeline get_pipeline() const { return shader_pipeline; }
 	[[nodiscard]] VkPipelineLayout get_pipeline_layout() const { return pipeline_layout; }
 
-
 protected:
 	friend AssetManager;
 	Shader(const std::filesystem::path& vertex_shader_path = "", const std::filesystem::path& fragment_shader_path = "", const std::filesystem::path& geometry_shader_path = "");
@@ -39,13 +38,11 @@ protected:
 private:
 
 	void create_pipeline();
-	void create_descriptor_sets(std::vector<VkDescriptorSetLayoutBinding> layout_bindings);
-	std::vector<VkDescriptorSetLayoutBinding> create_layout_bindings();
+	void create_descriptor_sets();
 	void destroy();
 
-
-	std::vector<std::shared_ptr<UniformBase>> uniforms;
-
+	
+	
 	std::shared_ptr<ShaderModule> vertex_module;
 	std::shared_ptr<ShaderModule> fragment_module;
 	std::shared_ptr<ShaderModule> geometry_module;

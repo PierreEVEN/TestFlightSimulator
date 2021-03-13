@@ -77,7 +77,7 @@ namespace logger
 #if _WIN32
 		SetConsoleTextAttribute(h_console_out, color);
 #endif
-		if (function) std::cout << log_format("] [%s] % s::% d :% s", type, function, line, message.c_str());
+		if (function) std::cout << log_format("] [%s] % s::% d : %s", type, function, line, message.c_str());
 		else std::cout << log_format("] [%s] : %s", type, message.c_str());
 
 		if (file) std::cout << log_format("\n\t=>%s", file);

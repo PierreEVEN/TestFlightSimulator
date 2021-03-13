@@ -78,7 +78,6 @@ private:
 
 
 	// Vulkan data
-
 	Window*					 g_window_context = {};
 	VkPipelineCache			 g_pipeline_cache = VK_NULL_HANDLE;
 	VkDeviceSize             g_BufferMemoryAlignment = 256;
