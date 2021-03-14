@@ -7,13 +7,14 @@ layout(location = 3) in vec3 norm;
 layout(location = 4) in vec3 tang;
 layout(location = 5) in vec3 bitang;
 
+/*
 layout(binding = 5) uniform UniformBufferObject {
     mat4 worldProjection;
     mat4 viewMatrix;
 	vec3 cameraLocation;
 	float time;
 } ubo;
-
+*/
 
 layout(push_constant) uniform PushConsts {
 	mat4 model;
@@ -28,6 +29,6 @@ out gl_PerVertex {
 void main() {
 
 	texCoords = uv;
-	gl_Position = ubo.worldProjection * ubo.viewMatrix * primitive.model * vec4(pos.xyz, 1.0);
+	//gl_Position = ubo.worldProjection * ubo.viewMatrix * primitive.model * vec4(pos.xyz, 1.0);
 
 }

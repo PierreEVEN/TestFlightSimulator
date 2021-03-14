@@ -199,7 +199,7 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
 			uint32_t set = compiler.get_decoration(buffer.id, spv::DecorationDescriptorSet);
 			uniform_buffer_binding = compiler.get_decoration(buffer.id, spv::DecorationBinding);
 #if ENABLE_SHADER_LOGGING
-			logger_log("\t => Found UBO % s at set = % u, binding = % u!", buffer.name.c_str(), set, uniform_buffer_binding);
+			logger_log("\t => Found UBO % s at set = %u, binding = %u!", buffer.name.c_str(), set, uniform_buffer_binding);
 #endif
 		}
 	}
@@ -216,7 +216,7 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
 	
 	if (!sampled_image.empty())
 	{
-		for (auto& sampler : sampled_image)
+		for (const auto& sampler : sampled_image)
 		{
 			uint32_t set = compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
 			uint32_t sampled_image_binding = compiler.get_decoration(sampler.id, spv::DecorationBinding);

@@ -4,6 +4,7 @@
 #include "rendering/window.h"
 
 #include <cmath>
+#include <stb_image.h>
 
 
 
@@ -13,23 +14,31 @@
 #include "rendering/vulkan/texture.h"
 #include "ui/window/windows/profiler.h"
 
+Texture2d::Texture2d(const std::filesystem::path& texture_path)
+{
+	if (!std::filesystem::exists(texture_path))
+	{
+		logger_error("cannot find texture asset %s", texture_path.string().c_str());
+		return;
+	}
+	
+	texture_data = stbi_load(texture_path.string().c_str(), &texture_width, &texture_height, &texture_channels, 4);
+	texture_channels = 4;
+	load_image();
+}
+
 Texture2d::Texture2d(uint8_t* data, size_t width,
                      size_t height, uint8_t channel_count)
-	: texture_data(data), texture_width(width), texture_height(height), texture_channels(4)
+	: texture_data(data), texture_width(static_cast<int>(width)), texture_height(static_cast<int>(height)), texture_channels(4)
 {
-	creation_job = job_system::new_job([&] {
-		BEGIN_NAMED_RECORD(LOAD_TEXTURE_2D);
-		create_image();
-		create_image_sampler();
-		create_image_descriptors();
-		logger_log("created texture 2d %s", asset_id->to_string().c_str());
-		});
+	load_image();
 }
 
 Texture2d::~Texture2d()
 {
 	creation_job->wait();
 
+	if (descriptor_image_info) delete descriptor_image_info;
 	if (image_sampler != VK_NULL_HANDLE) vkDestroySampler(window_context->get_context()->logical_device, image_sampler, vulkan_common::allocation_callback);
 	if (image_view != VK_NULL_HANDLE) vkDestroyImageView(window_context->get_context()->logical_device, image_view, vulkan_common::allocation_callback);
 
@@ -44,6 +53,29 @@ Texture2d::~Texture2d()
 bool Texture2d::try_load()
 {
 	return creation_job && creation_job->is_complete();
+}
+
+VkDescriptorImageInfo* Texture2d::get_descriptor_info()
+{
+	if (!descriptor_image_info)
+	{
+		descriptor_image_info = new VkDescriptorImageInfo();
+		descriptor_image_info->sampler = image_sampler;
+		descriptor_image_info->imageView = image_view;
+		descriptor_image_info->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	}
+	return descriptor_image_info;
+}
+
+void Texture2d::load_image()
+{
+	creation_job = job_system::new_job([&] {
+		BEGIN_NAMED_RECORD(LOAD_TEXTURE_2D);
+		create_image();
+		create_image_sampler();
+		create_image_descriptors();
+		logger_log("created texture 2d %s", asset_id->to_string().c_str());
+		});
 }
 
 void Texture2d::create_image()

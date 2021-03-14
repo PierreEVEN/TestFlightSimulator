@@ -11,6 +11,12 @@ namespace std {
 	}
 }
 
+struct descriptor_set
+{
+	VkDescriptorType type;
+};
+
+
 class ShaderModule final
 {
 public:

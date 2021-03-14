@@ -3,6 +3,7 @@
 #include "assets/Scene.h"
 #include "assets/shader.h"
 #include "statsRecorder.h"
+#include "assets/texture2d.h"
 #include "jobSystem/job_system.h"
 #include "ios/logger.h"
 #include "ios/scene_importer.h"
@@ -15,14 +16,20 @@ void window_test(bool imgui_context)
 {	
 	Window game_window(800, 600, config::application_name, false, imgui_context);
 	
-	
-	game_window.get_asset_manager()->create<Shader>("shader_Test", "data/test.vs.glsl", "data/test.fs.glsl");
+
 	game_window.get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
+	
+	auto default_texture = game_window.get_asset_manager()->create<Texture2d>("default-texture", "data/DefaultTexture.png");
+
+	auto shader = game_window.get_asset_manager()->create<Shader>(
+	"shader_Test",
+		"data/test.vs.glsl",
+		"data/test.fs.glsl"
+		);
 
 	new ProfilerWindow(&game_window, "profiler");
 	new ContentBrowser(&game_window, "content browser");
-	
-	
+		
 	while (game_window.begin_frame()) {
 		game_window.end_frame();
 	}

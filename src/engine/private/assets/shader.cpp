@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "assets/staticMesh.h"
+#include "assets/texture2d.h"
 #include "glm/glm.hpp"
 
 
@@ -15,9 +16,10 @@
 #include "ui/window/windows/profiler.h"
 
 
-
 Shader::Shader(const std::filesystem::path& vertex_shader_path,	const std::filesystem::path& fragment_shader_path, const std::filesystem::path& geometry_shader_path)
 {
+
+	
 	shader_creation_job = job_system::new_job([&, vertex_shader_path, fragment_shader_path, geometry_shader_path] {
 
 		std::shared_ptr<job_system::IJobTask> shader_creation_vertex;
@@ -362,5 +364,48 @@ void Shader::destroy()
 	shader_pipeline = VK_NULL_HANDLE;
 	pipeline_layout = VK_NULL_HANDLE;
 	descriptor_set_layout = VK_NULL_HANDLE;
+}
+
+void Shader::update_descriptors()
+{
+	/*
+	std::vector<VkWriteDescriptorSet> descriptor_update;
+	for (auto& descriptor : descriptors)
+	{
+		descriptor_update.push_back(VkWriteDescriptorSet{
+				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				.pNext = nullptr,
+				.dstSet = descriptor_sets,
+				.dstBinding = descriptor.first,
+				.dstArrayElement = 0,
+				.descriptorCount = 1,
+				.descriptorType = descriptor.second.texture_ptr ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				.pImageInfo = descriptor.second.texture_ptr ? descriptor.second.texture_ptr.value()->get_descriptor_info() : nullptr,
+				.pBufferInfo = nullptr,
+			});
+	}
+	*/
+
+
+
+
+
+	//vkUpdateDescriptorSets(get_context()->get_context()->logical_device, static_cast<uint32_t>(descriptor_update.size()), descriptor_update.data(), 0, nullptr);
+}
+
+std::shared_ptr<ShaderModule> Shader::get_shader_module(VkShaderStageFlags shader_stage)
+{
+	switch (shader_stage)
+	{
+	case VK_SHADER_STAGE_VERTEX_BIT:
+		return vertex_module;
+	case VK_SHADER_STAGE_GEOMETRY_BIT:
+		return geometry_module;
+	case VK_SHADER_STAGE_FRAGMENT_BIT:
+			return fragment_module;
+	default:
+		logger_error("unhandled shader stage : %d", shader_stage);
+		return nullptr;
+	}
 }
  

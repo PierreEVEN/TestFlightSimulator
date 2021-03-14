@@ -127,7 +127,7 @@ void Window::setup_swapchain_property()
 	max_msaa_sample_count = vulkan_utils::get_max_usable_sample_count(context->physical_device);
 	msaa_sample_count = max_msaa_sample_count;
 	logger_log("swapchain details : \n\
-		\t-max samples : %d\n\
+		\t-max pass_samples : %d\n\
 		\t-image count : %d\n\
 		\t-present mode : %d\n\
 		\t-surface log_format : %d\
