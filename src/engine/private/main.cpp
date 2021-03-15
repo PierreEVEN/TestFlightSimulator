@@ -9,13 +9,47 @@
 #include "ios/scene_importer.h"
 #include "misc/capabilities.h"
 #include "rendering/window.h"
+#include "rendering/framegraph/framegraph.h"
 #include "ui/window/windows/contentBrowser.h"
 #include "ui/window/windows/profiler.h"
+
+
+void create_test_framegraph(Window* context)
+{
+	FramebufferDescription color_buffer_descriptions{
+		.format = VK_FORMAT_R8G8B8A8_UNORM,
+		.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+	};
+	
+	FramebufferDescription coordinate_buffer_description{
+	.format = VK_FORMAT_R16G16B16A16_SFLOAT,
+	.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+	};
+	
+	FramebufferDescription depth_buffer_description{
+	.format = vulkan_utils::get_depth_format(context->get_context()->physical_device),
+	.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+	};
+
+	
+	auto* framegraph = new Framegraph(context, {
+		FramegraphPass({800, 600}, "color_pass", {
+			FramegraphSubpass("color_subpass", color_buffer_descriptions),
+			FramegraphSubpass("depth_stencil_subpass",depth_buffer_description),
+			FramegraphSubpass("normal_subpass", coordinate_buffer_description),
+			FramegraphSubpass("position_subpass", coordinate_buffer_description)
+		}),
+		FramegraphPass({800, 600}, "post_process_path", {
+			FramegraphSubpass("bloom_subpass", color_buffer_descriptions),
+			FramegraphSubpass("motion_blur_subpass", color_buffer_descriptions)
+		}),
+		});
+}
 
 void window_test(bool imgui_context)
 {	
 	Window game_window(800, 600, config::application_name, false, imgui_context);
-	
+	/*
 
 	game_window.get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
 	
@@ -29,7 +63,11 @@ void window_test(bool imgui_context)
 
 	new ProfilerWindow(&game_window, "profiler");
 	new ContentBrowser(&game_window, "content browser");
-		
+	*/
+	create_test_framegraph(&game_window);
+	return;
+
+	
 	while (game_window.begin_frame()) {
 		game_window.end_frame();
 	}
