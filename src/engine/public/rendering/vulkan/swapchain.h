@@ -4,6 +4,14 @@
 
 class Window;
 
+struct DrawInfo
+{
+	Window* context = nullptr;
+	VkCommandBuffer command_buffer = VK_NULL_HANDLE;
+	uint32_t image_index = 0;
+	uint32_t frame_id = 0;
+};
+
 class Swapchain
 {
 public:
@@ -13,11 +21,25 @@ public:
 
 	[[nodiscard]] VkSwapchainKHR get() const { return swapchain; }
 
+
+	DrawInfo acquire_next_image();
+	void submit_next_image(uint32_t image_index, std::vector<VkSemaphore> render_finished_semaphores);
+
 private:
 
+	void create_fences_and_semaphores();
+	
 	void create_or_recreate();
 	void destroy();
 
+
+	uint32_t current_frame_id = 0;
+
+	std::vector<VkSemaphore> image_acquire_semaphore;
+	std::vector<VkSemaphore> render_finished_semaphores;
+	std::vector<VkFence> in_flight_fences;
+	std::vector<VkFence> images_in_flight;
+	
 	VkViewport viewport;
 	VkExtent2D swapchain_extend;
 	VkRect2D scissor;

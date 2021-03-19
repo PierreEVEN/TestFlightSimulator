@@ -572,6 +572,12 @@ void Window::render()
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &current_command_buffer;
 
+
+
+
+
+
+	
 	VkSemaphore finished_semaphore[] = { render_finished_semaphores[current_frame_id] }; // This fence is used to tell when the gpu can present the submitted data
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = finished_semaphore;

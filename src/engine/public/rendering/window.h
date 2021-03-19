@@ -74,6 +74,8 @@ public:
 
 	Node* TEMP_NODE = nullptr;
 
+	void resize_window(int res_x, int res_y);
+	bool bHasViewportBeenResized = false;
 private:
 
 	bool has_imgui_context;
@@ -81,7 +83,7 @@ private:
 	
 	GLFWwindow* window_handle;
 	command_pool::Container* command_pool;
-	vulkan_utils::SwapchainSupportDetails	swapchain_support_details;
+	vulkan_utils::SwapchainSupportDetails swapchain_support_details;
 	VkSurfaceFormatKHR swapchain_surface_format;
 	VkPresentModeKHR swapchain_present_mode;
 	VkSampleCountFlagBits max_msaa_sample_count;
@@ -98,7 +100,6 @@ private:
 	std::vector<VkFence> in_flight_fences;
 	std::vector<VkFence> images_in_flight;
 	size_t current_frame_id = 0;
-	bool bHasViewportBeenResized = false;
 	
 	uint32_t window_width;
 	uint32_t window_height;
@@ -109,7 +110,6 @@ private:
 	std::vector<VkCommandBuffer> command_buffers;
 
 	friend void framebuffer_size_callback(GLFWwindow* handle, int res_x, int res_y);
-	void resize_window(int res_x, int res_y);	
 	void create_window_surface();
 	void setup_swapchain_property();
 	void create_or_recreate_render_pass();

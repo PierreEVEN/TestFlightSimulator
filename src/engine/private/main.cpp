@@ -10,38 +10,41 @@
 #include "misc/capabilities.h"
 #include "rendering/window.h"
 #include "rendering/framegraph/framegraph.h"
+#include "rendering/framegraph/renderpass.h"
 #include "ui/window/windows/contentBrowser.h"
 #include "ui/window/windows/profiler.h"
-
 
 void create_test_framegraph(Window* context)
 {
 	FramebufferDescription color_buffer_descriptions{
 		.format = VK_FORMAT_R8G8B8A8_UNORM,
-		.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
 	};
 	
 	FramebufferDescription coordinate_buffer_description{
 	.format = VK_FORMAT_R16G16B16A16_SFLOAT,
-	.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
 	};
 	
 	FramebufferDescription depth_buffer_description{
 	.format = vulkan_utils::get_depth_format(context->get_context()->physical_device),
-	.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+	.is_depth_buffer = true
 	};
 
 	
 	auto* framegraph = new Framegraph(context, {
-		FramegraphPass({800, 600}, "color_pass", {
+		FramegraphPass({800, 600}, "color_pass", {},{
 			FramegraphSubpass("color_subpass", color_buffer_descriptions),
 			FramegraphSubpass("depth_stencil_subpass",depth_buffer_description),
 			FramegraphSubpass("normal_subpass", coordinate_buffer_description),
 			FramegraphSubpass("position_subpass", coordinate_buffer_description)
 		}),
-		FramegraphPass({800, 600}, "post_process_path", {
-			FramegraphSubpass("bloom_subpass", color_buffer_descriptions),
-			FramegraphSubpass("motion_blur_subpass", color_buffer_descriptions)
+		FramegraphPass({800, 600}, "shadow_pass", {}, {
+			FramegraphSubpass("shadow_depth_subpass", depth_buffer_description),
+			}),
+		FramegraphPass({800, 600}, "post_process_path", { "color_pass", "shadow_pass" }, {
+			FramegraphSubpass("post_process_subpass", color_buffer_descriptions),
+		}),
+		FramegraphPass({800, 600}, "ui_pass", { "post_process_path" }, {
+			FramegraphSubpass("ui_subpass", color_buffer_descriptions),
 		}),
 		});
 }

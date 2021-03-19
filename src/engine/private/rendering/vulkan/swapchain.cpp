@@ -5,6 +5,8 @@
 #include <string>
 
 
+
+#include "config.h"
 #include "ios/logger.h"
 #include "rendering/window.h"
 
@@ -12,6 +14,7 @@
 Swapchain::Swapchain(const VkExtent2D& extend, Window* window)
 		: surface_window(window)
 {
+	create_fences_and_semaphores();
 	set_size(extend);
 }
 
@@ -34,7 +37,88 @@ void Swapchain::set_size(VkExtent2D extend, const bool force_rebuild, const bool
 	}
 }
 
-size_t test = 0;
+void Swapchain::create_fences_and_semaphores()
+{
+	logger_log("create fence and semaphores\n\t-in flight fence : %d\n\t-images in flight : %d", config::max_frame_in_flight, surface_window->get_image_count());
+	image_acquire_semaphore.resize(config::max_frame_in_flight);
+	render_finished_semaphores.resize(config::max_frame_in_flight);
+	in_flight_fences.resize(config::max_frame_in_flight);
+	images_in_flight.resize(surface_window->get_image_count(), VK_NULL_HANDLE);
+
+	VkSemaphoreCreateInfo semaphoreInfo{};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fenceInfo{};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (size_t i = 0; i < config::max_frame_in_flight; i++) {
+		VK_ENSURE(vkCreateSemaphore(surface_window->get_context()->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &image_acquire_semaphore[i]), "Failed to create image available semaphore #%d" + i);
+		VK_ENSURE(vkCreateSemaphore(surface_window->get_context()->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &render_finished_semaphores[i]), "Failed to create render finnished semaphore #%d" + i)
+			VK_ENSURE(vkCreateFence(surface_window->get_context()->logical_device, &fenceInfo, vulkan_common::allocation_callback, &in_flight_fences[i]), "Failed to create fence #%d" + i);
+	}
+}
+
+DrawInfo Swapchain::acquire_next_image()
+{
+	// Select next image
+	current_frame_id = (current_frame_id + 1) % config::max_frame_in_flight;
+
+	// Ensure all frame data are submitted
+	vkWaitForFences(surface_window->get_context()->logical_device, 1, &in_flight_fences[current_frame_id], VK_TRUE, UINT64_MAX);
+
+	// Retrieve the next available image ID
+	uint32_t image_index;
+	VkResult result = vkAcquireNextImageKHR(surface_window->get_context()->logical_device, swapchain, UINT64_MAX, image_acquire_semaphore[current_frame_id], VK_NULL_HANDLE, &image_index);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(surface_window->get_handle(), &width, &height);
+		surface_window->resize_window(width, height);
+		return DrawInfo{};
+	}
+	if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+		logger_error("Failed to acquire image from the swapchain");
+		return DrawInfo{};
+	}
+
+	if (images_in_flight[image_index] != VK_NULL_HANDLE) vkWaitForFences(surface_window->get_context()->logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
+	images_in_flight[image_index] = in_flight_fences[current_frame_id];
+
+	return DrawInfo{
+		.context = surface_window,
+		.image_index = image_index,
+		.frame_id = current_frame_id,
+	};
+}
+
+void Swapchain::submit_next_image(uint32_t image_index, std::vector<VkSemaphore> render_finished_semaphores)
+{
+
+	/**
+	 * Present to swapchain
+	 */
+
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = static_cast<uint32_t>(render_finished_semaphores.size());
+	presentInfo.pWaitSemaphores = render_finished_semaphores.data();
+
+	VkSwapchainKHR swapChains[] = { swapchain };
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = swapChains;
+	presentInfo.pImageIndices = &image_index;
+	presentInfo.pResults = nullptr; // Optional
+
+	VkResult result = surface_window->get_context()->submit_present_queue(presentInfo);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || surface_window->bHasViewportBeenResized) {
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(surface_window->get_handle(), &width, &height);
+		surface_window->resize_window(width, height);
+	}
+	else if (result != VK_SUCCESS) {
+		logger_fail("Failed to present image to swap chain");
+	}	
+}
 
 void Swapchain::create_or_recreate()
 {
