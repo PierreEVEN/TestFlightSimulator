@@ -12,7 +12,7 @@
 #include "rendering/vulkan/commandPool.h"
 
 FramegraphPass::FramegraphPass(VkExtent2D resolution, const std::string& in_pass_name, const std::vector<std::string>& in_dependencies, std::vector<FramegraphSubpass> in_subpasses)
-	: subpasses(in_subpasses), pass_name(in_pass_name), size(resolution), dependencies(in_dependencies) {}
+	: subpasses(in_subpasses), pass_name(in_pass_name), size(resolution), dependencies_names(in_dependencies) {}
 
 void FramegraphPass::render(DrawInfo draw_info)
 {
@@ -164,7 +164,7 @@ void FramegraphPass::create_render_pass()
 	 *  SETUP SUBPASSES DEPENDENCIES
 	 */
 
-	 // Use subpass dependencies for attachment layout transitions
+	 // Use subpass dependencies_names for attachment layout transitions
 	std::array<VkSubpassDependency, 2> dependencies = {};
 
 	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;

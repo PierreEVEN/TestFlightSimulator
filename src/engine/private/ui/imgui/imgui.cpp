@@ -97,7 +97,7 @@ CODE
  - Minimize screen real-estate usage.
  - Minimize setup and maintenance.
  - Minimize state storage on user side.
- - Portable, minimize dependencies, run on target (consoles, phones, etc.).
+ - Portable, minimize dependencies_names, run on target (consoles, phones, etc.).
  - Efficient runtime and memory consumption (NB- we do allocate when "growing" content e.g. creating a window,.
    opening a tree node for the first time, etc. but a typical frame should not allocate anything).
 

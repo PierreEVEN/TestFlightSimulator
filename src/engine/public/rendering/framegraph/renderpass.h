@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
@@ -42,9 +43,10 @@ private:
 	std::vector<VkSemaphore> image_acquire_semaphores;
 	std::vector<VkSemaphore> render_finished_semaphores;
 
-	std::vector<std::string> dependencies;
-	std::vector<FramegraphPass*> children_pass;
-	FramegraphPass* parent_pass = nullptr;
+	std::vector<std::string> dependencies_names;
+	std::unordered_map<std::string, std::shared_ptr<FramegraphPass>> children_pass;
+	std::vector<std::shared_ptr<FramegraphPass>> children_pass_list;
+	std::shared_ptr<FramegraphPass> parent_pass = nullptr;
 
 	
 };
