@@ -27,7 +27,7 @@ public:
 
 	VmaAllocator vulkan_memory_allocator = VK_NULL_HANDLE;
 
-	void submit_graphic_queue(const VkSubmitInfo& submit_infos, VkFence& submit_fence);
+	void submit_graphic_queue(const VkSubmitInfo& submit_infos, VkFence submit_fence);
 	VkResult submit_present_queue(const VkPresentInfoKHR& present_infos);
 	void wait_device();
 private:

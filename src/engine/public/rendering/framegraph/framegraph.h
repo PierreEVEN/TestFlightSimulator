@@ -23,7 +23,6 @@ private:
 	std::vector<std::shared_ptr<FramegraphPass>> graph_top;
 
 	Swapchain* swapchain = nullptr;
-
-	Window* context;
+	Window* context = nullptr;
 };
 

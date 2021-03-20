@@ -9,6 +9,17 @@
 
 class Framegraph;
 
+struct PerFrameData
+{
+	VkSemaphore wait_render_finished_semaphore;
+	VkFence queue_submit_fence;
+};
+
+struct PerImageData
+{
+	VkCommandBuffer command_buffer;
+};
+
 class FramegraphPass
 {
 	friend Framegraph;
@@ -38,10 +49,8 @@ private:
 	Framegraph* parent;
 
 	VkExtent2D size;
-
-	std::vector<VkCommandBuffer> command_buffers;
-	std::vector<VkSemaphore> image_acquire_semaphores;
-	std::vector<VkSemaphore> render_finished_semaphores;
+	std::vector<PerImageData> per_image_data;
+	std::vector<PerFrameData> per_frame_data;
 
 	std::vector<std::string> dependencies_names;
 	std::unordered_map<std::string, std::shared_ptr<FramegraphPass>> children_pass;

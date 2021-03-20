@@ -15,10 +15,14 @@
 Framegraph::Framegraph(Window* in_context, const std::vector<std::shared_ptr<FramegraphPass>>& in_render_pass)
 	: context(in_context)
 {
+	int width = 0, height = 0;
+	glfwGetFramebufferSize(context->get_handle(), &width, &height);
+	swapchain = new Swapchain(VkExtent2D{ static_cast<uint32_t>(width), static_cast<uint32_t>(height) }, context);
+
 	for (const auto& pass : in_render_pass)
 	{
 		graph_passes[pass->pass_name] = pass;
-	}	
+	}
 
 	/*
 	 * BUILD DEPENDENCY GRAPH
@@ -48,43 +52,40 @@ Framegraph::Framegraph(Window* in_context, const std::vector<std::shared_ptr<Fra
 	for (auto& render_pass : graph_passes)
 	{
 		render_pass.second->init(this);
-	}	
+	}
 }
 
 void Framegraph::render_pass(const DrawInfo& draw_info, std::shared_ptr<FramegraphPass> pass)
 {
-	// Render each subpass in a different job
-	job_system::new_job([&, draw_info, pass]
-		{
-			for (auto& child : pass->children_pass_list) render_pass(draw_info, child);
-
-			job_system::wait_children();  //@TODO Optional i guess...
-		
-			pass->render(draw_info);
-		});
+	for (auto& child : pass->children_pass_list) {
+		// Render each subpass in a different job
+		job_system::new_job([&, draw_info, child]
+			{
+				render_pass(draw_info, child);
+			});
+	}
+	pass->render(draw_info);
 }
 
 void Framegraph::render()
 {
+	logger_log("#### BEGIN FRAME");
 	// Begin frame rendering
-
 	// Acquire next image to draw on
 	DrawInfo draw_info = swapchain->acquire_next_image();
-	draw_info.command_buffer = VK_NULL_HANDLE;
+
+	logger_log("#### ACQUIRED NEXT IMAGE");
 	
-	// Build and submit render passes
-	std::vector<VkSemaphore> render_finished_semaphores;
+	// Build and submit render passes in different jobs
 	for (auto& pass : graph_top)
 	{
-		render_pass(draw_info, pass);
-		
-		render_finished_semaphores.push_back(pass->render_finished_semaphores[draw_info.frame_id]);
+		job_system::new_job([&, draw_info] { render_pass(draw_info, pass); });		
 	}
-	job_system::wait_children();  //@TODO Optional i guess...
-	
-	// Submit image
-	swapchain->submit_next_image(draw_info.image_index, render_finished_semaphores);
 
+	logger_log("#### SUBMIT TO SWAPCHAIN");
+	// Submit image
+	swapchain->submit_next_image(draw_info.image_index, {});
+	
 	// End frame rendering
 }
 

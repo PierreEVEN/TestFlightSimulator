@@ -76,7 +76,9 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 
 	// Create window vulkan objects
 	command_pool = new command_pool::Container(context->logical_device, context->queue_families.graphic_family.value());
+	logger_warning("finished window creation");
 	setup_swapchain_property();
+	return;
 	create_or_recreate_render_pass();
 
 	back_buffer = new Framebuffer(this, VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) });
@@ -167,7 +169,7 @@ void Window::create_window_surface()
 	logger_log("Create Window surface");
 }
 
-void WindowContext::submit_graphic_queue(const VkSubmitInfo& submit_infos, VkFence& submit_fence)
+void WindowContext::submit_graphic_queue(const VkSubmitInfo& submit_infos, VkFence submit_fence)
 {
 	std::lock_guard<std::mutex> lock(queue_access_lock);
 	VK_ENSURE(vkQueueSubmit(graphic_queue, 1, &submit_infos, submit_fence), "Failed to submit graphic queue");

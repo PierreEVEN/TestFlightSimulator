@@ -30,7 +30,7 @@ void create_test_framegraph(Window* context)
 	.is_depth_buffer = true
 	};
 
-	
+
 	auto* framegraph = new Framegraph(context, {
 		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "color_pass",  std::vector<std::string>{},
 		 std::vector<FramegraphSubpass>{
@@ -52,6 +52,10 @@ void create_test_framegraph(Window* context)
 			FramegraphSubpass("ui_subpass", color_buffer_descriptions),
 		}),
 		});
+	
+	while (true) {
+		framegraph->render();
+	}
 }
 
 void window_test(bool imgui_context)
