@@ -4,8 +4,8 @@
 #include "rendering/framegraph/framegraph.h"
 #include "rendering/framegraph/renderpass.h"
 
-FramegraphSubpass::FramegraphSubpass(const std::string& name, const FramebufferDescription& in_framebuffer_description)
-	: framebuffer_description(in_framebuffer_description) {}
+FramegraphSubpass::FramegraphSubpass(const std::string& name, const FramebufferDescription& in_framebuffer_description, const VkClearValue& in_clear_value)
+	: framebuffer_description(in_framebuffer_description), clear_value(in_clear_value) {}
 
 void FramegraphSubpass::build_buffer(FramegraphPass* parent)
 {

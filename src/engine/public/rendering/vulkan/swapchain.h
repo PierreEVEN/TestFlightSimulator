@@ -2,6 +2,7 @@
 
 #include "rendering/vulkan/utils.h"
 
+class Framegraph;
 class FramegraphPass;
 class Window;
 
@@ -16,7 +17,7 @@ struct DrawInfo
 
 class Swapchain
 {
-	friend FramegraphPass;
+	friend Framegraph;
 public:
 	explicit Swapchain(const VkExtent2D& extend, Window* window);
 	virtual ~Swapchain();

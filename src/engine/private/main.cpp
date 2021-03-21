@@ -34,22 +34,22 @@ void create_test_framegraph(Window* context)
 	auto* framegraph = new Framegraph(context, {
 		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "color_pass",  std::vector<std::string>{},
 		 std::vector<FramegraphSubpass>{
-			FramegraphSubpass("color_subpass", color_buffer_descriptions),
-			FramegraphSubpass("depth_stencil_subpass",depth_buffer_description),
-			FramegraphSubpass("normal_subpass", coordinate_buffer_description),
-			FramegraphSubpass("position_subpass", coordinate_buffer_description)
+			FramegraphSubpass("color_subpass", color_buffer_descriptions, {1, 0, 0, 0}),
+			FramegraphSubpass("depth_stencil_subpass",depth_buffer_description, VkClearValue{.depthStencil{1, 0}}),
+			FramegraphSubpass("normal_subpass", coordinate_buffer_description, {0, 0, 1, 0}),
+			FramegraphSubpass("position_subpass", coordinate_buffer_description, {0, 0, 0, 0})
 		}),
 		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "shadow_pass",  std::vector<std::string>{}, 
 		std::vector<FramegraphSubpass> {
-			FramegraphSubpass("shadow_depth_subpass", depth_buffer_description),
+			FramegraphSubpass("shadow_depth_subpass", depth_buffer_description, {0, 0, 0, 0}),
 			}),
 		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "post_process_path",  std::vector<std::string>{ "color_pass", "shadow_pass" }, 
 		std::vector<FramegraphSubpass> {
-			FramegraphSubpass("post_process_subpass", color_buffer_descriptions),
+			FramegraphSubpass("post_process_subpass", color_buffer_descriptions, {0, 1, 0, 0}),
 		}),
 		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "ui_pass",  std::vector<std::string>{ "post_process_path" },
 		std::vector<FramegraphSubpass> {
-			FramegraphSubpass("ui_subpass", color_buffer_descriptions),
+			FramegraphSubpass("ui_subpass", color_buffer_descriptions, {1, 1, 0, 0}),
 		}),
 		});
 	
@@ -88,7 +88,7 @@ void window_test(bool imgui_context)
 void execute()
 {
 	// Create workers
-	job_system::Worker::create_workers();
+	job_system::Worker::create_workers(2);
 
 	// Initialize rendering window
 	logger_log("initialize rendering");

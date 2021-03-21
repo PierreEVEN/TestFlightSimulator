@@ -12,7 +12,8 @@ namespace job_system {
 	{
 	public:
 		explicit worker_lock(const std::ptrdiff_t current = 0)
-			: val(current) {}
+			: val(current) {
+		}
 
 		void count_up()
 		{
@@ -64,10 +65,23 @@ namespace job_system {
 			return task;
 		}
 
+
+		void wait_children()
+		{
+			while (auto task = children_pool.pop()) {
+				Worker::get()->current_task = task;
+				task->execute();
+				Worker::get()->current_task = task->parent_task;
+			}
+			child_lock.wait();
+		}
+		
 		void wait()
 		{
 			while (auto task = children_pool.pop()) {
+				Worker::get()->current_task = task;
 				task->execute();
+				Worker::get()->current_task = task->parent_task;
 			}
 			completion_lock.wait();
 			child_lock.wait();
@@ -108,9 +122,9 @@ namespace job_system {
 			dec_total_job_count(); // stats
 
 			wait();
-			
-			if (parent_task) parent_task->child_lock.count_down();
+
 			complete = true;
+			if (parent_task) parent_task->child_lock.count_down();
 		}
 	private:
 		Lambda func;

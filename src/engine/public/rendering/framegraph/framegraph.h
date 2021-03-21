@@ -10,6 +10,12 @@ class Swapchain;
 class FramegraphSubpass;
 class FramegraphPass;
 
+struct PerFrameData
+{
+	VkSemaphore wait_render_finished_semaphore = VK_NULL_HANDLE;
+	VkFence queue_submit_fence = VK_NULL_HANDLE;
+};
+
 class Framegraph
 {
 	friend FramegraphPass;
@@ -21,6 +27,8 @@ private:
 	void render_pass(const DrawInfo& draw_info, std::shared_ptr<FramegraphPass> pass);
 	std::unordered_map<std::string, std::shared_ptr<FramegraphPass>> graph_passes;
 	std::vector<std::shared_ptr<FramegraphPass>> graph_top;
+	
+	std::vector<PerFrameData> per_frame_data;
 
 	Swapchain* swapchain = nullptr;
 	Window* context = nullptr;

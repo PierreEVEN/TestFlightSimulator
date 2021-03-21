@@ -22,12 +22,12 @@ namespace job_system {
     TObjectPool<IJobTask, 2048> job_pool;
     std::counting_semaphore<> workers_create_semaphore(0);
     std::counting_semaphore<> workers_release_semaphore(0);
+    std::counting_semaphore<> workers_destroy_semaphore(0);
     std::binary_semaphore workers_complete_semaphore(0);
-    std::atomic_int destroy_counter = 0;
 
     std::condition_variable wake_up_worker_condition_variable;
 
-    int jobs = 0;
+    std::atomic_int jobs = 0;
 
     void Worker::create_workers(int desired_worker_count) {
 
@@ -76,14 +76,15 @@ namespace job_system {
     }
 
     void Worker::destroy_workers() {
-        logger_log("no more job - destroy workers");
         for (int i = 0; i < worker_count; ++i) {
-        	
             workers[i].run = false;
-            ++destroy_counter;
         }
         wake_up_worker_condition_variable.notify_all();
-    	while (destroy_counter > 0) {}
+    	for (int i = 0; i < worker_count; ++i)
+    	{
+            workers_destroy_semaphore.acquire();
+    	}
+        logger_log("no more job - destroyed workers");
         free(workers);
     }
 
@@ -108,7 +109,7 @@ namespace job_system {
             }
             else logger_fail("failed to find worker on current thread");
         } while (worker->run);
-        --destroy_counter;
+        workers_destroy_semaphore.release();
     }) {}
 
 	/**
@@ -116,20 +117,15 @@ namespace job_system {
 	 */
     void Worker::next_task() {
         if (auto found_job = steal_or_get_task()) {
-            BEGIN_NAMED_RECORD(worker_execute_job);
-            jobs++;
-            MEMORY_BARRIER();
             current_task = found_job;
+            BEGIN_NAMED_RECORD(worker_execute_job);
+            ++jobs;
             ADD_NAMED_TIMEPOINT(worker_begin_job);
             found_job->execute();
             ADD_NAMED_TIMEPOINT(worker_complete_job);
-            MEMORY_BARRIER();
-            current_task = nullptr;
-            MEMORY_BARRIER();
-            jobs--;
-            MEMORY_BARRIER();
-            workers_complete_semaphore.release();
-
+            --jobs;
+            workers_complete_semaphore.release();         
+            current_task = found_job->parent_task;
         } else {
         	// Wait next job order
             std::unique_lock<std::mutex> WakeUpWorkerLock(WaitNewJobMutex);

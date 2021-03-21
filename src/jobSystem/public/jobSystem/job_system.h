@@ -30,7 +30,7 @@ namespace job_system {
 		{
 			if (auto task = worker->get_current_task())
 			{
-				task->wait();
+				task->wait_children();
 			}			
 		}		
 	}

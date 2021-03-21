@@ -9,15 +9,11 @@
 
 class Framegraph;
 
-struct PerFrameData
-{
-	VkSemaphore wait_render_finished_semaphore;
-	VkFence queue_submit_fence;
-};
 
 struct PerImageData
 {
-	VkCommandBuffer command_buffer;
+	VkCommandPool command_pool = VK_NULL_HANDLE;
+	VkCommandBuffer command_buffer = VK_NULL_HANDLE;
 };
 
 class FramegraphPass
@@ -50,12 +46,11 @@ private:
 
 	VkExtent2D size;
 	std::vector<PerImageData> per_image_data;
-	std::vector<PerFrameData> per_frame_data;
 
 	std::vector<std::string> dependencies_names;
 	std::unordered_map<std::string, std::shared_ptr<FramegraphPass>> children_pass;
 	std::vector<std::shared_ptr<FramegraphPass>> children_pass_list;
 	std::shared_ptr<FramegraphPass> parent_pass = nullptr;
 
-	
+	[[nodiscard]] std::vector<VkCommandBuffer> collect_command_buffers(const DrawInfo& draw_info) const { return { per_image_data[draw_info.image_index].command_buffer }; }
 };

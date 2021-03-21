@@ -17,22 +17,21 @@ class FramegraphSubpass
 	friend FramegraphPass;
 public:
 
-	FramegraphSubpass(const std::string& name, const FramebufferDescription& in_framebuffer_description);
+	FramegraphSubpass(const std::string& name, const FramebufferDescription& in_framebuffer_description, const VkClearValue& in_clear_value);
 
 private:
 
 	void build_buffer(FramegraphPass* parent);
 
 	VkAttachmentDescription get_attachment_description();
+	VkClearValue clear_value;
 
 	std::string subpass_name;
 
 	std::array<VkClearValue, 2> clear_values{
-		VkClearValue{.color = { 0.6f, 0.9f, 1.f, 1.0f }},
-		VkClearValue{.depthStencil = { 1.0f, 0 }}
+		VkClearValue{.color = { 1, 0, 0, 0 }},
 	};
 
 	std::shared_ptr<Framebuffer> framebuffer;
 	FramebufferDescription framebuffer_description;
-
 };

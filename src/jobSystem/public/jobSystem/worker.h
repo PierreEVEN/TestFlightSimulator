@@ -29,7 +29,8 @@ namespace job_system {
 		static void wake_up_worker();
 
 		[[nodiscard]] bool is_busy() const { return current_task != nullptr; }
-	
+
+		std::shared_ptr<IJobTask> current_task = nullptr;
 	private:
 
 		Worker(const uint8_t worker_id);
@@ -39,7 +40,6 @@ namespace job_system {
 		explicit operator bool() const { return std::this_thread::get_id() == worker_thread.get_id(); }
 		[[nodiscard]] std::thread::id get_thread_id() const { return worker_thread.get_id(); }
 
-		std::shared_ptr<IJobTask> current_task = nullptr;
 		[[nodiscard]] static std::shared_ptr<IJobTask> steal_or_get_task();
 		[[nodiscard]] static std::shared_ptr<IJobTask> steal_task();
 

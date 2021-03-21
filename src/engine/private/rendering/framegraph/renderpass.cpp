@@ -20,7 +20,6 @@ void FramegraphPass::render(DrawInfo draw_info)
 {
 	logger_log("#### RENDER PASS %s", pass_name.c_str());
 	PerImageData& current_image_data = per_image_data[draw_info.image_index];
-	PerFrameData& current_frame_data= per_frame_data[draw_info.image_index];
 	// Update render infos
 	draw_info.current_pass = this;
 	draw_info.command_buffer = current_image_data.command_buffer;
@@ -32,9 +31,8 @@ void FramegraphPass::render(DrawInfo draw_info)
 
 	if (vkBeginCommandBuffer(draw_info.command_buffer, &begin_info) != VK_SUCCESS) { logger_fail("Failed to create command buffer for pass #%s", pass_name.c_str()); }
 
-	std::array<VkClearValue, 2> clear_values{};
-	clear_values[0].color = { 0.6f, 0.9f, 1.f, 1.0f };
-	clear_values[1].depthStencil = { 1.0f, 0 };
+	std::vector<VkClearValue> clear_values;
+	for (auto& subpass : subpasses) clear_values.push_back(subpass.clear_value);
 
 	VkRenderPassBeginInfo render_pass_info{};
 	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -72,43 +70,7 @@ void FramegraphPass::render(DrawInfo draw_info)
 
 
 	vkCmdEndRenderPass(draw_info.command_buffer);
-	VK_ENSURE(vkEndCommandBuffer(draw_info.command_buffer), "Failed to register command buffer for pass #s", pass_name.c_str());
-
-
-
-
-	/**
-	 * Submit command buffer
-	 */
-	
-	vkResetFences(parent->context->get_context()->logical_device, 1, &current_frame_data.queue_submit_fence);
-
-	/* Ensure previous pass are rendered */
-	std::vector<VkSemaphore> previous_pass_finished_semaphore = {};
-	for (auto& child_pass : children_pass_list) 
-	{
-		previous_pass_finished_semaphore.push_back(child_pass->per_frame_data[draw_info.frame_id].wait_render_finished_semaphore);
-	}
-	/* If no child pass were found, wait for KHR image acquire semaphore*/
-	if (previous_pass_finished_semaphore.empty())
-	{
-		previous_pass_finished_semaphore.push_back(parent->swapchain->image_acquire_semaphore[draw_info.frame_id]);		
-	}
-	
-	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-	const VkSubmitInfo submit_infos	{
-		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-		.waitSemaphoreCount = static_cast<uint32_t>(previous_pass_finished_semaphore.size()),
-		.pWaitSemaphores = previous_pass_finished_semaphore.data(),
-		.pWaitDstStageMask = &wait_stage,
-		.commandBufferCount = 1,
-		.pCommandBuffers = &draw_info.command_buffer,
-		.signalSemaphoreCount = 1,
-		.pSignalSemaphores = &current_frame_data.wait_render_finished_semaphore
-	};
-	
-	parent->context->get_context()->submit_graphic_queue(submit_infos, VK_NULL_HANDLE);
+	VK_ENSURE(vkEndCommandBuffer(draw_info.command_buffer), "Failed to register command buffer for pass #s", pass_name.c_str());	
 }
 
 void FramegraphPass::init(Framegraph* in_parent)
@@ -124,29 +86,18 @@ void FramegraphPass::create_frame_objects()
 	per_image_data.resize(parent->context->get_image_count());
 	for (auto& i : per_image_data)
 	{
+		VkCommandPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.queueFamilyIndex = parent->context->get_context()->queue_families.graphic_family.value();
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // Optional
+		VK_ENSURE(vkCreateCommandPool(parent->context->get_context()->logical_device, &poolInfo, vulkan_common::allocation_callback, &i.command_pool), "Failed to create command pool");
+		
 		VkCommandBufferAllocateInfo alloc_info{};
 		alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		alloc_info.commandPool = parent->context->get_command_pool();
+		alloc_info.commandPool = i.command_pool;
 		alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		alloc_info.commandBufferCount = 1;
 		VK_ENSURE(vkAllocateCommandBuffers(parent->context->get_context()->logical_device, &alloc_info, &i.command_buffer), "Failed to allocate command buffer");
-	}
-
-	per_frame_data.resize(config::max_frame_in_flight);
-	for (auto& i : per_frame_data)
-	{
-		VkSemaphoreCreateInfo semaphoreInfo {
-			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-		};
-
-		VK_ENSURE(vkCreateSemaphore(parent->context->get_context()->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &i.wait_render_finished_semaphore), "Failed to create render finnished semaphore")
-
-		VkFenceCreateInfo fenceInfo {
-			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-			.flags = VK_FENCE_CREATE_SIGNALED_BIT,
-		};
-		
-		VK_ENSURE(vkCreateFence(parent->context->get_context()->logical_device, &fenceInfo, vulkan_common::allocation_callback, &i.queue_submit_fence), "Failed to create fence");
 	}
 }
 
