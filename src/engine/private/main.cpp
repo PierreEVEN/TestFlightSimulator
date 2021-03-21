@@ -32,6 +32,7 @@ void create_test_framegraph(Window* context)
 
 
 	auto* framegraph = new Framegraph(context, {
+		/*
 		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "color_pass",  std::vector<std::string>{},
 		 std::vector<FramegraphSubpass>{
 			FramegraphSubpass("color_subpass", color_buffer_descriptions, {1, 0, 0, 0}),
@@ -46,8 +47,8 @@ void create_test_framegraph(Window* context)
 		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "post_process_path",  std::vector<std::string>{ "color_pass", "shadow_pass" }, 
 		std::vector<FramegraphSubpass> {
 			FramegraphSubpass("post_process_subpass", color_buffer_descriptions, {0, 1, 0, 0}),
-		}),
-		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "ui_pass",  std::vector<std::string>{ "post_process_path" },
+		}),*/
+		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "ui_pass",  std::vector<std::string>{ /*"post_process_path"*/ },
 		std::vector<FramegraphSubpass> {
 			FramegraphSubpass("ui_subpass", color_buffer_descriptions, {1, 1, 0, 0}),
 		}),

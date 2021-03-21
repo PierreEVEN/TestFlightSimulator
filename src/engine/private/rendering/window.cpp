@@ -589,6 +589,8 @@ void Window::render()
 	context->submit_graphic_queue(submitInfo, in_flight_fences[current_frame_id]); // Pass fence to know when all the data are submitted
 
 
+
+	
 	/**
 	 * Present to swapchain
 	 */

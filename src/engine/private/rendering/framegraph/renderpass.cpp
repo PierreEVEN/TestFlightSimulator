@@ -70,6 +70,36 @@ void FramegraphPass::render(DrawInfo draw_info)
 
 
 	vkCmdEndRenderPass(draw_info.command_buffer);
+
+	/*
+	if (pass_name == "ui_pass") {
+
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = subpasses[0].framebuffer->buffer_image;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.levelCount = 1;
+
+		VkPipelineStageFlags sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		VkPipelineStageFlags destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		
+		vkCmdPipelineBarrier(draw_info.command_buffer,
+			sourceStage,
+			destinationStage,
+			0, 0, nullptr, 0, nullptr, 1, &barrier);
+		logger_warning("CA PASSE OUI OU MERDE");
+	}*/
+
+	
 	VK_ENSURE(vkEndCommandBuffer(draw_info.command_buffer), "Failed to register command buffer for pass #s", pass_name.c_str());	
 }
 
@@ -124,6 +154,12 @@ void FramegraphPass::create_render_pass()
 	for (int i = 0; i < subpasses.size(); ++i)
 	{
 		attachment_descriptions.push_back(subpasses[i].get_attachment_description());
+
+		if (pass_name == "ui_pass") {
+			logger_error("################# switch attachment desc");
+			attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		}
+		
 		if (subpasses[i].framebuffer->is_depth_stencil_buffer)
 		{
 			if (depth_stencil_attachment_reference) logger_error("cannot handle multiple depth attachment per render pass");

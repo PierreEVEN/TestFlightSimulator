@@ -3,6 +3,8 @@
 #include "rendering/framegraph/framegraph.h"
 
 
+
+#include <queue>
 #include <vulkan/vulkan_core.h>
 
 
@@ -73,6 +75,15 @@ Framegraph::Framegraph(Window* in_context, const std::vector<std::shared_ptr<Fra
 
 		VK_ENSURE(vkCreateFence(context->get_context()->logical_device, &fenceInfo, vulkan_common::allocation_callback, &i.queue_submit_fence), "Failed to create fence");
 	}
+
+
+	present_command_buffers.resize(context->get_image_count());
+	VkCommandBufferAllocateInfo alloc_info{};
+	alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	alloc_info.commandPool = context->get_command_pool();
+	alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	alloc_info.commandBufferCount = present_command_buffers.size();
+	VK_ENSURE(vkAllocateCommandBuffers(context->get_context()->logical_device, &alloc_info, present_command_buffers.data()), "Failed to allocate command buffer");
 }
 
 void Framegraph::render_pass(const DrawInfo& draw_info, std::shared_ptr<FramegraphPass> pass)
@@ -127,7 +138,7 @@ void Framegraph::render()
 	vkResetFences(context->get_context()->logical_device, 1, &current_frame_data.queue_submit_fence);
 	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	
-	const VkSubmitInfo submit_infos{
+	VkSubmitInfo submit_infos{
 		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 		.waitSemaphoreCount = 1,
 		.pWaitSemaphores = &swapchain->image_acquire_semaphore[draw_info.frame_id],
@@ -140,10 +151,14 @@ void Framegraph::render()
 	context->get_context()->submit_graphic_queue(submit_infos, VK_NULL_HANDLE);
 
 
+	logger_validate("SUCCESSFULLY validated submit");
+
+
+
 	
 	// Submit image
 	logger_log("#### SUBMIT TO SWAPCHAIN");
-	swapchain->submit_next_image(draw_info.image_index, {});
+	swapchain->submit_next_image(draw_info.image_index, { current_frame_data.wait_render_finished_semaphore });
 	
 	// End frame rendering
 }
