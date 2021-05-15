@@ -44,7 +44,7 @@ jobs:
           
     - name: install-libxrandr
       shell: bash
-      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev
+      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
           
     # Generate makefile
     - name: generate-makefile
