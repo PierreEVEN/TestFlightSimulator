@@ -3,7 +3,8 @@
 #include "rendering/vulkan/framebuffer.h"
 
 
-#include "ios/logger.h"
+
+#include <cpputils/logger.hpp>
 #include "rendering/window.h"
 #include "rendering/vulkan/swapchain.h"
 #include "rendering/vulkan/texture.h"
@@ -11,13 +12,13 @@
 Framebuffer::Framebuffer(Window* window_context, VkExtent2D size)
 	: window(window_context)
 {
-	logger_log("create framebuffer ( %d x %d )", size.width, size.height);
+	LOG_INFO("create framebuffer ( %d x %d )", size.width, size.height);
 	set_size(size, true);
 }
 
 Framebuffer::~Framebuffer()
 {
-	logger_log("destroy framebuffer");
+    LOG_INFO("destroy framebuffer");
 	delete swapchain;
 	destroy_framebuffer();
 	destroy_framebuffer_images();

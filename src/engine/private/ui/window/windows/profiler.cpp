@@ -5,7 +5,8 @@
 
 #include "jobSystem/job.h"
 #include "jobSystem/worker.h"
-#include "ios/logger.h"
+
+#include <cpputils/logger.hpp>
 #include "ui/imgui/imgui.h"
 
 
@@ -60,7 +61,7 @@ void ProfilerWindow::draw_thread_stats()
 	for (int i = 0; i < job_system::Worker::get_worker_count(); ++i)
 	{
 		auto& data = usage_history[job_system::Worker::get_worker(i)];
-		ImGui::PlotHistogram(logger::log_format("thread #%x", job_system::Worker::get_worker(i)->get_thread()).c_str(), data.second, 100, data.first, 0, 0, 1, ImVec2(300, 20));
+		ImGui::PlotHistogram(stringutils::format("thread #%x", job_system::Worker::get_worker(i)->get_thread()).c_str(), data.second, 100, data.first, 0, 0, 1, ImVec2(300, 20));
 	}
 }
 
@@ -115,7 +116,7 @@ void ProfilerWindow::draw_profiler_history()
 			for (const auto& thread : infos)
 			{
 				ImGui::Text("thread #%x", thread.first);
-				if (ImGui::BeginChild(logger::log_format("child_%x", thread.first).c_str(), ImVec2(static_cast<float>(length), 20), true))
+				if (ImGui::BeginChild(stringutils::format("child_%x", thread.first).c_str(), ImVec2(static_cast<float>(length), 20), true))
 				{
 					for (auto& elem : thread.second.thread_stats) {
 

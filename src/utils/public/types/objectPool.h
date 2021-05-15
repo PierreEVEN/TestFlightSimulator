@@ -2,7 +2,7 @@
 
 #include <mutex>
 #include <vector>
-#include "ios/logger.h"
+#include <cpputils/logger.hpp>
 
 template<typename ObjectType>
 class IObjectPool
@@ -38,8 +38,7 @@ public:
 	{
 		std::lock_guard lock(pool_lock);
 		if ((pool_bottom + 1) % PoolSize == pool_top)
-		{
-			logger_fail("object pool overflow : max=%d", PoolSize);
+		{ LOG_FATAL("object pool overflow : max=%d", PoolSize);
 		}
 		
 		pool[pool_bottom] = object;

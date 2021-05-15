@@ -9,7 +9,8 @@
 
 
 #include "config.h"
-#include "ios/logger.h"
+#include <cpputils/logger.hpp>
+#include <cpputils/stringutils.hpp>
 
 #if _DEBUG
 Profiler profiler_instance(true);
@@ -63,7 +64,7 @@ void Profiler::begin_record(bool silent)
 {
 	if (is_recording) return;
 	std::lock_guard<std::mutex> lock(access_lock);
-	if (!silent) logger_log("begin profiler record");
+        if (!silent) LOG_INFO("begin profiler record");
 	is_recording = true;
 	record_start = record_clock::now();
 }
@@ -72,7 +73,7 @@ void Profiler::end_record()
 {
 	if (!is_recording) return;
 	std::lock_guard<std::mutex> lock(access_lock);
-	logger_log("storing profiler stats");
+        LOG_INFO("storing profiler stats");
 	is_recording = false;
 	store_stats();
 }
@@ -105,8 +106,7 @@ void Profiler::store_stats()
 	
 	std::ofstream output(std::string(config::profiler_storage_path) + "/Profiler-" + buf + ".csv");
 	if (!output)
-	{
-		logger_fail("cannot write profiler results");
+	{ LOG_FATAL("cannot write profiler results ");
 	}
 
 	
@@ -114,7 +114,7 @@ void Profiler::store_stats()
 	
 	for (const auto& stat : history)
 	{
-		output << logger::log_format("%x, %s, %s, %ld, %ld",
+		output << stringutils::format("%x, %s, %s, %ld, %ld",
 			stat.thread,
 			stat.name,
 			stat.function_name,

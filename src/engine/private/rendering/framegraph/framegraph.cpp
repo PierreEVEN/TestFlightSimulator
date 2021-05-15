@@ -82,7 +82,7 @@ Framegraph::Framegraph(Window* in_context, const std::vector<std::shared_ptr<Fra
 	alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	alloc_info.commandPool = context->get_command_pool();
 	alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	alloc_info.commandBufferCount = present_command_buffers.size();
+	alloc_info.commandBufferCount = static_cast<uint32_t>(present_command_buffers.size());
 	VK_ENSURE(vkAllocateCommandBuffers(context->get_context()->logical_device, &alloc_info, present_command_buffers.data()), "Failed to allocate command buffer");
 }
 
@@ -91,12 +91,12 @@ void Framegraph::render_pass(const DrawInfo& draw_info, std::shared_ptr<Framegra
 	for (auto& child : pass->children_pass_list) {
 		job_system::new_job([&, draw_info, child]
 			{
-				logger_warning("-> begin child pass %s", child->pass_name.c_str());
+                LOG_WARNING("-> begin child pass %s", child->pass_name.c_str());
 				render_pass(draw_info, child);
-				logger_warning("-> end child pass %s", child->pass_name.c_str());
+                LOG_WARNING("-> end child pass %s", child->pass_name.c_str());
 			});
 	}
-	logger_validate("wait children %s", pass->pass_name.c_str());
+        LOG_VALIDATE("wait children %s", pass->pass_name.c_str());
 	job_system::wait_children();
 
 
@@ -104,17 +104,17 @@ void Framegraph::render_pass(const DrawInfo& draw_info, std::shared_ptr<Framegra
 
 	
 	pass->render(draw_info);
-	logger_error("end pass %s", pass->pass_name.c_str());
+        LOG_ERROR("end pass %s", pass->pass_name.c_str());
 }
 
 void Framegraph::render()
 {
-	logger_log("#### BEGIN FRAME");
+    LOG_INFO("#### BEGIN FRAME");
 	// Begin frame rendering
 	// Acquire next image to draw on
 	DrawInfo draw_info = swapchain->acquire_next_image();
 
-	logger_log("#### ACQUIRED NEXT IMAGE");
+	LOG_INFO("#### ACQUIRED NEXT IMAGE");
 	PerFrameData& current_frame_data = per_frame_data[draw_info.image_index];
 
 	// Build command buffers
@@ -125,7 +125,7 @@ void Framegraph::render()
 	job_system::wait_children();
 	
 	// Submit command buffers
-	logger_log("### BEGIN SUBMIT PASS");
+        LOG_INFO("### BEGIN SUBMIT PASS");
 
 
 	std::vector<VkCommandBuffer> command_buffers;
@@ -151,13 +151,13 @@ void Framegraph::render()
 	context->get_context()->submit_graphic_queue(submit_infos, VK_NULL_HANDLE);
 
 
-	logger_validate("SUCCESSFULLY validated submit");
+	LOG_VALIDATE("SUCCESSFULLY validated submit");
 
 
 
 	
 	// Submit image
-	logger_log("#### SUBMIT TO SWAPCHAIN");
+        LOG_INFO("#### SUBMIT TO SWAPCHAIN");
 	swapchain->submit_next_image(draw_info.image_index, { current_frame_data.wait_render_finished_semaphore });
 	
 	// End frame rendering

@@ -1,167 +1,150 @@
 
-#include "config.h"
 #include "assets/Scene.h"
 #include "assets/shader.h"
-#include "statsRecorder.h"
 #include "assets/texture2d.h"
-#include "jobSystem/job_system.h"
-#include "ios/logger.h"
+#include "config.h"
 #include "ios/scene_importer.h"
+#include "jobSystem/job_system.h"
 #include "misc/capabilities.h"
-#include "rendering/window.h"
 #include "rendering/framegraph/framegraph.h"
 #include "rendering/framegraph/renderpass.h"
+#include "rendering/window.h"
+#include "statsRecorder.h"
 #include "ui/window/windows/contentBrowser.h"
 #include "ui/window/windows/profiler.h"
 
-
 void create_test_framegraph(Window* context)
 {
-	FramebufferDescription color_buffer_descriptions{
-		.format = VK_FORMAT_R8G8B8A8_UNORM,
-	};
-	
-	FramebufferDescription coordinate_buffer_description{
-	.format = VK_FORMAT_R16G16B16A16_SFLOAT,
-	};
-	
-	FramebufferDescription depth_buffer_description{
-	.format = vulkan_utils::get_depth_format(context->get_context()->physical_device),
-	.is_depth_buffer = true
-	};
+    FramebufferDescription color_buffer_descriptions{
+        .format = VK_FORMAT_R8G8B8A8_UNORM,
+    };
 
+    FramebufferDescription coordinate_buffer_description{
+        .format = VK_FORMAT_R16G16B16A16_SFLOAT,
+    };
 
-	auto* framegraph = new Framegraph(context, {
-		/*
-		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "color_pass",  std::vector<std::string>{},
-		 std::vector<FramegraphSubpass>{
-			FramegraphSubpass("color_subpass", color_buffer_descriptions, {1, 0, 0, 0}),
-			FramegraphSubpass("depth_stencil_subpass",depth_buffer_description, VkClearValue{.depthStencil{1, 0}}),
-			FramegraphSubpass("normal_subpass", coordinate_buffer_description, {0, 0, 1, 0}),
-			FramegraphSubpass("position_subpass", coordinate_buffer_description, {0, 0, 0, 0})
-		}),
-		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "shadow_pass",  std::vector<std::string>{}, 
-		std::vector<FramegraphSubpass> {
-			FramegraphSubpass("shadow_depth_subpass", depth_buffer_description, {0, 0, 0, 0}),
-			}),
-		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "post_process_path",  std::vector<std::string>{ "color_pass", "shadow_pass" }, 
-		std::vector<FramegraphSubpass> {
-			FramegraphSubpass("post_process_subpass", color_buffer_descriptions, {0, 1, 0, 0}),
-		}),*/
-		std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "ui_pass",  std::vector<std::string>{ /*"post_process_path"*/ },
-		std::vector<FramegraphSubpass> {
-			FramegraphSubpass("ui_subpass", color_buffer_descriptions, {1, 1, 0, 0}),
-		}),
-		});
-	
-	while (true) {
-		framegraph->render();
-	}
+    FramebufferDescription depth_buffer_description{.format = vulkan_utils::get_depth_format(context->get_context()->physical_device), .is_depth_buffer = true};
+
+    auto* framegraph = new Framegraph(context, {
+                                                   /*
+                                                   std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "color_pass",  std::vector<std::string>{},
+                                                    std::vector<FramegraphSubpass>{
+                                                           FramegraphSubpass("color_subpass", color_buffer_descriptions, {1, 0, 0, 0}),
+                                                           FramegraphSubpass("depth_stencil_subpass",depth_buffer_description, VkClearValue{.depthStencil{1, 0}}),
+                                                           FramegraphSubpass("normal_subpass", coordinate_buffer_description, {0, 0, 1, 0}),
+                                                           FramegraphSubpass("position_subpass", coordinate_buffer_description, {0, 0, 0, 0})
+                                                   }),
+                                                   std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "shadow_pass",  std::vector<std::string>{},
+                                                   std::vector<FramegraphSubpass> {
+                                                           FramegraphSubpass("shadow_depth_subpass", depth_buffer_description, {0, 0, 0, 0}),
+                                                           }),
+                                                   std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "post_process_path",  std::vector<std::string>{ "color_pass", "shadow_pass" },
+                                                   std::vector<FramegraphSubpass> {
+                                                           FramegraphSubpass("post_process_subpass", color_buffer_descriptions, {0, 1, 0, 0}),
+                                                   }),*/
+                                                   std::make_shared<FramegraphPass>(VkExtent2D{800, 600}, "ui_pass", std::vector<std::string>{/*"post_process_path"*/},
+                                                                                    std::vector<FramegraphSubpass>{
+                                                                                        FramegraphSubpass("ui_subpass", color_buffer_descriptions, {1, 1, 0, 0}),
+                                                                                    }),
+                                               });
+
+    while (true) { framegraph->render(); }
 }
 
 void window_test(bool imgui_context)
-{	
-	Window game_window(800, 600, config::application_name, false, imgui_context);
-	/*
+{
+    Window game_window(800, 600, config::application_name, false, imgui_context);
+    /*
 
-	game_window.get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
-	
-	auto default_texture = game_window.get_asset_manager()->create<Texture2d>("default-texture", "data/DefaultTexture.png");
+    game_window.get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
 
-	auto shader = game_window.get_asset_manager()->create<Shader>(
-	"shader_Test",
-		"data/test.vs.glsl",
-		"data/test.fs.glsl"
-		);
+    auto default_texture = game_window.get_asset_manager()->create<Texture2d>("default-texture", "data/DefaultTexture.png");
 
-	new ProfilerWindow(&game_window, "profiler");
-	new ContentBrowser(&game_window, "content browser");
-	*/
-	create_test_framegraph(&game_window);
-	return;
+    auto shader = game_window.get_asset_manager()->create<Shader>(
+    "shader_Test",
+            "data/test.vs.glsl",
+            "data/test.fs.glsl"
+            );
 
-	
-	while (game_window.begin_frame()) {
-		game_window.end_frame();
-	}
+    new ProfilerWindow(&game_window, "profiler");
+    new ContentBrowser(&game_window, "content browser");
+    */
+    create_test_framegraph(&game_window);
+    return;
+
+    while (game_window.begin_frame()) { game_window.end_frame(); }
 }
 
 void execute()
 {
-	// Create workers
-	job_system::Worker::create_workers(2);
+    // Create workers
+    job_system::Worker::create_workers(2);
 
-	// Initialize rendering window
-	logger_log("initialize rendering");
-	glfwInit();
-	capabilities::check_all();
-	vulkan_common::vulkan_init();
+    // Initialize rendering window
+    LOG_INFO("initialize rendering");
+    glfwInit();
+    capabilities::check_all();
+    vulkan_common::vulkan_init();
 
-	// Create two test windows
-	auto main_task = job_system::new_job([] {window_test(true); });
+    // Create two test windows
+    auto main_task = job_system::new_job([] { window_test(true); });
 
-	// Wait remaining job completion
-	logger_log("waiting remaining jobs...");
-	main_task->wait();
-	
-	// Destroy rendering window
-	vulkan_common::vulkan_shutdown();
-	glfwTerminate();
-	job_system::Worker::destroy_workers();
-	logger_validate("process complete !");
+    // Wait remaining job completion
+    LOG_INFO("waiting remaining jobs...");
+    main_task->wait();
+
+    // Destroy rendering window
+    vulkan_common::vulkan_shutdown();
+    glfwTerminate();
+    job_system::Worker::destroy_workers();
+    LOG_VALIDATE("process complete !");
 }
-
 
 void execute_job_test()
 {
-	job_system::Worker::create_workers();
+    job_system::Worker::create_workers();
 
-	logger_validate("run test");
+    LOG_VALIDATE("run test");
 
-	job_system::new_job([]
-		{
-			logger_log("add child task");
-			job_system::new_job([]
-				{
+    job_system::new_job([] {
+        LOG_INFO("add child task");
+        job_system::new_job([] {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            LOG_INFO("finnished child execution");
+        })->wait();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        job_system::new_job([] {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            LOG_INFO("finnished child execution");
+        })->wait();
+        LOG_INFO("wait child task");
+        LOG_INFO("complete child task");
+    });
 
-					std::this_thread::sleep_for(std::chrono::milliseconds(500));
-					logger_log("finnished child execution");
-				
-				})->wait();
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			job_system::new_job([]
-				{
+    job_system::Worker::wait_job_completion();
 
-					std::this_thread::sleep_for(std::chrono::milliseconds(500));
-					logger_log("finnished child execution");
+    LOG_VALIDATE("job complete - destroying jobs");
 
-				})->wait();
-			logger_log("wait child task");
-			logger_log("complete child task");
-		});
-
-	job_system::Worker::wait_job_completion();
-
-	logger_validate("job complete - destroying jobs");
-	
-	job_system::Worker::destroy_workers();
+    job_system::Worker::destroy_workers();
 }
-
 
 int main(int argc, char* argv[])
 {
-	Profiler::get().begin_record();
+    Logger::get().set_log_file("./saved/log/Log - %s.log");
+    Logger::get().enable_logs(Logger::LOG_LEVEL_TRACE | Logger::LOG_LEVEL_DEBUG | Logger::LOG_LEVEL_INFO);
 
-	try
-	{
-		BEGIN_RECORD();
-		execute();
-		//execute_job_test();
-	}
-	catch (std::exception& e)
-	{
-		logger_fail("application crashed : %s", e.what());
-	}
-	
-	Profiler::get().end_record();
+    Profiler::get().begin_record();
+
+    try
+    {
+        BEGIN_RECORD();
+        execute();
+        // execute_job_test();
+    }
+    catch (std::exception& e)
+    {
+        LOG_FATAL("application crashed : %s", e.what());
+    }
+
+    Profiler::get().end_record();
 }

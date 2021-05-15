@@ -7,17 +7,17 @@
 
 
 #include "config.h"
-#include "ios/logger.h"
+#include <cpputils/logger.hpp>
 #include "rendering/window.h"
 
 namespace capabilities
 {
 	void check_all()
 	{
-		logger_log("checking vulkan support");
+            LOG_INFO("checking vulkan support");
 		check_vk_extensions();
 		if (config::use_validation_layers) check_validation_layer_support();
-		logger_validate("vulkan is fully supported !");
+                LOG_VALIDATE("vulkan is fully supported !");
 	}
 
 	void check_vk_extensions()
@@ -35,7 +35,7 @@ namespace capabilities
 
 		std::vector<const char*> required_extensions = vulkan_utils::get_required_extensions();
 
-		logger_log(log.c_str());
+		LOG_INFO(log.c_str());
 
 		for (const auto& required_ext : required_extensions)
 		{
@@ -48,9 +48,9 @@ namespace capabilities
 					break;
 				}
 			}
-			if (!found_extension) logger_error("extension '%s' is required but cannot be found.", required_ext);
+                        if (!found_extension) LOG_ERROR("extension '%s' is required but cannot be found.", required_ext);
 		}
-		logger_log("all required extensions are supported !");
+                LOG_INFO("all required extensions are supported !");
 	}
 
 	void check_validation_layer_support()
@@ -70,8 +70,8 @@ namespace capabilities
 				}
 			}
 
-			if (!found_layer) logger_warning("failed to enable required validation layer '%s'", layer_name);
+			if (!found_layer) LOG_WARNING("failed to enable required validation layer '%s'", layer_name);
 		}
-		logger_log("validation layers are supported");
+                LOG_INFO("validation layers are supported");
 	}
 }

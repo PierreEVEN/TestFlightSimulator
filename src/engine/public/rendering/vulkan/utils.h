@@ -9,9 +9,12 @@
 #include <optional>
 #include <vector>
 
-#include "ios/logger.h"
-#define VK_ENSURE(condition, ...) if ((condition) != VK_SUCCESS) { logger_fail("VK_ERROR %d : %s", condition, __VA_ARGS__); }
-#define VK_CHECK(object, ...) if ((object) == VK_NULL_HANDLE) { logger_fail("VK_ERROR_NULL_HANDLE %d : %s", object, __VA_ARGS__); }
+
+#include <cpputils/logger.hpp>
+#define VK_ENSURE(condition, ...) \
+    if ((condition) != VK_SUCCESS) { LOG_FATAL("VK_ERROR %d : %s", condition, __VA_ARGS__); }
+#define VK_CHECK(object, ...) \
+    if ((object) == VK_NULL_HANDLE) { LOG_FATAL("VK_ERROR_NULL_HANDLE %d : %s", object, __VA_ARGS__); }
 
 class WindowContext;
 class Window;

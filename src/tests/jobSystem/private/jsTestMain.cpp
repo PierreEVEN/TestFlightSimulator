@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 		});
 
 	p2->wait();
-	logger_validate("complete");
+	LOG_VALIDATE("complete");
 
 	job_system::Worker::destroy_workers();
 }

@@ -8,7 +8,8 @@
 #include <vulkan/vulkan_core.h>
 
 
-#include "ios/logger.h"
+
+#include <cpputils/logger.hpp>
 
 #include "spirv_glsl.hpp"
 #include "rendering/vulkan/common.h"
@@ -62,7 +63,7 @@ std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name
 
 	if (preprocess_result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		logger_error("failed to prprocess shader %s : %s", file_name.c_str(), preprocess_result.GetErrorMessage().c_str());
+            LOG_ERROR("failed to prprocess shader %s : %s", file_name.c_str(), preprocess_result.GetErrorMessage().c_str());
 		return bytecode;
 	}
 	std::vector<char> preprocessed_shader = { preprocess_result.cbegin(), preprocess_result.cend() };
@@ -81,7 +82,7 @@ std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name
 
 	if (compilation_result.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		logger_error("Failed to compile shader %s : %s", file_name.c_str(), compilation_result.GetErrorMessage().c_str());
+            LOG_ERROR("Failed to compile shader %s : %s", file_name.c_str(), compilation_result.GetErrorMessage().c_str());
 		return bytecode;
 	}
 	bytecode = { compilation_result.cbegin(), compilation_result.cend() };
@@ -99,7 +100,7 @@ std::optional<VkShaderModule> create_shader_module(VkDevice logical_device, cons
 	createInfo.pCode = reinterpret_cast<const uint32_t*>(bytecode.data());
 	VkResult res = vkCreateShaderModule(logical_device, &createInfo, vulkan_common::allocation_callback, &shader_module);
 	if (!res == VK_SUCCESS) {
-		logger_error("Failed to create shader module : %d", static_cast<uint32_t>(res));
+            LOG_ERROR("Failed to create shader module : %d", static_cast<uint32_t>(res));
 		return nullptr;
 	}
 	return shader_module;
@@ -145,7 +146,7 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
 	const spirv_cross::Compiler compiler(bytecode);
 
 #if ENABLE_SHADER_LOGGING
-	logger_log("### BUILDING SHADER ###");
+        LOG_INFO("### BUILDING SHADER ###");
 #endif
 
 	/**
@@ -156,27 +157,26 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
 	const auto push_constant_buffers = compiler.get_shader_resources().push_constant_buffers;
 	
 #if ENABLE_SHADER_LOGGING
-	logger_log("push constant : %d", push_constant_buffers.size());
+        LOG_INFO("push constant : %d", push_constant_buffers.size());
 	for (auto& push_constant : push_constant_buffers)
-	{
-		logger_log("\t=> #%d (%s)", push_constant.id, push_constant.name.c_str());
+	{ LOG_INFO("\t=> #%d (%s)", push_constant.id, push_constant.name.c_str());
 	}
 #endif
 
 	push_constant_buffer_size = 0;
 	if (!push_constant_buffers.empty())
 	{
-		if (push_constant_buffers.size() != 1) logger_error("unhandled push constant buffer count");
+            if (push_constant_buffers.size() != 1) LOG_ERROR("unhandled push constant buffer count");
 		
 		for (auto& buffer_range : compiler.get_active_buffer_ranges(compiler.get_shader_resources().push_constant_buffers[0].id)) {
 #if ENABLE_SHADER_LOGGING
-			logger_log("\t\t => Accessing member # % u, offset % u, size % u", buffer_range.index, buffer_range.offset, buffer_range.range);
+                    LOG_INFO("\t\t => Accessing member # % u, offset % u, size % u", buffer_range.index, buffer_range.offset, buffer_range.range);
 #endif
 			push_constant_buffer_size += static_cast<uint32_t>(buffer_range.range);
 		}
 		
 #if ENABLE_SHADER_LOGGING
-		logger_log("push constant size : %d", push_constant_buffer_size);
+                LOG_INFO("push constant size : %d", push_constant_buffer_size);
 #endif
 	}
 
@@ -188,18 +188,18 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
 	const auto uniform_buffers = compiler.get_shader_resources().uniform_buffers;
 	
 #if ENABLE_SHADER_LOGGING
-	logger_log("uniform buffers : %d", uniform_buffers.size());
+        LOG_INFO("uniform buffers : %d", uniform_buffers.size());
 #endif
 	
 	if (!uniform_buffers.empty())
 	{
-		if (uniform_buffers.size() != 1) logger_error("unhandled uniform buffer count");
+            if (uniform_buffers.size() != 1) LOG_ERROR("unhandled uniform buffer count");
 		for (auto& buffer : uniform_buffers)
 		{
 			uint32_t set = compiler.get_decoration(buffer.id, spv::DecorationDescriptorSet);
 			uniform_buffer_binding = compiler.get_decoration(buffer.id, spv::DecorationBinding);
 #if ENABLE_SHADER_LOGGING
-			logger_log("\t => Found UBO % s at set = %u, binding = %u!", buffer.name.c_str(), set, uniform_buffer_binding);
+                        LOG_INFO("\t => Found UBO % s at set = %u, binding = %u!", buffer.name.c_str(), set, uniform_buffer_binding);
 #endif
 		}
 	}
@@ -211,7 +211,7 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
 	const auto sampled_image = compiler.get_shader_resources().sampled_images;
 	
 #if ENABLE_SHADER_LOGGING
-	logger_log("uniform sampler : %d", sampled_image.size());
+        LOG_INFO("uniform sampler : %d", sampled_image.size());
 #endif
 	
 	if (!sampled_image.empty())
@@ -221,7 +221,7 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
 			uint32_t set = compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
 			uint32_t sampled_image_binding = compiler.get_decoration(sampler.id, spv::DecorationBinding);
 #if ENABLE_SHADER_LOGGING
-			logger_log("\t => Found sampled image % s at set = % u, binding = % u!", sampler.name.c_str(), set, sampled_image_binding);
+                        LOG_INFO("\t => Found sampled image % s at set = % u, binding = % u!", sampler.name.c_str(), set, sampled_image_binding);
 #endif
 			sampled_image_bindings.push_back(sampled_image_binding);
 		}

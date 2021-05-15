@@ -69,7 +69,7 @@ StaticMesh::StaticMesh(const VertexGroup& in_vertices, const std::vector<uint32_
 {
 	creation_job = job_system::new_job([&, in_vertices, in_triangles]
 		{
-			logger_log("create static mesh %s", get_id().to_string().c_str());
+        LOG_INFO("create static mesh %s", get_id().to_string().c_str());
 			BEGIN_NAMED_RECORD(CREATE_MESH);
 			void* data;
 			VkBuffer stagin_buffer;

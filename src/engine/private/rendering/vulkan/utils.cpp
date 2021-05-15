@@ -6,7 +6,8 @@
 #include "vk_mem_alloc.h"
 
 #include "config.h"
-#include "ios/logger.h"
+
+#include <cpputils/logger.hpp>
 #include "rendering/window.h"
 #include "rendering/vulkan/commandPool.h"
 
@@ -19,18 +20,18 @@ namespace vulkan_utils
 	VKAPI_ATTR VkBool32 VKAPI_CALL validation_layer_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data)
 	{
 		if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
-			logger_log("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
+                LOG_INFO("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
 		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-			logger_validate("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
+                    LOG_VALIDATE("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
 		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-			logger_warning("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
+                    LOG_WARNING("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
 		else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 		{
-			logger_fail("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
+                    LOG_FATAL("VULKAN VALIDATION LAYER : %s", callback_data->pMessage);
 		}
 		else
 		{
-			logger_error("VULKAN VALIDATION LAYER - UNKOWN VERBOSITY : %s", callback_data->pMessage);
+                    LOG_ERROR("VULKAN VALIDATION LAYER - UNKOWN VERBOSITY : %s", callback_data->pMessage);
 		}
 
 		return VK_FALSE;
@@ -93,8 +94,7 @@ namespace vulkan_utils
 			i++;
 		}
 		if (!indices.is_complete())
-		{
-			logger_fail("queue family indices are not complete");
+		{ LOG_FATAL("queue family indices are not complete");
 		}
 		return indices;
 	}
@@ -258,7 +258,7 @@ namespace vulkan_utils
 			}
 		}
 
-		logger_error("cannot support required log_format");
+		LOG_ERROR("cannot support required log_format");
 		exit(EXIT_FAILURE);
 	}
 
@@ -289,7 +289,7 @@ namespace vulkan_utils
 			}
 		}
 
-		logger_error("Failed to find desired memory type");
+		LOG_ERROR("Failed to find desired memory type");
 		return -1;
 	}
 
@@ -346,8 +346,7 @@ namespace vulkan_utils
 		bufferInfo.usage = usage;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (vkCreateBuffer(context->logical_device, &bufferInfo, vulkan_common::allocation_callback, &buffer) != VK_SUCCESS) {
-			logger_fail("Failed to create buffer");
+		if (vkCreateBuffer(context->logical_device, &bufferInfo, vulkan_common::allocation_callback, &buffer) != VK_SUCCESS) { LOG_FATAL("Failed to create buffer");
 		}
 
 		VkMemoryRequirements memRequirements;
@@ -358,8 +357,7 @@ namespace vulkan_utils
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = find_memory_type(context->physical_device, memRequirements.memoryTypeBits, properties);
 
-		if (vkAllocateMemory(context->logical_device, &allocInfo, vulkan_common::allocation_callback, &bufferMemory) != VK_SUCCESS) {
-			logger_fail("Failled to allocate buffer memory");
+		if (vkAllocateMemory(context->logical_device, &allocInfo, vulkan_common::allocation_callback, &bufferMemory) != VK_SUCCESS) { LOG_FATAL("Failled to allocate buffer memory");
 		}
 
 		vkBindBufferMemory(context->logical_device, buffer, bufferMemory, 0);

@@ -31,8 +31,9 @@
 *.out
 *.app
 
+.idea
+.vs
 temp
 bin
 saved
-.idea
-cmake-build-debug
+imgui.ini

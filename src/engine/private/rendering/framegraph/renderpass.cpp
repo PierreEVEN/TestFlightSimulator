@@ -6,7 +6,7 @@
 
 
 #include "config.h"
-#include "ios/logger.h"
+#include <cpputils/logger.hpp>
 #include "jobSystem/job_system.h"
 #include "rendering/window.h"
 #include "rendering/framegraph/framegraph.h"
@@ -18,7 +18,7 @@ FramegraphPass::FramegraphPass(VkExtent2D resolution, const std::string& in_pass
 
 void FramegraphPass::render(DrawInfo draw_info)
 {
-	logger_log("#### RENDER PASS %s", pass_name.c_str());
+	LOG_INFO("#### RENDER PASS %s", pass_name.c_str());
 	PerImageData& current_image_data = per_image_data[draw_info.image_index];
 	// Update render infos
 	draw_info.current_pass = this;
@@ -29,7 +29,7 @@ void FramegraphPass::render(DrawInfo draw_info)
 	begin_info.flags = 0; // Optional
 	begin_info.pInheritanceInfo = nullptr; // Optional
 
-	if (vkBeginCommandBuffer(draw_info.command_buffer, &begin_info) != VK_SUCCESS) { logger_fail("Failed to create command buffer for pass #%s", pass_name.c_str()); }
+	if (vkBeginCommandBuffer(draw_info.command_buffer, &begin_info) != VK_SUCCESS) { LOG_FATAL("Failed to create command buffer for pass #%s", pass_name.c_str()); }
 
 	std::vector<VkClearValue> clear_values;
 	for (auto& subpass : subpasses) clear_values.push_back(subpass.clear_value);
@@ -96,7 +96,7 @@ void FramegraphPass::render(DrawInfo draw_info)
 			sourceStage,
 			destinationStage,
 			0, 0, nullptr, 0, nullptr, 1, &barrier);
-		logger_warning("CA PASSE OUI OU MERDE");
+		LOG_WARNING("CA PASSE OUI OU MERDE");
 	}*/
 
 	
@@ -140,8 +140,8 @@ void FramegraphPass::create_render_pass()
 	}
 	create_frame_objects();
 
-	logger_log("create render pass group '%s'", pass_name.c_str());
-	if (render_pass != VK_NULL_HANDLE) logger_fail("cannot recreate render pass yet");
+	LOG_INFO("create render pass group '%s'", pass_name.c_str());
+        if (render_pass != VK_NULL_HANDLE) LOG_FATAL("cannot recreate render pass yet");
 
 	/*
 	 *  QUERY SUBPASSES
@@ -156,13 +156,13 @@ void FramegraphPass::create_render_pass()
 		attachment_descriptions.push_back(subpasses[i].get_attachment_description());
 
 		if (pass_name == "ui_pass") {
-			logger_error("################# switch attachment desc");
+                    LOG_ERROR("################# switch attachment desc");
 			attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		}
 		
 		if (subpasses[i].framebuffer->is_depth_stencil_buffer)
 		{
-			if (depth_stencil_attachment_reference) logger_error("cannot handle multiple depth attachment per render pass");
+                    if (depth_stencil_attachment_reference) LOG_ERROR("cannot handle multiple depth attachment per render pass");
 			depth_stencil_attachment_reference = VkAttachmentReference{
 				.attachment = static_cast<uint32_t>(i),
 				.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,

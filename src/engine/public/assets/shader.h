@@ -46,8 +46,8 @@ public:
 	void push_constant_value(VkCommandBuffer command_buffer, Struct* data, VkShaderStageFlags shader_stage)
 	{
 		auto shader_stage = get_shader_module(shader_stage);
-		if (!shader_stage) logger_fail("%d is not a valid shader stage", shader_stage);
-		if (shader_stage->get_push_constant_size() != sizeof(Struct)) logger_fail("push constant error : %d is not a valid buffer size (expected %d)", sizeof(Struct), shader_stage->get_push_constant_size());
+            if (!shader_stage) LOG_FATAL("%d is not a valid shader stage", shader_stage);
+                if (shader_stage->get_push_constant_size() != sizeof(Struct)) LOG_FATAL("push constant error : %d is not a valid buffer size (expected %d)", sizeof(Struct), shader_stage->get_push_constant_size());
 		vkCmdPushConstants(command_buffer, pipeline_layout, shader_stage, 0, sizeof(Struct), data);
 	}
 

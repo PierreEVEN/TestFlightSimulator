@@ -2,7 +2,8 @@
 
 #include "scene/node.h"
 
-#include "ios/logger.h"
+
+#include <cpputils/logger.hpp>
 
 Node::Node(Node* in_parent, const glm::dvec3& in_position, const glm::dquat& in_rotation,
            const glm::dvec3& in_scale)
@@ -15,7 +16,7 @@ void Node::attach_to(Node* target, bool keep_world_transform)
 {
 	if (!target)
 	{
-		logger_warning("attempting to attach node to null parent");
+            LOG_WARNING("attempting to attach node to null parent");
 		return;
 	}
 	

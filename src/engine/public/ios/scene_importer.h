@@ -1,12 +1,15 @@
 #pragma once
 #include <filesystem>
 #include <unordered_map>
-#include <assimp/Importer.hpp>
 
 
 
 #include "assets/assetPtr.h"
-#include "assets/GraphicResource.h"
+#include "assets/graphicResource.h"
+
+namespace Assimp {
+class Importer;
+}
 
 class Texture2d;
 class Shader;
@@ -45,5 +48,5 @@ private:
 	std::vector<TAssetPtr<Shader>> material_refs;
 	std::vector<TAssetPtr<StaticMesh>> meshes_refs;
 	
-	Assimp::Importer importer;
+	std::unique_ptr<Assimp::Importer> importer;
 };

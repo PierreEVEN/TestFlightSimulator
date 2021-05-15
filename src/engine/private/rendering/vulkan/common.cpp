@@ -9,7 +9,8 @@
 
 
 #include "config.h"
-#include "ios/logger.h"
+
+#include <cpputils/logger.hpp>
 
 namespace vulkan_common {
 
@@ -21,7 +22,7 @@ namespace vulkan_common {
 	{
 		create_instance();
 		create_validation_layers();
-		logger_validate("initialized vulkan");
+                LOG_VALIDATE("initialized vulkan");
 	}
 
 	void vulkan_shutdown()
@@ -60,7 +61,7 @@ namespace vulkan_common {
 		{
 			vkInstanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(config::required_validation_layers.size());
 			vkInstanceCreateInfo.ppEnabledLayerNames = config::required_validation_layers.data();
-			logger_log("Linked validation layers");
+                        LOG_INFO("Linked validation layers");
 			debugMessengerCreateInfos = static_cast<VkDebugUtilsMessengerCreateInfoEXT>(vulkan_utils::debug_messenger_create_infos);
 			vkInstanceCreateInfo.pNext = &debugMessengerCreateInfos;
 		}
@@ -71,7 +72,7 @@ namespace vulkan_common {
 		}
 		
 		VK_ENSURE(vkCreateInstance(&vkInstanceCreateInfo, allocation_callback, &instance), "Failed to create vulkan instance");
-		logger_log("Created vulkan instance");
+                LOG_INFO("Created vulkan instance");
 		VK_CHECK(instance, "VkInstance is null");
 	}
 
@@ -83,28 +84,27 @@ namespace vulkan_common {
 		auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
 		if (func != nullptr) {
 			if (func(instance, &vulkan_utils::debug_messenger_create_infos, nullptr, &debugMessenger) != VK_SUCCESS)
-			{
-				logger_fail("Failed to create debug messenger");
+			{ LOG_FATAL("Failed to create debug messenger");
 			}
 		}
 		else {
-			logger_fail("Cannot create debug messenger : cannot find required extension");
+                    LOG_FATAL("Cannot create debug messenger : cannot find required extension");
 		}
-		logger_log("enabled validation layers");
+                LOG_INFO("enabled validation layers");
 	}
 
 	void destroy_validation_layers()
 	{
 		if (!config::use_validation_layers) return;
 
-		logger_log("Destroy validation layers");
+		LOG_INFO("Destroy validation layers");
 		auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
 		if (func) func(instance, debugMessenger, allocation_callback);
 	}
 
 	void destroy_instance()
 	{
-		logger_log("Destroy Vulkan instance");
+            LOG_INFO("Destroy Vulkan instance");
 		vkDestroyInstance(instance, allocation_callback);
 	}
 }

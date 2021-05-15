@@ -19,3 +19,6 @@
 [submodule "third_party/stb"]
 	path = third_party/stb
 	url = https://github.com/nothings/stb
+[submodule "third_party/CppUtils"]
+	path = third_party/CppUtils
+	url = https://github.com/PierreEVEN/CppUtils

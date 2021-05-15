@@ -92,7 +92,7 @@ namespace vulkan_texture {
 			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 		}
 		else {
-			logger_fail("Unsupported layout transition");
+                    LOG_FATAL("Unsupported layout transition");
 		}
 
 		vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
@@ -123,8 +123,7 @@ namespace vulkan_texture {
 	{
 		VkFormatProperties formatProperties;
 		vkGetPhysicalDeviceFormatProperties(context->get_context()->physical_device, imageFormat, &formatProperties);
-		if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
-			logger_fail("This texture image format doesn't support image blitting");
+		if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) { LOG_FATAL("This texture image format doesn't support image blitting");
 		}
 
 		VkImageMemoryBarrier barrier{};

@@ -48,10 +48,10 @@ void WindowManager::remove_window(WindowBase* window)
 WindowBase::WindowBase(Window* context, const std::string& name, WindowBase* parent)
 	: open(true), window_name(name), window_context(context)
 {
-	logger_log("open window %s", name.c_str());
+    LOG_INFO("open window %s", name.c_str());
 	if (!context->window_manager)
 	{
-		logger_error("cannot create window : invalid window manager");
+            LOG_ERROR("cannot create window : invalid window manager");
 		open = false;
 		return;
 	}
@@ -65,9 +65,7 @@ WindowBase::WindowBase(Window* context, const std::string& name, WindowBase* par
 }
 
 WindowBase::~WindowBase()
-{
-	logger_log("close window %s", window_name.c_str());
-}
+{ LOG_INFO("close window %s", window_name.c_str()); }
 
 void WindowBase::close()
 {

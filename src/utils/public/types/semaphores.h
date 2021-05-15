@@ -8,7 +8,12 @@
 #include <climits>
 
 
-#define SEM_VERIFY(cond, msg) {if (cond) {} else logger_fail(msg);}
+#define SEM_VERIFY(cond, msg) \
+    {                         \
+        if (cond) {}          \
+        else                  \
+            LOG_FATAL(msg);   \
+    }
 
 namespace std
 {

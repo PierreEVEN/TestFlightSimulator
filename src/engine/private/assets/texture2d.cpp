@@ -18,7 +18,7 @@ Texture2d::Texture2d(const std::filesystem::path& texture_path)
 {
 	if (!std::filesystem::exists(texture_path))
 	{
-		logger_error("cannot find texture asset %s", texture_path.string().c_str());
+            LOG_ERROR("cannot find texture asset %s", texture_path.string().c_str());
 		return;
 	}
 	
@@ -74,7 +74,7 @@ void Texture2d::load_image()
 		create_image();
 		create_image_sampler();
 		create_image_descriptors();
-		logger_log("created texture 2d %s", asset_id->to_string().c_str());
+        LOG_INFO("created texture 2d %s", asset_id->to_string().c_str());
 		});
 }
 

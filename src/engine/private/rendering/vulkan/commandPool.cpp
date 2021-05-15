@@ -1,5 +1,5 @@
 #include "rendering/vulkan/commandPool.h"
-#include "ios/logger.h"
+#include <cpputils/logger.hpp>
 #include "jobSystem/worker.h"
 
 namespace command_pool
@@ -38,7 +38,7 @@ namespace command_pool
 		: context_logical_device(logical_device), context_queue(queue)
 	{
 		command_pool_count = job_system::Worker::get_worker_count();
-		logger_log("create command pool for %d workers", command_pool_count);
+            LOG_INFO("create command pool for %d workers", command_pool_count);
 		command_pools = static_cast<CommandPool*>(std::malloc(command_pool_count * sizeof(CommandPool)));
 		for (int i = 0; i < job_system::Worker::get_worker_count(); ++i)
 		{
@@ -48,7 +48,7 @@ namespace command_pool
 
 	Container::~Container()
 	{
-		logger_log("destroy command pools");
+            LOG_INFO("destroy command pools");
 		for (int i = 0; i < command_pool_count; ++i)
 		{
 			command_pools[i].destroy();
@@ -65,6 +65,6 @@ namespace command_pool
 				return pool.get();
 			}
 		}
-		logger_fail("no command pool is available on current thread");
+                LOG_FATAL("no command pool is available on current thread");
 	}
 }

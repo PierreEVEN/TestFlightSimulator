@@ -816,11 +816,11 @@ ImGuiInstance::ImGuiInstance(Window* context)
 {
     if (instance_count > 0)
     {
-        logger::fail("multiple imgui instance are not supported yet");
+        LOG_FATAL("multiple imgui instance are not supported yet");
     }
     instance_count++;
 	
-    logger_log("Initialize imgui ressources");
+    LOG_INFO("Initialize imgui ressources");
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -867,7 +867,7 @@ ImGuiInstance::ImGuiInstance(Window* context)
 
 ImGuiInstance::~ImGuiInstance()
 {
-    logger_log("cleaning up ImGui ressources");
+    LOG_INFO("cleaning up ImGui ressources");
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     instance_count--;

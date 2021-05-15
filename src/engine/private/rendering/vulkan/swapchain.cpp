@@ -7,7 +7,8 @@
 
 
 #include "config.h"
-#include "ios/logger.h"
+
+#include <cpputils/logger.hpp>
 #include "rendering/window.h"
 
 
@@ -29,7 +30,7 @@ void Swapchain::set_size(VkExtent2D extend, const bool force_rebuild, const bool
 
 	if (extend.height != swapchain_extend.height || extend.width != swapchain_extend.width || force_rebuild)
 	{
-		logger_log("resize swapchain ( %d x %d )", extend.width, extend.height);
+            LOG_INFO("resize swapchain ( %d x %d )", extend.width, extend.height);
 
 		swapchain_extend = extend;
 
@@ -39,7 +40,7 @@ void Swapchain::set_size(VkExtent2D extend, const bool force_rebuild, const bool
 
 void Swapchain::create_fences_and_semaphores()
 {
-	logger_log("create fence and semaphores\n\t-in flight fence : %d\n\t-images in flight : %d", config::max_frame_in_flight, surface_window->get_image_count());
+    LOG_INFO("create fence and semaphores\n\t-in flight fence : %d\n\t-images in flight : %d", config::max_frame_in_flight, surface_window->get_image_count());
 	image_acquire_semaphore.resize(config::max_frame_in_flight);
 	in_flight_fences.resize(config::max_frame_in_flight);
 	images_in_flight.resize(surface_window->get_image_count(), VK_NULL_HANDLE);
@@ -76,8 +77,7 @@ DrawInfo Swapchain::acquire_next_image()
 		surface_window->resize_window(width, height);
 		return acquire_next_image(); // Try to acquire next image when finished
 	}
-	if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-		logger_fail("Failed to acquire image from the swapchain");
+	if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) { LOG_FATAL("Failed to acquire image from the swapchain");
 	}
 
 	if (images_in_flight[image_index] != VK_NULL_HANDLE) vkWaitForFences(surface_window->get_context()->logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
@@ -116,7 +116,7 @@ void Swapchain::submit_next_image(uint32_t image_index, std::vector<VkSemaphore>
 		surface_window->resize_window(width, height);
 	}
 	else if (result != VK_SUCCESS) {
-		logger_fail("Failed to present image to swap chain");
+            LOG_FATAL("Failed to present image to swap chain");
 	}	
 }
 
@@ -186,7 +186,7 @@ void Swapchain::create_or_recreate()
 	create_info.clipped = VK_TRUE;
 	create_info.oldSwapchain = VK_NULL_HANDLE;
 
-	logger_log("create swapchain ( %d x %d ) / sharing mode : %d", swapchain_extend.width, swapchain_extend.height, create_info.imageSharingMode);
+	LOG_INFO("create swapchain ( %d x %d ) / sharing mode : %d", swapchain_extend.width, swapchain_extend.height, create_info.imageSharingMode);
 
 	VK_ENSURE(vkCreateSwapchainKHR(surface_window->get_context()->logical_device, &create_info, vulkan_common::allocation_callback, &swapchain), "Failed to create swap chain");
 	VK_CHECK(swapchain, "Invalid swapchain reference");
@@ -205,7 +205,7 @@ void Swapchain::create_or_recreate()
 
 void Swapchain::destroy()
 {
-	logger_log("Destroy swapChain");
+    LOG_INFO("Destroy swapChain");
 	vkDestroySwapchainKHR(surface_window->get_context()->logical_device, swapchain, vulkan_common::allocation_callback);
 	swapchain = VK_NULL_HANDLE;
 }

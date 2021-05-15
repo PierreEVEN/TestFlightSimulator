@@ -8,7 +8,8 @@
 #include "assetId.h"
 #include "assetPtr.h"
 #include "types/nonCopiable.h"
-#include "ios/logger.h"
+
+#include <cpputils/logger.hpp>
 
 class Window;
 class AssetBase;
@@ -23,7 +24,7 @@ public:
 	template <class AssetClass, typename ... Args>
 	TAssetPtr<AssetClass> create(const AssetId& asset_id, Args... args) {
 		if (exists(asset_id)) {
-			logger_error("Cannot create two asset with the same id : %s", asset_id.to_string().c_str());
+			LOG_ERROR("Cannot create two asset with the same id : %s", asset_id.to_string().c_str());
 			return nullptr;
 		}
 

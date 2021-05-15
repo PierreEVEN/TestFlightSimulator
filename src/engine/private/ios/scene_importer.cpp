@@ -4,16 +4,17 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <assimp/Importer.hpp>
 
 
 #include "assets/staticMesh.h"
 #include "assets/shader.h"
 #include "assets/texture2d.h"
-#include "ios/logger.h"
+
+#include <cpputils/logger.hpp>
 #include "rendering/window.h"
 #include "scene/node.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "jobSystem/job_system.h"
 #include "scene/meshNode.h"
@@ -23,16 +24,16 @@
 SceneImporter::SceneImporter(Window* context, const std::filesystem::path& source_file, const std::string& desired_asset_name)
 	: window_context(context), object_name(desired_asset_name)
 {
-	logger_warning("import");
+    LOG_WARNING("import");
 	BEGIN_NAMED_RECORD(IMPORT_SCENE_DATA);
-	const aiScene* scene = importer.ReadFile(source_file.string(),
+	const aiScene* scene = importer->ReadFile(source_file.string(),
 		aiProcess_CalcTangentSpace |
 		aiProcess_Triangulate |
 		aiProcess_JoinIdenticalVertices |
 		aiProcess_SortByPType);
 
 	if (!scene) {
-		logger_error("failed to import scene file %s", source_file.string().c_str());
+            LOG_ERROR("failed to import scene file %s", source_file.string().c_str());
 		return;
 	}
 
@@ -93,7 +94,7 @@ Node* SceneImporter::create_node(aiNode* context, Node* parent)
 		}
 	}
 	
-	//logger_log("meshes : %s / meshes : %d", context->mName.data, context->mNumMeshes);
+	//LOG_INFO("meshes : %s / meshes : %d", context->mName.data, context->mNumMeshes);
 
 	
 	return node;
@@ -159,7 +160,7 @@ TAssetPtr<StaticMesh> SceneImporter::process_mesh(aiMesh* mesh, size_t id)
 	{
 		if (mesh->mFaces[i].mNumIndices > 3)
 		{
-			logger_error("cannot process shapes that are not triangles : %s", mesh->mName.data);
+                    LOG_ERROR("cannot process shapes that are not triangles : %s", mesh->mName.data);
 			continue;
 		}
 		

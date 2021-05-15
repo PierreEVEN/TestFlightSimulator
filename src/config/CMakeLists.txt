@@ -1,4 +1,5 @@
 
-file(GLOB_RECURSE SOURCES *.cpp *.h)
+file(GLOB_RECURSE SOURCES ./*)
 add_library(Config ${SOURCES})
-construct_target(Config . ${SOURCES})
+configure_project(Config ${SOURCES})
+target_include_directories(Config PUBLIC public)

@@ -51,27 +51,24 @@ Shader::Shader(const std::filesystem::path& vertex_shader_path,	const std::files
 		if (shader_creation_geometry) shader_creation_geometry->wait();
 
 		if (vertex_module) {
-			if (vertex_module->get() == VK_NULL_HANDLE) {
-				logger_fail("invalid vertex stage : %s", asset_id->to_string().c_str());
+			if (vertex_module->get() == VK_NULL_HANDLE) { LOG_FATAL("invalid vertex stage : %s", asset_id->to_string().c_str());
 			}
 		}
 		
 		if (geometry_module) {
-			if (geometry_module->get() == VK_NULL_HANDLE) {
-				logger_fail("invalid geometry stage : %s", asset_id->to_string().c_str());
+			if (geometry_module->get() == VK_NULL_HANDLE) { LOG_FATAL("invalid geometry stage : %s", asset_id->to_string().c_str());
 			}
 		}
 		
 		if (fragment_module) {
-			if (fragment_module->get() == VK_NULL_HANDLE) {
-				logger_fail("invalid fragment stage : %s", asset_id->to_string().c_str());
+			if (fragment_module->get() == VK_NULL_HANDLE) { LOG_FATAL("invalid fragment stage : %s", asset_id->to_string().c_str());
 			}
 		}
 		
 		create_descriptor_sets();
 		create_pipeline();
 		
-		logger_log("loaded shader %s", asset_id->to_string().c_str());
+		LOG_INFO("loaded shader %s", asset_id->to_string().c_str());
 		});
 }
 
@@ -403,8 +400,7 @@ std::shared_ptr<ShaderModule> Shader::get_shader_module(VkShaderStageFlags shade
 		return geometry_module;
 	case VK_SHADER_STAGE_FRAGMENT_BIT:
 			return fragment_module;
-	default:
-		logger_error("unhandled shader stage : %d", shader_stage);
+	default: LOG_ERROR("unhandled shader stage : %d", shader_stage);
 		return nullptr;
 	}
 }

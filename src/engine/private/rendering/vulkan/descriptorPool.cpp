@@ -8,8 +8,7 @@
 void DescriptorPool::alloc_memory(VkDescriptorSetAllocateInfo& alloc_infos)
 {
 	std::lock_guard<std::mutex> lock(find_pool_lock);
-	if (alloc_infos.descriptorSetCount > config::max_descriptor_per_pool) {
-		logger_fail("Cannot allocate mor than %d descriptors per pool.", config::max_descriptor_per_pool);
+	if (alloc_infos.descriptorSetCount > config::max_descriptor_per_pool) { LOG_FATAL("Cannot allocate mor than %d descriptors per pool.", config::max_descriptor_per_pool);
 	}
 	for (auto& pool : context_pools)
 	{
@@ -18,7 +17,7 @@ void DescriptorPool::alloc_memory(VkDescriptorSetAllocateInfo& alloc_infos)
 			return;
 		}
 	}
-	logger_log("create new descriptor pool");
+        LOG_INFO("create new descriptor pool");
 	context_pools.push_back(new DescriptorPoolItem(window_context, alloc_infos));
 }
 
@@ -32,7 +31,7 @@ DescriptorPool::DescriptorPool(Window* context)
 	: window_context(context) {}
 
 DescriptorPool::~DescriptorPool() {
-	logger_log("destroy descriptor pools");
+    LOG_INFO("destroy descriptor pools");
 	std::lock_guard<std::mutex> lock(find_pool_lock);
 	for (auto& pool : context_pools) delete pool;
 }
