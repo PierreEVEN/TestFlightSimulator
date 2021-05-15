@@ -35,7 +35,6 @@ jobs:
       run: |
         @echo | msbuild -m temp/TestFlightSimulator.sln /t:build /p:Configuration="Debug" /p:Platform="x64" /p:BuildInParallel=true
         
-        
   build-linux:
   
     runs-on: ubuntu-latest
