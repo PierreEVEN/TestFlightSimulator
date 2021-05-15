@@ -21,7 +21,7 @@ jobs:
     - name: generate-sln
       shell: bash
       run: |
-        @echo | Build.sh
+        sh Build.sh
         
     # Build engine Release
     - name: build-sln-Release
@@ -47,12 +47,11 @@ jobs:
     - name: generate-makefile
       shell: bash
       run: |
-        @echo | Build.sh
+        sh Build.sh
         
     # Build engine Release
     - name: build-sln-Release
-      shell: cmd
+      shell: bash
       run: |
         cd temp
-        @echo | make
-        @echo | cd temp
+        make
