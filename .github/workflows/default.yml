@@ -1,0 +1,58 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+  
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: setup-msbuild
+      uses: microsoft/setup-msbuild@v1
+      
+    # Generate sln
+    - name: generate-sln
+      shell: bash
+      run: |
+        @echo | Build.sh
+        
+    # Build engine Release
+    - name: build-sln-Release
+      shell: cmd
+      run: |
+        @echo | msbuild -m temp/TestFlightSimulator.sln /t:build /p:Configuration="Release" /p:Platform="x64" /p:BuildInParallel=true
+        
+    # Build engine Debug
+    - name: build-sln-Release
+      shell: cmd
+      run: |
+        @echo | msbuild -m temp/TestFlightSimulator.sln /t:build /p:Configuration="Debug" /p:Platform="x64" /p:BuildInParallel=true
+        
+        
+  build-linux:
+  
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+          
+    # Generate makefile
+    - name: generate-makefile
+      shell: bash
+      run: |
+        @echo | Build.sh
+        
+    # Build engine Release
+    - name: build-sln-Release
+      shell: cmd
+      run: |
+        cd temp
+        @echo | make
+        @echo | cd temp
