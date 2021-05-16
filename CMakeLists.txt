@@ -40,7 +40,7 @@ function(configure_project PROJECT_NAME SOURCES)
 		LIBRARY_OUTPUT_DIRECTORY "${BINARIES_DIR}/Bin"
 		VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_ROOT}")
 	target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
-	set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
+	set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS ON)
 endfunction()
 
 function(add_subfodler_target TARGET_NAME CONTAINER_FOLDER)

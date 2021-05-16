@@ -1,15 +1,14 @@
 #pragma once
+#if __has_include("filesystem")
+#include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 #include <spirv_cross.hpp>
 #include <string>
 
 #include <shaderc/shaderc.hpp>
 #include <vulkan/vulkan_core.h>
-
-namespace std {
-	namespace filesystem {
-		class path;
-	}
-}
 
 struct descriptor_set
 {

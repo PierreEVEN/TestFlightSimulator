@@ -1,7 +1,6 @@
 
 #include "rendering/vulkan/shaderModule.h"
 
-#include <filesystem>
 #include <optional>
 #include <string>
 #include <fstream>

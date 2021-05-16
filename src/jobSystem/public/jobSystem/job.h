@@ -1,10 +1,11 @@
 #pragma once
 
 #include <vector>
-#include <latch>
+//#include <latch>
 
 #include "jobSystem/worker.h"
 #include "types/semaphores.h"
+
 
 namespace job_system {
 	
@@ -83,7 +84,7 @@ namespace job_system {
 				task->execute();
 				Worker::get()->current_task = task->parent_task;
 			}
-			completion_lock.wait();
+			//completion_lock.wait();
 			child_lock.wait();
 		}
 		
@@ -96,7 +97,7 @@ namespace job_system {
 		std::shared_ptr<IJobTask> parent_task = nullptr;
 		TObjectPool<IJobTask, 4096> children_pool;
 		worker_lock child_lock;
-		std::latch completion_lock = std::latch(1);
+		//std::latch completion_lock = std::latch(1);
 	protected:
 
 		void inc_job_count();
@@ -118,7 +119,7 @@ namespace job_system {
 		{
 			dec_awaiting_job_count(); // stats
 			func(); // execute task
-			completion_lock.count_down();
+			//completion_lock.count_down();
 			dec_total_job_count(); // stats
 
 			wait();

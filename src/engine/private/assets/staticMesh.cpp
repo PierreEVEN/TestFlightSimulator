@@ -1,7 +1,7 @@
 
 
 #include "assets/staticMesh.h"
-
+#include <cstring>
 
 #include "jobSystem/job_system.h"
 #include "rendering/window.h"

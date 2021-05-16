@@ -9,7 +9,7 @@
 
 #include "config.h"
 #include "assets/assetBase.h"
-#include "assets/GraphicResource.h"
+#include "assets/graphicResource.h"
 #include <cpputils/logger.hpp>
 #include "rendering/vulkan/commandPool.h"
 #include "rendering/vulkan/descriptorPool.h"
