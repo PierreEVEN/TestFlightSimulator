@@ -1,5 +1,12 @@
 # Glfw
 add_subfodler_target(glfw ThirdParty)
+
+set(BUILD_SHARED_LIBS ON)
+set(ASSIMP_NO_EXPORT ON)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_INSTALL OFF)
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
 add_subfodler_target(assimp ThirdParty)
 add_subfodler_target(SPIRV-Cross ThirdParty)
 add_subfodler_target(CppUtils ThirdParty)
