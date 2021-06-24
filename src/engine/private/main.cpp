@@ -6,8 +6,6 @@
 #include "ios/scene_importer.h"
 #include "jobSystem/job_system.h"
 #include "misc/capabilities.h"
-#include "rendering/framegraph/framegraph.h"
-#include "rendering/framegraph/renderpass.h"
 #include "rendering/window.h"
 #include "statsRecorder.h"
 #include "ui/window/windows/contentBrowser.h"

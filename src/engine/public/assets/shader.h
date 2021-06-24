@@ -4,7 +4,6 @@
 
 
 #include "assetBase.h"
-#include "GraphicResource.h"
 #include "rendering/vulkan/shaderModule.h"
 
 #include "jobSystem/job.h"

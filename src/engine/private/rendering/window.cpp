@@ -9,18 +9,17 @@
 
 #include "config.h"
 #include "assets/assetBase.h"
-#include "assets/GraphicResource.h"
 #include <cpputils/logger.hpp>
 #include "rendering/vulkan/commandPool.h"
 #include "rendering/vulkan/descriptorPool.h"
 #include "rendering/vulkan/framebuffer.h"
 #include "rendering/vulkan/swapchain.h"
 #include "scene/sceneNode.h"
-#include "ui/imgui/imgui_impl_glfw.h"
-#include "ui/imgui/imgui_impl_vulkan.h"
+#include "backends/imgui_impl_glfw.h"
 #include "ui/window/windowBase.h"
 #include "ui/window/windows/contentBrowser.h"
 #include "ui/window/windows/profiler.h"
+#include "ui/imgui/imgui_impl_vulkan.h"
 
 std::mutex window_map_lock;
 std::unordered_map<GLFWwindow*, Window*> window_map;
@@ -524,30 +523,29 @@ void Window::render()
 	
 	BEGIN_NAMED_RECORD(IMGUI_DRAW);
 	if (has_imgui_context) {
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-		//ImGui::PushFont(G_IMGUI_DEFAULT_FONT);
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
 
-		if (ImGui::BeginMainMenuBar())
-		{
-			if (ImGui::BeginMenu("misc"))
-			{
-				if (ImGui::MenuItem("demo window")) new DemoWindow(this, "demo window");
-				if (ImGui::MenuItem("profiler")) new ProfilerWindow(this, "profiler");
-				if (ImGui::MenuItem("content browser")) new ContentBrowser(this, "content browser");
-				ImGui::EndMenu();
-			}
-			
-			ImGui::EndMainMenuBar();
-		}
+            if (ImGui::BeginMainMenuBar())
+            {
+                if (ImGui::BeginMenu("misc"))
+                {
+                    if (ImGui::MenuItem("demo window")) new DemoWindow(this, "demo window");
+                    if (ImGui::MenuItem("profiler")) new ProfilerWindow(this, "profiler");
+                    if (ImGui::MenuItem("content browser")) new ContentBrowser(this, "content browser");
+                    ImGui::EndMenu();
+                }
 
-		window_manager->draw();
-		
-		//ImGui::PopFont();
-		ImGui::EndFrame();
+                ImGui::EndMainMenuBar();
+            }
 
-		ImGui::Render();
-		ImDrawData* draw_data = ImGui::GetDrawData();
+            window_manager->draw();
+
+            ImGui::EndFrame();
+
+            ImGui::Render();
+        ImDrawData* draw_data = ImGui::GetDrawData();
+
 		imgui_instance->ImGui_ImplVulkan_RenderDrawData(draw_data, current_command_buffer);
 	}
 	END_NAMED_RECORD(IMGUI_DRAW);

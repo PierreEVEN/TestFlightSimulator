@@ -25,13 +25,8 @@ target_link_libraries(TestFlightSimulator cpputils)
 target_link_libraries(TestFlightSimulator spirv-cross-core)
 target_link_libraries(TestFlightSimulator spirv-cross-glsl)
 target_link_libraries(TestFlightSimulator glslang OSDependent OGLCompiler SPIRV)
-
-
-target_include_directories(TestFlightSimulator PUBLIC public)
-
-# GLM
 target_link_libraries(TestFlightSimulator glm)
-
-# STB
+target_link_libraries(TestFlightSimulator imgui_interface)
 target_include_directories(TestFlightSimulator PUBLIC ${stb_SOURCE_DIR})
 
+target_include_directories(TestFlightSimulator PUBLIC public)

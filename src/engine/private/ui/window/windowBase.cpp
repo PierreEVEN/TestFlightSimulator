@@ -3,7 +3,7 @@
 
 
 #include "rendering/window.h"
-#include "ui/imgui/imgui.h"
+#include "imgui.h"
 
 WindowManager::~WindowManager()
 {

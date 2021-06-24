@@ -5,7 +5,6 @@
 
 
 #include "assets/assetPtr.h"
-#include "assets/graphicResource.h"
 
 namespace Assimp {
 class Importer;

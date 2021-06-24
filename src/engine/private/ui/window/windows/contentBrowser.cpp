@@ -4,7 +4,7 @@
 
 #include "assets/assetBase.h"
 #include "rendering/window.h"
-#include "ui/imgui/imgui.h"
+#include "imgui.h"
 
 void ContentBrowser::draw_content()
 {

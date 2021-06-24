@@ -7,7 +7,7 @@
 #include "jobSystem/worker.h"
 
 #include <cpputils/logger.hpp>
-#include "ui/imgui/imgui.h"
+#include "imgui.h"
 
 
 double ProfilerWindow::time_to_local(const record_clock::time_point& time) {

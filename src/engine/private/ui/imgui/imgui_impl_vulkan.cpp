@@ -13,14 +13,14 @@
 // IF YOU FEEL YOU NEED TO MAKE ANY CHANGE TO THIS CODE, please share them and your feedback at https://github.com/ocornut/imgui/
 
 
-#include "ui/imgui/imgui.h"
+#include "imgui.h"
 #include "ui/imgui/imgui_impl_vulkan.h"
 
 #include <array>
 
 #include "rendering/window.h"
 #include "rendering/vulkan/descriptorPool.h"
-#include "ui/imgui/imgui_impl_glfw.h"
+#include "backends/imgui_impl_glfw.h"
 
 static uint32_t instance_count = 0;
 
@@ -221,6 +221,7 @@ void ImGuiInstance::ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCom
     if (fb_width <= 0 || fb_height <= 0 || draw_data->TotalVtxCount == 0)
         return;
 
+    LOG_DEBUG("set ImGui_ImplVulkan_RenderDrawData count");
     Window* v = g_window_context;
 
     // Allocate array to store enough vertex/index buffers
@@ -229,6 +230,7 @@ void ImGuiInstance::ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCom
     {
         wrb->Index = 0;
         wrb->Count = v->get_image_count();
+        LOG_DEBUG("set image count");
         wrb->FrameRenderBuffers = static_cast<ImGui_ImplVulkanH_FrameRenderBuffers*>(IM_ALLOC(sizeof(ImGui_ImplVulkanH_FrameRenderBuffers) * wrb->Count));
         memset(wrb->FrameRenderBuffers, 0, sizeof(ImGui_ImplVulkanH_FrameRenderBuffers) * wrb->Count);
     }
@@ -756,6 +758,7 @@ int ImGui_ImplVulkanH_GetMinImageCountFromPresentMode(VkPresentModeKHR present_m
 
 void ImGuiInstance::ImGui_ImplVulkanH_DestroyFrameRenderBuffers(VkDevice device, ImGui_ImplVulkanH_FrameRenderBuffers* buffers, const VkAllocationCallbacks* allocator)
 {
+    if (!buffers) LOG_FATAL("ImGui render buffer was null");
     if (buffers->VertexBuffer) { vkDestroyBuffer(device, buffers->VertexBuffer, allocator); buffers->VertexBuffer = VK_NULL_HANDLE; }
     if (buffers->VertexBufferMemory) { vkFreeMemory(device, buffers->VertexBufferMemory, allocator); buffers->VertexBufferMemory = VK_NULL_HANDLE; }
     if (buffers->IndexBuffer) { vkDestroyBuffer(device, buffers->IndexBuffer, allocator); buffers->IndexBuffer = VK_NULL_HANDLE; }
@@ -766,8 +769,11 @@ void ImGuiInstance::ImGui_ImplVulkanH_DestroyFrameRenderBuffers(VkDevice device,
 
 void ImGuiInstance::ImGui_ImplVulkanH_DestroyWindowRenderBuffers(VkDevice device, ImGui_ImplVulkanH_WindowRenderBuffers* buffers, const VkAllocationCallbacks* allocator)
 {
-    for (uint32_t n = 0; n < buffers->Count; n++)
-        ImGui_ImplVulkanH_DestroyFrameRenderBuffers(device, &buffers->FrameRenderBuffers[n], allocator);
+    LOG_DEBUG("buf %u", buffers->Count);
+    for (uint32_t n = 0; n < buffers->Count; n++) { 
+        
+    LOG_DEBUG("buf %d", n);
+        ImGui_ImplVulkanH_DestroyFrameRenderBuffers(device, &buffers->FrameRenderBuffers[n], allocator); }
     IM_FREE(buffers->FrameRenderBuffers);
     buffers->FrameRenderBuffers = NULL;
     buffers->Index = 0;
@@ -828,8 +834,8 @@ ImGuiInstance::ImGuiInstance(Window* context)
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
     ImGuiStyle& style = ImGui::GetStyle();
     style.WindowRounding = 0;

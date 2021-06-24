@@ -2,7 +2,6 @@
 #include <spirv_cross.hpp>
 #include <string>
 
-//#include <shaderc/shaderc.hpp>
 #include <vulkan/vulkan_core.h>
 #include "glslang/Include/glslang_c_shader_types.h"
 

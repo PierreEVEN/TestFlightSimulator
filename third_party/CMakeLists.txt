@@ -3,7 +3,7 @@ if (NOT PkgConfig_FOUND)
 endif()
 
 # Vulkan
-set(VULKAN_PATH $ENV{VULKAN_SDK} PARENT_SCOPE)
+set(VULKAN_PATH $ENV{VULKAN_SDK} CACHE INTERNAL "vulkan_sdk_path")
 message("-- vulkan sdk : " ${VULKAN_PATH})
 add_library(vulkan INTERFACE)
 target_include_directories(vulkan INTERFACE ${VULKAN_PATH}/Include)
@@ -59,3 +59,15 @@ fetch_target(stb https://github.com/nothings/stb master)
 fetch_target(glm https://github.com/g-truc/glm master)
 fetch_target(VulkanMemoryAllocator https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator  master)
 fetch_target(cpputils https://github.com/PierreEVEN/CppUtils main)
+fetch_target(imgui https://github.com/ocornut/imgui docking)
+
+# Create an interface for IMGUI (should alway be linked as static library)
+file(GLOB IMGUI_SOURCES 
+	${imgui_SOURCE_DIR}/*.cpp
+	${imgui_SOURCE_DIR}/*.h
+	${imgui_SOURCE_DIR}/backends/imgui_impl_glfw*)
+add_library(imgui_interface STATIC ${IMGUI_SOURCES})
+target_include_directories(imgui_interface PUBLIC ${imgui_SOURCE_DIR})
+target_link_libraries(imgui_interface vulkan)
+target_link_libraries(imgui_interface glfw)
+
