@@ -54,16 +54,17 @@ endfunction()
 
 function(fetch_target TARGET_NAME URL BRANCH)
 	message("--- [fetching ${TARGET_NAME}]")
+	
 	FetchContent_Declare(
 	  ${TARGET_NAME}
 	  GIT_REPOSITORY  ${URL}
 	  GIT_TAG ${BRANCH}
 	)
 	FetchContent_MakeAvailable(${TARGET_NAME})	
+
 	configure_target(${TARGET_NAME} third_party)		
-	
-	
+
 	get_property(target_src_dir VARIABLE PROPERTY ${TARGET_NAME}_SOURCE_DIR)	
 	set(${TARGET_NAME}_SOURCE_DIR ${target_src_dir} CACHE INTERNAL "source_list")
-
+	
 endfunction()

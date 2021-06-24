@@ -1,3 +1,6 @@
+if (NOT PkgConfig_FOUND) 
+ message("-- PkgConfig is not installed - using compiled libraries")
+endif()
 
 # Vulkan
 set(VULKAN_PATH $ENV{VULKAN_SDK} PARENT_SCOPE)
@@ -50,11 +53,11 @@ set(ENABLE_GLSLANG_BINARIES OFF)
 set(ENABLE_SPVREMAPPER OFF)
 
 
-fetch_target(VulkanMemoryAllocator https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator  master)
-fetch_target(cpputils https://github.com/PierreEVEN/CppUtils main)
+fetch_target(glfw https://github.com/glfw/glfw master)
+fetch_target(assimp https://github.com/assimp/assimp master)
+fetch_target(SPIRV-Cross https://github.com/KhronosGroup/SPIRV-Cross master)
+fetch_target(glslang https://github.com/KhronosGroup/glslang master)
 fetch_target(stb https://github.com/nothings/stb master)
 fetch_target(glm https://github.com/g-truc/glm master)
-fetch_target(glfw https://github.com/glfw/glfw master)
-fetch_target(SPIRV-Cross https://github.com/KhronosGroup/SPIRV-Cross master)
-fetch_target(assimp https://github.com/assimp/assimp master)
-fetch_target(glslang https://github.com/KhronosGroup/glslang master)
+fetch_target(VulkanMemoryAllocator https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator  master)
+fetch_target(cpputils https://github.com/PierreEVEN/CppUtils main)
