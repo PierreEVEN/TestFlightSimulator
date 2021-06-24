@@ -43,8 +43,3 @@ set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_ROOT}")
 
 add_subdirectory(third_party)
 add_subdirectory(src)
-
-
-get_property(targets VARIABLE PROPERTY BUILDSYSTEM_TARGETS)
-
-message("RES : " ${targets})
