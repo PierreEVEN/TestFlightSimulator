@@ -6,7 +6,6 @@
 #include "jobSystem/worker.h"
 #include "types/semaphores.h"
 
-
 namespace job_system {
 	
 	class worker_lock

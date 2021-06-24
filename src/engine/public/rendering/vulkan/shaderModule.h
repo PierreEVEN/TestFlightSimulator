@@ -1,14 +1,16 @@
 #pragma once
-#if __has_include("filesystem")
-#include <filesystem>
-#else
-#include <experimental/filesystem>
-#endif
 #include <spirv_cross.hpp>
 #include <string>
 
-#include <shaderc/shaderc.hpp>
+//#include <shaderc/shaderc.hpp>
 #include <vulkan/vulkan_core.h>
+#include "glslang/Include/glslang_c_shader_types.h"
+
+namespace std {
+	namespace filesystem {
+		class path;
+	}
+}
 
 struct descriptor_set
 {
@@ -19,8 +21,8 @@ struct descriptor_set
 class ShaderModule final
 {
 public:
-	ShaderModule(VkDevice logical_device, std::string in_file_name, const std::string& shader_code, shaderc_shader_kind shader_kind);
-	ShaderModule(VkDevice logical_device, std::filesystem::path source_path, shaderc_shader_kind shader_kind);
+    ShaderModule(VkDevice logical_device, std::string in_file_name, const std::string& shader_code, glslang_stage_t shader_kind);
+  ShaderModule(VkDevice logical_device, std::filesystem::path source_path, glslang_stage_t shader_kind);
 
 	~ShaderModule();
 

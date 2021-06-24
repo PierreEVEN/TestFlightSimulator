@@ -40,7 +40,7 @@ public:
 		if ((pool_bottom + 1) % PoolSize == pool_top)
 		{ LOG_FATAL("object pool overflow : max=%d", PoolSize);
 		}
-
+		
 		pool[pool_bottom] = object;
 		pool_bottom = (pool_bottom + 1) % PoolSize;
 	}

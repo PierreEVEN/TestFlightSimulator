@@ -1,6 +1,7 @@
 
 #include "rendering/vulkan/shaderModule.h"
 
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <fstream>
@@ -13,6 +14,8 @@
 #include "spirv_glsl.hpp"
 #include "rendering/vulkan/common.h"
 #include "ui/window/windows/profiler.h"
+#include "glslang/Include/glslang_c_shader_types.h"
+#include "glslang/Include/glslang_c_interface.h"
 
 #define ENABLE_SHADER_LOGGING true
 
@@ -37,56 +40,65 @@ std::optional<std::string> read_shader_file(const std::filesystem::path& source_
 	return code;
 }
 
-std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name, const std::string& shader_code, shaderc_shader_kind shader_kind, bool optimize = true)
+std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name, const std::string& shader_code, glslang_stage_t shader_kind, bool optimize = true)
 {
 	BEGIN_NAMED_RECORD(COMPILE_SHADER_MODULE);
-	shaderc::Compiler Compiler;
-	shaderc::CompileOptions Options;
-	std::optional<std::vector<uint32_t>> bytecode;
-	
-	switch (shader_kind)
-	{
-	case shaderc_vertex_shader:
-		Options.AddMacroDefinition("VERTEX_SHADER");
-		break;
-	case shaderc_fragment_shader:
-		Options.AddMacroDefinition("FRAGMENT_SHADER");
-		break;
-	case shaderc_geometry_shader:
-		Options.AddMacroDefinition("GEOMETRY_SHADER");
-		break;
-	default: break;
-	}
 
-	const shaderc::PreprocessedSourceCompilationResult preprocess_result = Compiler.PreprocessGlsl(shader_code.data(), shader_kind, file_name.c_str(), Options);
+	const glslang_input_t input = {
+            .language                          = GLSLANG_SOURCE_GLSL,
+            .stage                             = shader_kind,
+            .client                            = GLSLANG_CLIENT_VULKAN,
+            .client_version                    = GLSLANG_TARGET_VULKAN_1_1,
+            .target_language                   = GLSLANG_TARGET_SPV,
+            .target_language_version           = GLSLANG_TARGET_SPV_1_3,
+            .code                              = shader_code.c_str(),
+            .default_version                   = 100,
+            .default_profile                   = GLSLANG_NO_PROFILE,
+            .force_default_version_and_profile = false,
+            .forward_compatible                = false,
+            .messages                          = GLSLANG_MSG_DEFAULT_BIT,
+        };
 
-	if (preprocess_result.GetCompilationStatus() != shaderc_compilation_status_success)
-	{
-            LOG_ERROR("failed to prprocess shader %s : %s", file_name.c_str(), preprocess_result.GetErrorMessage().c_str());
-		return bytecode;
-	}
-	std::vector<char> preprocessed_shader = { preprocess_result.cbegin(), preprocess_result.cend() };
+        glslang_initialize_process();
 
-	Options.SetTargetEnvironment(shaderc_target_env_vulkan, 0);
+        glslang_shader_t* shader = glslang_shader_create(&input);
 
-#if _DEBUG
-	Options.SetOptimizationLevel(optimize ?
-		shaderc_optimization_level_size : shaderc_optimization_level_zero);
-#else
-	Options.SetOptimizationLevel(optimize ?
-		shaderc_optimization_level_performance : shaderc_optimization_level_zero);
-#endif
 
-	const shaderc::SpvCompilationResult compilation_result = Compiler.CompileGlslToSpv(static_cast<char*>(preprocessed_shader.data()), preprocessed_shader.size(), shader_kind, file_name.c_str(), "main", Options);
+		
+if (!glslang_shader_preprocess(shader, &input))
+        {
+    LOG_ERROR("failed to compile shader : %s", glslang_shader_get_info_debug_log(shader));
+            return std::optional<std::vector<uint32_t>>();
+            // use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
+        }
 
-	if (compilation_result.GetCompilationStatus() != shaderc_compilation_status_success)
-	{
-            LOG_ERROR("Failed to compile shader %s : %s", file_name.c_str(), compilation_result.GetErrorMessage().c_str());
-		return bytecode;
-	}
-	bytecode = { compilation_result.cbegin(), compilation_result.cend() };
+        if (!glslang_shader_parse(shader, &input))
+        {
+            LOG_ERROR("failed to compile shader : %s", glslang_shader_get_info_debug_log(shader));
+            return std::optional<std::vector<uint32_t>>();
+            // use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
+        }
 
-	return bytecode;
+        glslang_program_t* program = glslang_program_create();
+        glslang_program_add_shader(program, shader);
+
+        if (!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
+        {
+            LOG_ERROR("failed to compile shader : %s", glslang_shader_get_info_debug_log(shader));
+            return std::optional<std::vector<uint32_t>>();
+            // use glslang_program_get_info_log() and glslang_program_get_info_debug_log();
+        }
+
+        glslang_program_SPIRV_generate(program, input.stage);
+
+        if (glslang_program_SPIRV_get_messages(program)) { 
+			    LOG_INFO("%s", glslang_program_SPIRV_get_messages(program));
+		}
+
+        glslang_shader_delete(shader);
+		// @TODO glslang_program_delete( program );
+
+	return std::vector<uint32_t>(glslang_program_SPIRV_get_ptr(program), glslang_program_SPIRV_get_ptr(program) + glslang_program_SPIRV_get_size(program));
 }
 
 std::optional<VkShaderModule> create_shader_module(VkDevice logical_device, const std::vector<uint32_t>& bytecode)
@@ -105,9 +117,7 @@ std::optional<VkShaderModule> create_shader_module(VkDevice logical_device, cons
 	return shader_module;
 }
 
-ShaderModule::ShaderModule(VkDevice logical_device, std::string in_file_name, const std::string& shader_code,
-	shaderc_shader_kind shader_kind)
-	: device(logical_device), file_name(in_file_name)
+ShaderModule::ShaderModule(VkDevice logical_device, std::string in_file_name, const std::string& shader_code, glslang_stage_t shader_kind) : device(logical_device), file_name(in_file_name)
 {
 	if (auto bytecode = compile_module(file_name, shader_code, shader_kind))
 	{
@@ -119,7 +129,7 @@ ShaderModule::ShaderModule(VkDevice logical_device, std::string in_file_name, co
 	}
 }
 
-ShaderModule::ShaderModule(VkDevice logical_device, std::filesystem::path source_path, shaderc_shader_kind shader_kind)
+ShaderModule::ShaderModule(VkDevice logical_device, std::filesystem::path source_path, glslang_stage_t shader_kind)
 	: device(logical_device), file_name(source_path.string())
 {
 	auto shader_data = read_shader_file(source_path);

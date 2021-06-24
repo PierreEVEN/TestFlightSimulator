@@ -5,7 +5,7 @@ construct_target(TestFlightSimulator . ${SOURCES})
 
 
 # VMA
-target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/VulkanMemoryAllocator/src)
+target_include_directories(TestFlightSimulator PUBLIC ${VulkanMemoryAllocator_SOURCE_DIR}/include)
 
 # VULKAN
 set(VULKAN_PATH $ENV{VULKAN_SDK})
@@ -23,22 +23,15 @@ target_link_libraries(TestFlightSimulator assimp)
 target_link_libraries(TestFlightSimulator glfw)
 target_link_libraries(TestFlightSimulator cpputils)
 target_link_libraries(TestFlightSimulator spirv-cross-core)
-target_link_libraries(TestFlightSimulator shaderc)
-target_link_libraries(TestFlightSimulator shaderc_util)
-target_link_libraries(TestFlightSimulator GenericCodeGen)
-target_link_libraries(TestFlightSimulator MachineIndependent)
-target_link_libraries(TestFlightSimulator OGLCompiler)
-target_link_libraries(TestFlightSimulator OSDependent)
-target_link_libraries(TestFlightSimulator glslang)
-target_link_libraries(TestFlightSimulator SPIRV)
-target_link_libraries(TestFlightSimulator SPIRV-Tools)
-target_link_libraries(TestFlightSimulator SPIRV-Tools-opt)
+target_link_libraries(TestFlightSimulator spirv-cross-glsl)
+target_link_libraries(TestFlightSimulator glslang OSDependent OGLCompiler SPIRV)
+
 
 target_include_directories(TestFlightSimulator PUBLIC public)
 
 # GLM
-target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/glm)
+target_link_libraries(TestFlightSimulator glm)
 
 # STB
-target_include_directories(TestFlightSimulator PUBLIC ${PROJECT_ROOT}/third_party/stb)
+target_include_directories(TestFlightSimulator PUBLIC ${stb_SOURCE_DIR})
 

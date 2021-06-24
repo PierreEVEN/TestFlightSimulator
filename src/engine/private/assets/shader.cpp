@@ -29,19 +29,19 @@ Shader::Shader(const std::filesystem::path& vertex_shader_path,	const std::files
 		if (!vertex_shader_path.empty()) shader_creation_vertex = job_system::new_job([&, vertex_shader_path]
 			{
 				BEGIN_NAMED_RECORD(CREATE_SHADER);
-				vertex_module = (std::make_shared<ShaderModule>(window_context->get_context()->logical_device, vertex_shader_path, shaderc_vertex_shader));
+                        vertex_module = (std::make_shared<ShaderModule>(window_context->get_context()->logical_device, vertex_shader_path, GLSLANG_STAGE_VERTEX));
 
 			});
 		if (!fragment_shader_path.empty()) shader_creation_fragment = job_system::new_job([&, fragment_shader_path]
 			{
 				BEGIN_NAMED_RECORD(CREATE_SHADER);
-				fragment_module = (std::make_shared<ShaderModule>(window_context->get_context()->logical_device, fragment_shader_path, shaderc_fragment_shader));
+                        fragment_module = (std::make_shared<ShaderModule>(window_context->get_context()->logical_device, fragment_shader_path, GLSLANG_STAGE_FRAGMENT));
 
 			});
 		if (!geometry_shader_path.empty()) shader_creation_geometry = job_system::new_job([&, geometry_shader_path]
 			{
 				BEGIN_NAMED_RECORD(CREATE_SHADER);
-				geometry_module = (std::make_shared<ShaderModule>(window_context->get_context()->logical_device, geometry_shader_path, shaderc_geometry_shader));
+                        geometry_module = (std::make_shared<ShaderModule>(window_context->get_context()->logical_device, geometry_shader_path, GLSLANG_STAGE_GEOMETRY));
 
 			});
 
