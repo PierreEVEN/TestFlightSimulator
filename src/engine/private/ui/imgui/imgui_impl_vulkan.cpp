@@ -221,7 +221,6 @@ void ImGuiInstance::ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCom
     if (fb_width <= 0 || fb_height <= 0 || draw_data->TotalVtxCount == 0)
         return;
 
-    LOG_DEBUG("set ImGui_ImplVulkan_RenderDrawData count");
     Window* v = g_window_context;
 
     // Allocate array to store enough vertex/index buffers
@@ -230,7 +229,6 @@ void ImGuiInstance::ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCom
     {
         wrb->Index = 0;
         wrb->Count = v->get_image_count();
-        LOG_DEBUG("set image count");
         wrb->FrameRenderBuffers = static_cast<ImGui_ImplVulkanH_FrameRenderBuffers*>(IM_ALLOC(sizeof(ImGui_ImplVulkanH_FrameRenderBuffers) * wrb->Count));
         memset(wrb->FrameRenderBuffers, 0, sizeof(ImGui_ImplVulkanH_FrameRenderBuffers) * wrb->Count);
     }
@@ -769,10 +767,8 @@ void ImGuiInstance::ImGui_ImplVulkanH_DestroyFrameRenderBuffers(VkDevice device,
 
 void ImGuiInstance::ImGui_ImplVulkanH_DestroyWindowRenderBuffers(VkDevice device, ImGui_ImplVulkanH_WindowRenderBuffers* buffers, const VkAllocationCallbacks* allocator)
 {
-    LOG_DEBUG("buf %u", buffers->Count);
     for (uint32_t n = 0; n < buffers->Count; n++) { 
         
-    LOG_DEBUG("buf %d", n);
         ImGui_ImplVulkanH_DestroyFrameRenderBuffers(device, &buffers->FrameRenderBuffers[n], allocator); }
     IM_FREE(buffers->FrameRenderBuffers);
     buffers->FrameRenderBuffers = NULL;
