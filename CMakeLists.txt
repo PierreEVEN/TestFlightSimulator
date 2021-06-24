@@ -44,4 +44,4 @@ set(CMAKE_VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_ROOT}")
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 	
 add_subdirectory(third_party)
-#add_subdirectory(src)
+add_subdirectory(src)
