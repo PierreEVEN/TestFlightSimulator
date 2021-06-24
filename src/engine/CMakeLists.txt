@@ -1,7 +1,7 @@
 
 file(GLOB_RECURSE SOURCES *.cpp *.h)
 add_executable(TestFlightSimulator ${SOURCES})
-construct_target(TestFlightSimulator . ${SOURCES})
+configure_project(TestFlightSimulator "${SOURCES}")
 
 
 # VMA

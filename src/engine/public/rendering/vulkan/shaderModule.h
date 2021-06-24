@@ -32,6 +32,9 @@ public:
 	[[nodiscard]] int32_t get_uniform_bindings() const { return uniform_buffer_binding; }
 	[[nodiscard]] std::vector<uint32_t> get_sampled_image_bindings() const { return sampled_image_bindings; }
 
+	static void initialize_glslang();
+    static void shutdown_glslang();
+
 private:
 
 	void build_reflection_data(const std::vector<uint32_t>& bytecode);

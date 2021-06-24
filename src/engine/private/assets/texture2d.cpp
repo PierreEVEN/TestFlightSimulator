@@ -9,7 +9,6 @@
 #include <stb_image.h>
 
 
-
 #include "jobSystem/job.h"
 #include "jobSystem/job_system.h"
 #include "rendering/vulkan/descriptorPool.h"

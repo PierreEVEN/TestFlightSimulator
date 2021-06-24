@@ -78,7 +78,7 @@ Window::Window(const int res_x, const int res_y, const char* name, bool fullscre
 	command_pool = new command_pool::Container(context->logical_device, context->queue_families.graphic_family.value());
 	LOG_WARNING("finished window creation");
 	setup_swapchain_property();
-	return;
+
 	create_or_recreate_render_pass();
 
 	back_buffer = new Framebuffer(this, VkExtent2D{ static_cast<uint32_t>(window_width), static_cast<uint32_t>(window_height) });
@@ -134,6 +134,13 @@ void Window::setup_swapchain_property()
 		\t-present mode : %d\n\
 		\t-surface log_format : %d\
 		", max_msaa_sample_count, swapchain_image_count, swapchain_present_mode, swapchain_surface_format);
+}
+
+
+AssetManager* Window::get_asset_manager() const
+{
+    if (!asset_manager) LOG_FATAL("Asset manager is not valid");
+	return asset_manager;
 }
 
 void Window::resize_window(const int res_x, const int res_y) {

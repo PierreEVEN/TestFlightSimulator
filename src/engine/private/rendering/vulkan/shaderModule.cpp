@@ -16,6 +16,7 @@
 #include "ui/window/windows/profiler.h"
 #include "glslang/Include/glslang_c_shader_types.h"
 #include "glslang/Include/glslang_c_interface.h"
+#include "StandAlone/ResourceLimits.h"
 
 #define ENABLE_SHADER_LOGGING true
 
@@ -40,65 +41,172 @@ std::optional<std::string> read_shader_file(const std::filesystem::path& source_
 	return code;
 }
 
+inline static bool is_glslang_initialized = false;
+
+static TBuiltInResource glslang_default_resource = {
+
+    .maxLights                                 = 32,
+    .maxClipPlanes                             = 6,
+    .maxTextureUnits                           = 32,
+    .maxTextureCoords                          = 32,
+    .maxVertexAttribs                          = 64,
+    .maxVertexUniformComponents                = 4096,
+    .maxVaryingFloats                          = 64,
+    .maxVertexTextureImageUnits                = 32,
+    .maxCombinedTextureImageUnits              = 80,
+    .maxTextureImageUnits                      = 32,
+    .maxFragmentUniformComponents              = 4096,
+    .maxDrawBuffers                            = 32,
+    .maxVertexUniformVectors                   = 128,
+    .maxVaryingVectors                         = 8,
+    .maxFragmentUniformVectors                 = 16,
+    .maxVertexOutputVectors                    = 16,
+    .maxFragmentInputVectors                   = 15,
+    .minProgramTexelOffset                     = -8,
+    .maxProgramTexelOffset                     = 7,
+    .maxClipDistances                          = 8,
+    .maxComputeWorkGroupCountX                 = 65535,
+    .maxComputeWorkGroupCountY                 = 65535,
+    .maxComputeWorkGroupCountZ                 = 65535,
+    .maxComputeWorkGroupSizeX                  = 1024,
+    .maxComputeWorkGroupSizeY                  = 1024,
+    .maxComputeWorkGroupSizeZ                  = 64,
+    .maxComputeUniformComponents               = 1024,
+    .maxComputeTextureImageUnits               = 16,
+    .maxComputeImageUniforms                   = 8,
+    .maxComputeAtomicCounters                  = 8,
+    .maxComputeAtomicCounterBuffers            = 1,
+    .maxVaryingComponents                      = 60,
+    .maxVertexOutputComponents                 = 64,
+    .maxGeometryInputComponents                = 64,
+    .maxGeometryOutputComponents               = 128,
+    .maxFragmentInputComponents                = 128,
+    .maxImageUnits                             = 8,
+    .maxCombinedImageUnitsAndFragmentOutputs   = 8,
+    .maxCombinedShaderOutputResources          = 8,
+    .maxImageSamples                           = 0,
+    .maxVertexImageUniforms                    = 0,
+    .maxTessControlImageUniforms               = 0,
+    .maxTessEvaluationImageUniforms            = 0,
+    .maxGeometryImageUniforms                  = 0,
+    .maxFragmentImageUniforms                  = 8,
+    .maxCombinedImageUniforms                  = 8,
+    .maxGeometryTextureImageUnits              = 16,
+    .maxGeometryOutputVertices                 = 256,
+    .maxGeometryTotalOutputComponents          = 1024,
+    .maxGeometryUniformComponents              = 1024,
+    .maxGeometryVaryingComponents              = 64,
+    .maxTessControlInputComponents             = 128,
+    .maxTessControlOutputComponents            = 128,
+    .maxTessControlTextureImageUnits           = 16,
+    .maxTessControlUniformComponents           = 1024,
+    .maxTessControlTotalOutputComponents       = 4096,
+    .maxTessEvaluationInputComponents          = 128,
+    .maxTessEvaluationOutputComponents         = 128,
+    .maxTessEvaluationTextureImageUnits        = 16,
+    .maxTessEvaluationUniformComponents        = 1024,
+    .maxTessPatchComponents                    = 120,
+    .maxPatchVertices                          = 32,
+    .maxTessGenLevel                           = 64,
+    .maxViewports                              = 16,
+    .maxVertexAtomicCounters                   = 0,
+    .maxTessControlAtomicCounters              = 0,
+    .maxTessEvaluationAtomicCounters           = 0,
+    .maxGeometryAtomicCounters                 = 0,
+    .maxFragmentAtomicCounters                 = 8,
+    .maxCombinedAtomicCounters                 = 8,
+    .maxAtomicCounterBindings                  = 1,
+    .maxVertexAtomicCounterBuffers             = 0,
+    .maxTessControlAtomicCounterBuffers        = 0,
+    .maxTessEvaluationAtomicCounterBuffers     = 0,
+    .maxGeometryAtomicCounterBuffers           = 0,
+    .maxFragmentAtomicCounterBuffers           = 1,
+    .maxCombinedAtomicCounterBuffers           = 1,
+    .maxAtomicCounterBufferSize                = 16384,
+    .maxTransformFeedbackBuffers               = 4,
+    .maxTransformFeedbackInterleavedComponents = 64,
+    .maxCullDistances                          = 8,
+    .maxCombinedClipAndCullDistances           = 8,
+    .maxSamples                                = 4,
+    .maxMeshOutputVerticesNV                   = 256,
+    .maxMeshOutputPrimitivesNV                 = 512,
+    .maxMeshWorkGroupSizeX_NV                  = 32,
+    .maxMeshWorkGroupSizeY_NV                  = 1,
+    .maxMeshWorkGroupSizeZ_NV                  = 1,
+    .maxTaskWorkGroupSizeX_NV                  = 32,
+    .maxTaskWorkGroupSizeY_NV                  = 1,
+    .maxTaskWorkGroupSizeZ_NV                  = 1,
+    .maxMeshViewCountNV                        = 4,
+    .limits{
+        .nonInductiveForLoops                 = 1,
+        .whileLoops                           = 1,
+        .doWhileLoops                         = 1,
+        .generalUniformIndexing               = 1,
+        .generalAttributeMatrixVectorIndexing = 1,
+        .generalVaryingIndexing               = 1,
+        .generalSamplerIndexing               = 1,
+        .generalVariableIndexing              = 1,
+        .generalConstantMatrixVectorIndexing  = 1,
+    }};
+
+
+
 std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name, const std::string& shader_code, glslang_stage_t shader_kind, bool optimize = true)
 {
-	BEGIN_NAMED_RECORD(COMPILE_SHADER_MODULE);
+    BEGIN_NAMED_RECORD(COMPILE_SHADER_MODULE);
 
-	const glslang_input_t input = {
-            .language                          = GLSLANG_SOURCE_GLSL,
-            .stage                             = shader_kind,
-            .client                            = GLSLANG_CLIENT_VULKAN,
-            .client_version                    = GLSLANG_TARGET_VULKAN_1_1,
-            .target_language                   = GLSLANG_TARGET_SPV,
-            .target_language_version           = GLSLANG_TARGET_SPV_1_3,
-            .code                              = shader_code.c_str(),
-            .default_version                   = 100,
-            .default_profile                   = GLSLANG_NO_PROFILE,
-            .force_default_version_and_profile = false,
-            .forward_compatible                = false,
-            .messages                          = GLSLANG_MSG_DEFAULT_BIT,
-        };
+    if (!is_glslang_initialized) LOG_FATAL("GLSLANG IS NOT INITIALIZED. Please call ShaderModule::initialize_glslang()");
 
-        glslang_initialize_process();
+    const glslang_input_t input = {
+        .language                          = GLSLANG_SOURCE_GLSL,
+        .stage                             = shader_kind,
+        .client                            = GLSLANG_CLIENT_VULKAN,
+        .client_version                    = GLSLANG_TARGET_VULKAN_1_2,
+        .target_language                   = GLSLANG_TARGET_SPV,
+        .target_language_version           = GLSLANG_TARGET_SPV_1_3,
+        .code                              = shader_code.c_str(),
+        .default_version                   = 100,
+        .default_profile                   = GLSLANG_NO_PROFILE,
+        .force_default_version_and_profile = false,
+        .forward_compatible                = false,
+        .messages                          = GLSLANG_MSG_DEFAULT_BIT,
+        .resource                          = reinterpret_cast<const glslang_resource_t*>(&glslang_default_resource),
+    };
 
-        glslang_shader_t* shader = glslang_shader_create(&input);
+    glslang_shader_t* shader = glslang_shader_create(&input);
 
+    if (!glslang_shader_preprocess(shader, &input))
+    {
+        LOG_ERROR("failed to compile shader : %s", glslang_shader_get_info_debug_log(shader));
+        return std::optional<std::vector<uint32_t>>();
+        // use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
+    }
 
-		
-if (!glslang_shader_preprocess(shader, &input))
-        {
-    LOG_ERROR("failed to compile shader : %s", glslang_shader_get_info_debug_log(shader));
-            return std::optional<std::vector<uint32_t>>();
-            // use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
-        }
+    if (!glslang_shader_parse(shader, &input))
+    {
+        LOG_ERROR("failed to compile shader : %s", glslang_shader_get_info_debug_log(shader));
+        return std::optional<std::vector<uint32_t>>();
+        // use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
+    }
 
-        if (!glslang_shader_parse(shader, &input))
-        {
-            LOG_ERROR("failed to compile shader : %s", glslang_shader_get_info_debug_log(shader));
-            return std::optional<std::vector<uint32_t>>();
-            // use glslang_shader_get_info_log() and glslang_shader_get_info_debug_log()
-        }
+    glslang_program_t* program = glslang_program_create();
+    glslang_program_add_shader(program, shader);
 
-        glslang_program_t* program = glslang_program_create();
-        glslang_program_add_shader(program, shader);
+    if (!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
+    {
+        LOG_ERROR("failed to compile shader : %s", glslang_shader_get_info_debug_log(shader));
+        return std::optional<std::vector<uint32_t>>();
+        // use glslang_program_get_info_log() and glslang_program_get_info_debug_log();
+    }
 
-        if (!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
-        {
-            LOG_ERROR("failed to compile shader : %s", glslang_shader_get_info_debug_log(shader));
-            return std::optional<std::vector<uint32_t>>();
-            // use glslang_program_get_info_log() and glslang_program_get_info_debug_log();
-        }
+    glslang_program_SPIRV_generate(program, input.stage);
 
-        glslang_program_SPIRV_generate(program, input.stage);
+    if (glslang_program_SPIRV_get_messages(program)) { LOG_INFO("%s", glslang_program_SPIRV_get_messages(program)); }
 
-        if (glslang_program_SPIRV_get_messages(program)) { 
-			    LOG_INFO("%s", glslang_program_SPIRV_get_messages(program));
-		}
+    glslang_shader_delete(shader);
+    // @TODO glslang_program_delete( program );
 
-        glslang_shader_delete(shader);
-		// @TODO glslang_program_delete( program );
-
-	return std::vector<uint32_t>(glslang_program_SPIRV_get_ptr(program), glslang_program_SPIRV_get_ptr(program) + glslang_program_SPIRV_get_size(program));
+    return std::vector<uint32_t>(glslang_program_SPIRV_get_ptr(program), glslang_program_SPIRV_get_ptr(program) + glslang_program_SPIRV_get_size(program));
 }
 
 std::optional<VkShaderModule> create_shader_module(VkDevice logical_device, const std::vector<uint32_t>& bytecode)
@@ -235,4 +343,16 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
 			sampled_image_bindings.push_back(sampled_image_binding);
 		}
 	}
+}
+
+void ShaderModule::initialize_glslang()
+{
+    is_glslang_initialized = true;
+    glslang_initialize_process();
+}
+
+void ShaderModule::shutdown_glslang()
+{
+    is_glslang_initialized = false;
+    glslang_finalize_process();
 }

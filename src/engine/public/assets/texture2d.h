@@ -45,7 +45,7 @@ private:
 	VkDeviceMemory image_memory = VK_NULL_HANDLE;
 	VkImageView image_view = VK_NULL_HANDLE;
 	VkSampler image_sampler = VK_NULL_HANDLE;
-	VkDescriptorImageInfo* descriptor_image_info;
+	VkDescriptorImageInfo* descriptor_image_info = nullptr;
 
 	VkDescriptorSetLayout image_descriptor_layout = VK_NULL_HANDLE;
 	std::vector<VkDescriptorSet> image_descriptors;

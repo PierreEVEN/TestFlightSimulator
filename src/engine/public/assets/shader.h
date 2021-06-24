@@ -54,10 +54,11 @@ public:
 	void bind_texture(uint32_t binding, TAssetPtr<Texture2d> texture);
 	void bind_buffer(uint32_t binding, void* buffer_data);
 
-protected:
+	~Shader();
+
+      protected:
 	friend AssetManager;
 	Shader(const std::filesystem::path& vertex_shader_path = "", const std::filesystem::path& fragment_shader_path = "", const std::filesystem::path& geometry_shader_path = "");
-	~Shader();
 private:
 
 	void create_pipeline();

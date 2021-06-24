@@ -46,12 +46,10 @@ set(ASSIMP_INSTALL OFF)
 set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
 
 # Glslang
-set(BUILD_SHARED_LIBS ON)
+set(BUILD_SHARED_LIBS OFF)
 set(ENABLE_HLSL OFF)
 set(SKIP_GLSLANG_INSTALL ON)
 set(ENABLE_GLSLANG_BINARIES OFF)
-set(ENABLE_SPVREMAPPER OFF)
-
 
 fetch_target(glfw https://github.com/glfw/glfw master)
 fetch_target(assimp https://github.com/assimp/assimp master)

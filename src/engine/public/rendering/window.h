@@ -66,7 +66,7 @@ public:
 	[[nodiscard]] VkSurfaceFormatKHR get_surface_format() const { return swapchain_surface_format;  }
 	[[nodiscard]] VkPresentModeKHR get_present_mode() const { return swapchain_present_mode; }
 	[[nodiscard]] VkRenderPass get_render_pass() const { return render_pass; }
-	[[nodiscard]] AssetManager* get_asset_manager() const { return asset_manager; }
+        [[nodiscard]] AssetManager*                         get_asset_manager() const;
 
 	[[nodiscard]] uint32_t get_msaa_sample_count() const { return msaa_sample_count; }
 	[[nodiscard]] uint32_t get_max_msaa_sample_count() const { return max_msaa_sample_count; }

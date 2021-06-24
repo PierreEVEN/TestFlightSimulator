@@ -1,6 +1,6 @@
 include(FetchContent)
 
-function(configure_project PROJECT_NAME)
+function(configure_project PROJECT_NAME SOURCES)
 	set_target_properties(${PROJECT_NAME} PROPERTIES 
 		ARCHIVE_OUTPUT_DIRECTORY "${BINARIES_DIR}/Lib"
 		RUNTIME_OUTPUT_DIRECTORY "${BINARIES_DIR}/Bin"
