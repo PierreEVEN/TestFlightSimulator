@@ -8,6 +8,7 @@ function(configure_project PROJECT_NAME SOURCES)
 		VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_ROOT}")
 	target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 	set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
+	source_group(TREE ${PROJECT_ROOT} FILES ${SOURCES})
 endfunction()
 
 function(add_subfodler_target TARGET_NAME CONTAINER_FOLDER)

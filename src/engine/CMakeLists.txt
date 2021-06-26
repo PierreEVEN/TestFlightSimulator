@@ -3,7 +3,6 @@ file(GLOB_RECURSE SOURCES *.cpp *.h)
 add_executable(TestFlightSimulator ${SOURCES})
 configure_project(TestFlightSimulator "${SOURCES}")
 
-
 # VMA
 target_include_directories(TestFlightSimulator PUBLIC ${VulkanMemoryAllocator_SOURCE_DIR}/include)
 
