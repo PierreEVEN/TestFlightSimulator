@@ -60,14 +60,14 @@ DescriptorPoolItem::DescriptorPoolItem(Window* context, VkDescriptorSetAllocateI
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = config::max_descriptor_per_pool;
 
-	VK_ENSURE(vkCreateDescriptorPool(window_context->get_context()->logical_device, &poolInfo, vulkan_common::allocation_callback, &pool), "Failed to create descriptor pool");
+	VK_ENSURE(vkCreateDescriptorPool(window_context->get_gfx_context()->logical_device, &poolInfo, vulkan_common::allocation_callback, &pool), "Failed to create descriptor pool");
 
 	bind_alloc_infos(allocInfos);
 }
 
 DescriptorPoolItem::~DescriptorPoolItem()
 {
-	vkDestroyDescriptorPool(window_context->get_context()->logical_device, pool, vulkan_common::allocation_callback);
+	vkDestroyDescriptorPool(window_context->get_gfx_context()->logical_device, pool, vulkan_common::allocation_callback);
 }
 
 DescriptorPoolItem::operator bool() const

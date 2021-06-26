@@ -1,6 +1,9 @@
 
 #include "assets/shader.h"
 
+#include "IEngineInterface.h"
+
+
 #include <fstream>
 #include <optional>
 
@@ -29,19 +32,19 @@ Shader::Shader(const std::filesystem::path& vertex_shader_path,	const std::files
 		if (!vertex_shader_path.empty()) shader_creation_vertex = job_system::new_job([&, vertex_shader_path]
 			{
 				BEGIN_NAMED_RECORD(CREATE_SHADER);
-                        vertex_module = (std::make_shared<ShaderModule>(window_context->get_context()->logical_device, vertex_shader_path, GLSLANG_STAGE_VERTEX));
+                        vertex_module = (std::make_shared<ShaderModule>(get_engine_interface()->get_gfx_context()->logical_device, vertex_shader_path, GLSLANG_STAGE_VERTEX));
 
 			});
 		if (!fragment_shader_path.empty()) shader_creation_fragment = job_system::new_job([&, fragment_shader_path]
 			{
 				BEGIN_NAMED_RECORD(CREATE_SHADER);
-                        fragment_module = (std::make_shared<ShaderModule>(window_context->get_context()->logical_device, fragment_shader_path, GLSLANG_STAGE_FRAGMENT));
+                        fragment_module = (std::make_shared<ShaderModule>(get_engine_interface()->get_gfx_context()->logical_device, fragment_shader_path, GLSLANG_STAGE_FRAGMENT));
 
 			});
 		if (!geometry_shader_path.empty()) shader_creation_geometry = job_system::new_job([&, geometry_shader_path]
 			{
 				BEGIN_NAMED_RECORD(CREATE_SHADER);
-                        geometry_module = (std::make_shared<ShaderModule>(window_context->get_context()->logical_device, geometry_shader_path, GLSLANG_STAGE_GEOMETRY));
+                        geometry_module = (std::make_shared<ShaderModule>(get_engine_interface()->get_gfx_context()->logical_device, geometry_shader_path, GLSLANG_STAGE_GEOMETRY));
 
 			});
 
@@ -149,7 +152,7 @@ void Shader::create_pipeline()
 	pipelineLayoutInfo.pSetLayouts = &descriptor_set_layout;
 	pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(push_constants.size());
 	pipelineLayoutInfo.pPushConstantRanges = push_constants.data();
-	VK_ENSURE(vkCreatePipelineLayout(get_context()->get_context()->logical_device, &pipelineLayoutInfo, nullptr, &pipeline_layout), "Failed to create pipeline layout");
+        VK_ENSURE(vkCreatePipelineLayout(get_engine_interface()->get_gfx_context()->logical_device, &pipelineLayoutInfo, nullptr, &pipeline_layout), "Failed to create pipeline layout");
 
 	/**
 	 *  DEFINE VERTEX ATTRIBUTES
@@ -194,12 +197,12 @@ void Shader::create_pipeline()
 
 	VkPipelineMultisampleStateCreateInfo multisampling{};
 	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	multisampling.rasterizationSamples = static_cast<VkSampleCountFlagBits>(get_context()->get_msaa_sample_count());
+        multisampling.rasterizationSamples  = static_cast<VkSampleCountFlagBits>(get_engine_interface()->get_window()->get_msaa_sample_count());
 	multisampling.minSampleShading = 1.0f; // Optional
 	multisampling.pSampleMask = nullptr; // Optional
 	multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
 	multisampling.alphaToOneEnable = VK_FALSE; // Optional
-	multisampling.sampleShadingEnable = get_context()->get_msaa_sample_count() > 1 ? VK_TRUE : VK_FALSE;
+        multisampling.sampleShadingEnable   = get_engine_interface()->get_window()->get_msaa_sample_count() > 1 ? VK_TRUE : VK_FALSE;
 	multisampling.minSampleShading = .2f;
 
 	VkPipelineDepthStencilStateCreateInfo depthStencil{};
@@ -253,12 +256,13 @@ void Shader::create_pipeline()
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = &dynamicState; // Optional
 	pipelineInfo.layout = pipeline_layout;
-	pipelineInfo.renderPass = get_context()->get_render_pass();
+        pipelineInfo.renderPass          = get_engine_interface()->get_window()->get_render_pass();
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 	pipelineInfo.basePipelineIndex = -1; // Optional
 	pipelineInfo.pDepthStencilState = &depthStencil;
-	VK_ENSURE(vkCreateGraphicsPipelines(get_context()->get_context()->logical_device, VK_NULL_HANDLE, 1, &pipelineInfo, vulkan_common::allocation_callback, &shader_pipeline), "Failed to create material graphic pipeline");
+        VK_ENSURE(vkCreateGraphicsPipelines(get_engine_interface()->get_gfx_context()->logical_device, VK_NULL_HANDLE, 1, &pipelineInfo, vulkan_common::allocation_callback, &shader_pipeline),
+                  "Failed to create material graphic pipeline");
 }
 
 void Shader::create_descriptor_sets()
@@ -339,25 +343,26 @@ void Shader::create_descriptor_sets()
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	layoutInfo.bindingCount = static_cast<uint32_t>(layout_bindings.size());
 	layoutInfo.pBindings = layout_bindings.data();
-	VK_ENSURE(vkCreateDescriptorSetLayout(get_context()->get_context()->logical_device, &layoutInfo, vulkan_common::allocation_callback, &descriptor_set_layout), "Failed to create descriptor set layout");
+        VK_ENSURE(vkCreateDescriptorSetLayout(get_engine_interface()->get_gfx_context()->logical_device, &layoutInfo, vulkan_common::allocation_callback, &descriptor_set_layout),
+                  "Failed to create descriptor set layout");
 
 	/** Allocate descriptor set */
-	std::vector<VkDescriptorSetLayout> layouts(get_context()->get_image_count(), descriptor_set_layout);
-	descriptor_sets.resize(get_context()->get_image_count());
+        std::vector<VkDescriptorSetLayout> layouts(get_engine_interface()->get_window()->get_image_count(), descriptor_set_layout);
+        descriptor_sets.resize(get_engine_interface()->get_window()->get_image_count());
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(get_context()->get_image_count());
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(get_engine_interface()->get_window()->get_image_count());
 	allocInfo.pSetLayouts = layouts.data();
 	allocInfo.descriptorPool = VK_NULL_HANDLE;
-	get_context()->get_descriptor_pool()->alloc_memory(allocInfo);
-	VK_ENSURE(vkAllocateDescriptorSets(get_context()->get_context()->logical_device, &allocInfo, descriptor_sets.data()), "Failed to allocate descriptor sets");
+        get_engine_interface()->get_window()->get_descriptor_pool()->alloc_memory(allocInfo);
+        VK_ENSURE(vkAllocateDescriptorSets(get_engine_interface()->get_gfx_context()->logical_device, &allocInfo, descriptor_sets.data()), "Failed to allocate descriptor sets");
 }
 
 void Shader::destroy()
 {
-	if (shader_pipeline != VK_NULL_HANDLE) vkDestroyPipeline(get_context()->get_context()->logical_device, shader_pipeline, vulkan_common::allocation_callback);
-	if (pipeline_layout != VK_NULL_HANDLE) vkDestroyPipelineLayout(get_context()->get_context()->logical_device, pipeline_layout, vulkan_common::allocation_callback);
-	if (descriptor_set_layout != VK_NULL_HANDLE) vkDestroyDescriptorSetLayout(get_context()->get_context()->logical_device, descriptor_set_layout, vulkan_common::allocation_callback);
+    if (shader_pipeline != VK_NULL_HANDLE) vkDestroyPipeline(get_engine_interface()->get_gfx_context()->logical_device, shader_pipeline, vulkan_common::allocation_callback);
+    if (pipeline_layout != VK_NULL_HANDLE) vkDestroyPipelineLayout(get_engine_interface()->get_gfx_context()->logical_device, pipeline_layout, vulkan_common::allocation_callback);
+    if (descriptor_set_layout != VK_NULL_HANDLE) vkDestroyDescriptorSetLayout(get_engine_interface()->get_gfx_context()->logical_device, descriptor_set_layout, vulkan_common::allocation_callback);
 	shader_pipeline = VK_NULL_HANDLE;
 	pipeline_layout = VK_NULL_HANDLE;
 	descriptor_set_layout = VK_NULL_HANDLE;
@@ -387,7 +392,7 @@ void Shader::update_descriptors()
 
 
 
-	//vkUpdateDescriptorSets(get_context()->get_context()->logical_device, static_cast<uint32_t>(descriptor_update.size()), descriptor_update.data(), 0, nullptr);
+	//vkUpdateDescriptorSets(get_engine_interface()->get_engine_interface()->logical_device, static_cast<uint32_t>(descriptor_update.size()), descriptor_update.data(), 0, nullptr);
 }
 
 std::shared_ptr<ShaderModule> Shader::get_shader_module(VkShaderStageFlags shader_stage)

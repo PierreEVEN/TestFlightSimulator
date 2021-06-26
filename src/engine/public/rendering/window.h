@@ -1,125 +1,112 @@
 #pragma once
 
+#include "rendering/gfx_context.h"
 #include <memory>
-#include <mutex>
 
 #include "vulkan/commandPool.h"
+
+#include <functional>
 
 class Node;
 class SceneNode;
 class WindowBase;
-class WindowManager;
-class AssetManager;
 class DescriptorPool;
 class ImGuiInstance;
 class Framebuffer;
 class Swapchain;
 
-class WindowContext
+struct WindowParameters
 {
-public:
-	WindowContext(GLFWwindow* handle, VkSurfaceKHR surface);
-	~WindowContext();
-	
-	VkPhysicalDevice physical_device = VK_NULL_HANDLE;
-	VkDevice logical_device = VK_NULL_HANDLE;
-	vulkan_utils::QueueFamilyIndices queue_families;
-
-	VmaAllocator vulkan_memory_allocator = VK_NULL_HANDLE;
-
-	void submit_graphic_queue(const VkSubmitInfo& submit_infos, VkFence submit_fence);
-	VkResult submit_present_queue(const VkPresentInfoKHR& present_infos);
-	void wait_device();
-private:
-	std::mutex queue_access_lock;
-	VkQueue graphic_queue = VK_NULL_HANDLE;
-	VkQueue transfert_queue = VK_NULL_HANDLE;
-	VkQueue present_queue = VK_NULL_HANDLE;
-
-	void select_physical_device(VkSurfaceKHR surface);
-	void create_logical_device(VkSurfaceKHR surface);
-	void create_vma_allocator();
-	
-	void destroy_vma_allocators();
-	void destroy_logical_device();
+    int         size_x           = 800;
+    int         size_y           = 600;
+    bool        b_is_fullscreen  = false;
+    std::string application_name = "Empty name";
 };
 
+struct RenderContext
+{
+    bool            is_valid       = false;
+    VkCommandBuffer command_buffer = VK_NULL_HANDLE;
+    VkFramebuffer   framebuffer    = VK_NULL_HANDLE;
+    uint32_t        image_index    = 0;
+};
 
 class Window
 {
-	friend WindowBase;
-public:
-	Window(int res_x, int res_y, const char* name, bool fullscreen = false, bool img_context = false);
-	virtual ~Window();
-	
-	bool begin_frame();	
-	bool end_frame();
+    friend WindowBase;
 
+  public:
+    Window(WindowParameters window_parameters = WindowParameters{});
+    virtual ~Window();
 
-	[[nodiscard]] DescriptorPool* get_descriptor_pool() const { return descriptor_pool; }
-	[[nodiscard]] VkCommandPool get_command_pool() const { return command_pool->get(); }
-	[[nodiscard]] GLFWwindow* get_handle() const { return window_handle; }
-	[[nodiscard]] WindowContext* get_context() const { return context.get(); }
-	[[nodiscard]] VkSurfaceKHR get_surface() const { return surface; }
-	[[nodiscard]] uint32_t get_image_count() const { return swapchain_image_count; }
-	[[nodiscard]] vulkan_utils::SwapchainSupportDetails get_support_details() const { return swapchain_support_details; }
-	[[nodiscard]] VkSurfaceFormatKHR get_surface_format() const { return swapchain_surface_format;  }
-	[[nodiscard]] VkPresentModeKHR get_present_mode() const { return swapchain_present_mode; }
-	[[nodiscard]] VkRenderPass get_render_pass() const { return render_pass; }
-        [[nodiscard]] AssetManager*                         get_asset_manager() const;
+    bool begin_frame();
+    bool end_frame();
 
-	[[nodiscard]] uint32_t get_msaa_sample_count() const { return msaa_sample_count; }
-	[[nodiscard]] uint32_t get_max_msaa_sample_count() const { return max_msaa_sample_count; }
+    [[nodiscard]] DescriptorPool*                       get_descriptor_pool() const { return descriptor_pool; }
+    [[nodiscard]] VkCommandPool                         get_command_pool() const { return command_pool->get(); }
+    [[nodiscard]] GLFWwindow*                           get_handle() const { return window_handle; }
+    [[nodiscard]] GfxContext*                           get_gfx_context() const { return gfx_context.get(); }
+    [[nodiscard]] VkSurfaceKHR                          get_surface() const { return surface; }
+    [[nodiscard]] uint32_t                              get_image_count() const { return swapchain_image_count; }
+    [[nodiscard]] vulkan_utils::SwapchainSupportDetails get_support_details() const { return swapchain_support_details; }
+    [[nodiscard]] VkSurfaceFormatKHR                    get_surface_format() const { return swapchain_surface_format; }
+    [[nodiscard]] VkPresentModeKHR                      get_present_mode() const { return swapchain_present_mode; }
+    [[nodiscard]] VkRenderPass                          get_render_pass() const { return render_pass; }
 
+    [[nodiscard]] uint32_t get_msaa_sample_count() const { return msaa_sample_count; }
+    [[nodiscard]] uint32_t get_max_msaa_sample_count() const { return max_msaa_sample_count; }
 
-	Node* TEMP_NODE = nullptr;
+    [[nodiscard]] uint32_t get_height() const { return window_height; }
+    [[nodiscard]] uint32_t get_width() const { return window_width; }
 
-	void resize_window(int res_x, int res_y);
-	bool bHasViewportBeenResized = false;
-private:
+    Node* TEMP_NODE = nullptr;
 
-	bool has_imgui_context;
-	std::shared_ptr<WindowContext> context;
-	
-	GLFWwindow* window_handle;
-	command_pool::Container* command_pool;
-	vulkan_utils::SwapchainSupportDetails swapchain_support_details;
-	VkSurfaceFormatKHR swapchain_surface_format;
-	VkPresentModeKHR swapchain_present_mode;
-	VkSampleCountFlagBits max_msaa_sample_count;
-	VkSampleCountFlagBits msaa_sample_count;
-	uint32_t swapchain_image_count;
+    void resize_window(int res_x, int res_y);
+    bool bHasViewportBeenResized = false;
 
-	DescriptorPool* descriptor_pool;
-	AssetManager* asset_manager;
-	ImGuiInstance* imgui_instance = nullptr;
-	WindowManager* window_manager = nullptr;
+    void          wait_init_idle();
+    RenderContext prepare_frame();
+    void          prepare_ui(RenderContext& render_context);
+    void          render_data(RenderContext& render_context);
 
-	std::vector<VkSemaphore> image_acquire_semaphore;
-	std::vector<VkSemaphore> render_finished_semaphores;
-	std::vector<VkFence> in_flight_fences;
-	std::vector<VkFence> images_in_flight;
-	size_t current_frame_id = 0;
-	
-	uint32_t window_width;
-	uint32_t window_height;
-	const char* window_name;
-	VkSurfaceKHR surface = VK_NULL_HANDLE;
-	VkRenderPass render_pass = VK_NULL_HANDLE;
-	Framebuffer* back_buffer;
-	std::vector<VkCommandBuffer> command_buffers;
+  private:
+    std::unique_ptr<GfxContext> gfx_context;
 
-	friend void framebuffer_size_callback(GLFWwindow* handle, int res_x, int res_y);
-	void create_window_surface();
-	void setup_swapchain_property();
-	void create_or_recreate_render_pass();
-	void create_command_buffer();
-	void create_fences_and_semaphores();
+    GLFWwindow*                           window_handle;
+    command_pool::Container*              command_pool;
+    vulkan_utils::SwapchainSupportDetails swapchain_support_details;
+    VkSurfaceFormatKHR                    swapchain_surface_format;
+    VkPresentModeKHR                      swapchain_present_mode;
+    VkSampleCountFlagBits                 max_msaa_sample_count;
+    VkSampleCountFlagBits                 msaa_sample_count;
+    uint32_t                              swapchain_image_count;
 
-	void render();
-	
-	void destroy_fences_and_semaphores();
-	void destroy_command_buffer();
-	void destroy_render_pass();
-	void destroy_window_surface();
+    DescriptorPool* descriptor_pool;
+    ImGuiInstance*  imgui_instance = nullptr;
+
+    std::vector<VkSemaphore> image_acquire_semaphore;
+    std::vector<VkSemaphore> render_finished_semaphores;
+    std::vector<VkFence>     in_flight_fences;
+    std::vector<VkFence>     images_in_flight;
+    size_t                   current_frame_id = 0;
+
+    uint32_t                     window_width;
+    uint32_t                     window_height;
+    const char*                  window_name;
+    VkSurfaceKHR                 surface     = VK_NULL_HANDLE;
+    VkRenderPass                 render_pass = VK_NULL_HANDLE;
+    Framebuffer*                 back_buffer;
+    std::vector<VkCommandBuffer> command_buffers;
+
+    friend void framebuffer_size_callback(GLFWwindow* handle, int res_x, int res_y);
+    void        create_window_surface();
+    void        setup_swapchain_property();
+    void        create_or_recreate_render_pass();
+    void        create_command_buffer();
+    void        create_fences_and_semaphores();
+
+    void destroy_fences_and_semaphores();
+    void destroy_command_buffer();
+    void destroy_render_pass();
+    void destroy_window_surface();
 };

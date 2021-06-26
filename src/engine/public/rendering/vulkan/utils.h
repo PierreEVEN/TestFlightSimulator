@@ -16,7 +16,7 @@
 #define VK_CHECK(object, ...) \
     if ((object) == VK_NULL_HANDLE) { LOG_FATAL("VK_ERROR_NULL_HANDLE %d : %s", object, __VA_ARGS__); }
 
-class WindowContext;
+class GfxContext;
 class Window;
 
 namespace vulkan_utils
@@ -54,7 +54,7 @@ namespace vulkan_utils
 	uint32_t find_memory_type(VkPhysicalDevice physical_device, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	VkCommandBuffer begin_single_time_commands(Window* context);
 	void end_single_time_commands(Window* context, VkCommandBuffer commandBuffer);
-	void create_buffer(WindowContext* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void create_buffer(GfxContext* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copy_buffer(Window* context, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void create_vma_buffer(Window* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VmaAllocation& allocation, VmaAllocationInfo& allocInfos);
 }

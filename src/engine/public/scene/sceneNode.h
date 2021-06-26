@@ -16,6 +16,4 @@ public:
 private:
 
 	TAssetPtr<Scene> scene;
-
-	
 };

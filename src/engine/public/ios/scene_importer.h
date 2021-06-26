@@ -26,7 +26,7 @@ struct aiNode;
 class SceneImporter final
 {
 public:
-	SceneImporter(Window* context, const std::filesystem::path& source_file, const std::string& desired_asset_name = "");
+	SceneImporter(IEngineInterface* context, const std::filesystem::path& source_file, const std::string& desired_asset_name = "");
 	~SceneImporter();
 
 	[[nodiscard]] Node* get_root_node() const { return root_node; }
@@ -40,7 +40,7 @@ private:
 	Node* create_node(aiNode* context, Node* parent);
 	
 	Node* root_node = nullptr;
-	Window* window_context = nullptr;
+        IEngineInterface* window_context = nullptr;
 
 	std::string object_name;
 	std::vector<TAssetPtr<Texture2d>> texture_refs;

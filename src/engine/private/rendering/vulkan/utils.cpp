@@ -303,7 +303,7 @@ namespace vulkan_utils
 		allocInfo.commandBufferCount = 1;
 
 		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(context->get_context()->logical_device, &allocInfo, &commandBuffer);
+		vkAllocateCommandBuffers(context->get_gfx_context()->logical_device, &allocInfo, &commandBuffer);
 
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -326,19 +326,19 @@ namespace vulkan_utils
 		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 		VkFence submitFence = VK_NULL_HANDLE;
-		vkCreateFence(context->get_context()->logical_device, &fenceInfo, vulkan_common::allocation_callback, &submitFence);
+		vkCreateFence(context->get_gfx_context()->logical_device, &fenceInfo, vulkan_common::allocation_callback, &submitFence);
 
-		vkResetFences(context->get_context()->logical_device, 1, &submitFence);
+		vkResetFences(context->get_gfx_context()->logical_device, 1, &submitFence);
 		{
-			context->get_context()->submit_graphic_queue(submitInfo, submitFence);
+			context->get_gfx_context()->submit_graphic_queue(submitInfo, submitFence);
 		}
-		vkWaitForFences(context->get_context()->logical_device, 1, &submitFence, VK_TRUE, UINT64_MAX);
-		vkDestroyFence(context->get_context()->logical_device, submitFence, vulkan_common::allocation_callback);
-		vkFreeCommandBuffers(context->get_context()->logical_device, context->get_command_pool(), 1, &commandBuffer);
+		vkWaitForFences(context->get_gfx_context()->logical_device, 1, &submitFence, VK_TRUE, UINT64_MAX);
+		vkDestroyFence(context->get_gfx_context()->logical_device, submitFence, vulkan_common::allocation_callback);
+		vkFreeCommandBuffers(context->get_gfx_context()->logical_device, context->get_command_pool(), 1, &commandBuffer);
 	}
 
 
-	void create_buffer(WindowContext* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+	void create_buffer(GfxContext* context, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 	{
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -385,7 +385,7 @@ namespace vulkan_utils
 
 		VmaAllocationCreateInfo vmaInfos{};
 		vmaInfos.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-		vmaCreateBuffer(context->get_context()->vulkan_memory_allocator, &bufferInfo, &vmaInfos, &buffer, &allocation, &allocInfos);
+		vmaCreateBuffer(context->get_gfx_context()->vulkan_memory_allocator, &bufferInfo, &vmaInfos, &buffer, &allocation, &allocInfos);
 	}
 
 	

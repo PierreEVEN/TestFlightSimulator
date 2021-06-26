@@ -17,8 +17,9 @@
 #include "scene/meshNode.h"
 #include "stb_image.h"
 #include "ui/window/windows/profiler.h"
+#include "IEngineInterface.h"
 
-SceneImporter::SceneImporter(Window* context, const std::filesystem::path& source_file, const std::string& desired_asset_name) : window_context(context), object_name(desired_asset_name)
+SceneImporter::SceneImporter(IEngineInterface* context, const std::filesystem::path& source_file, const std::string& desired_asset_name) : window_context(context), object_name(desired_asset_name)
 {
     BEGIN_NAMED_RECORD(IMPORT_SCENE_DATA);
     importer = std::make_unique<Assimp::Importer>();

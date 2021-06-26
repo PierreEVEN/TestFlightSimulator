@@ -6,7 +6,7 @@
 
 namespace vulkan_texture {
 
-	void create_image_view_2d(WindowContext* context, VkImage image, VkImageView& view, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
+	void create_image_view_2d(GfxContext* context, VkImage image, VkImageView& view, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
 	{
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -23,7 +23,7 @@ namespace vulkan_texture {
 		VK_ENSURE(vkCreateImageView(context->logical_device, &viewInfo, vulkan_common::allocation_callback, &view), "Failed to create view on texture image");
 	}
 
-	void create_image_2d(WindowContext* context, uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples,
+	void create_image_2d(GfxContext* context, uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples,
 		VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
 		VkImage& image, VkDeviceMemory& imageMemory)
 	{
@@ -122,7 +122,7 @@ namespace vulkan_texture {
 	void generate_mipmaps(Window* context, VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, VkCommandBuffer commandBuffer)
 	{
 		VkFormatProperties formatProperties;
-		vkGetPhysicalDeviceFormatProperties(context->get_context()->physical_device, imageFormat, &formatProperties);
+		vkGetPhysicalDeviceFormatProperties(context->get_gfx_context()->physical_device, imageFormat, &formatProperties);
 		if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) { LOG_FATAL("This texture image format doesn't support image blitting");
 		}
 
