@@ -14,7 +14,7 @@ void TestGameInterface::load_resources()
     get_asset_manager()->create<Texture2d>("default-texture", "data/DefaultTexture.png");
     get_asset_manager()->create<Shader>("shader_Test", "data/test.vs.glsl", "data/test.fs.glsl");
     get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
-    for (int i = 0; i < 50; ++i)
+    for (int i = 0; i < 500; ++i)
     {
         get_asset_manager()->create<Texture2d>(AssetId("de2fault-texture" + std::to_string(i)), "data/DefaultTexture.png");
         get_asset_manager()->create<Shader>(AssetId("shad2er_Test"+ std::to_string(i)), "data/test.vs.glsl", "data/test.fs.glsl");

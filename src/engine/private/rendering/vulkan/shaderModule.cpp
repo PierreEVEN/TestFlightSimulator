@@ -2,43 +2,42 @@
 #include "rendering/vulkan/shaderModule.h"
 
 #include <filesystem>
+#include <fstream>
 #include <optional>
 #include <string>
-#include <fstream>
 #include <vulkan/vulkan_core.h>
-
-
 
 #include <cpputils/logger.hpp>
 
-#include "spirv_glsl.hpp"
-#include "rendering/vulkan/common.h"
-#include "ui/window/windows/profiler.h"
-#include "glslang/Include/glslang_c_shader_types.h"
-#include "glslang/Include/glslang_c_interface.h"
 #include "StandAlone/ResourceLimits.h"
+#include "glslang/Include/glslang_c_interface.h"
+#include "glslang/Include/glslang_c_shader_types.h"
+#include "rendering/vulkan/common.h"
+#include "spirv_glsl.hpp"
+#include "ui/window/windows/profiler.h"
 
-#define ENABLE_SHADER_LOGGING true
-
+#define ENABLE_SHADER_LOGGING false
 
 std::optional<std::string> read_shader_file(const std::filesystem::path& source_path)
 {
-	std::optional<std::string> code;
+    std::optional<std::string> code;
 
-	if (exists(source_path)) {
-		std::ifstream shader_file(source_path);
+    if (exists(source_path))
+    {
+        std::ifstream shader_file(source_path);
 
-		std::string code_string;
-		std::string line;
-		while (std::getline(shader_file, line)) {
-			code_string += line + "\n";
-		}
+        std::string code_string;
+        std::string line;
+        while (std::getline(shader_file, line))
+        {
+            code_string += line + "\n";
+        }
 
-		shader_file.close();
-		code = code_string;
-	}
+        shader_file.close();
+        code = code_string;
+    }
 
-	return code;
+    return code;
 }
 
 inline static bool is_glslang_initialized = false;
@@ -149,13 +148,12 @@ static TBuiltInResource glslang_default_resource = {
         .generalConstantMatrixVectorIndexing  = 1,
     }};
 
-
-
 std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name, const std::string& shader_code, glslang_stage_t shader_kind, bool optimize = true)
 {
     BEGIN_NAMED_RECORD(COMPILE_SHADER_MODULE);
 
-    if (!is_glslang_initialized) LOG_FATAL("GLSLANG IS NOT INITIALIZED. Please call ShaderModule::initialize_glslang()");
+    if (!is_glslang_initialized)
+        LOG_FATAL("GLSLANG IS NOT INITIALIZED. Please call ShaderModule::initialize_glslang()");
 
     const glslang_input_t input = {
         .language                          = GLSLANG_SOURCE_GLSL,
@@ -201,7 +199,10 @@ std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name
 
     glslang_program_SPIRV_generate(program, input.stage);
 
-    if (glslang_program_SPIRV_get_messages(program)) { LOG_INFO("%s", glslang_program_SPIRV_get_messages(program)); }
+    if (glslang_program_SPIRV_get_messages(program))
+    {
+        LOG_INFO("%s", glslang_program_SPIRV_get_messages(program));
+    }
 
     glslang_shader_delete(shader);
     // @TODO glslang_program_delete( program );
@@ -211,138 +212,141 @@ std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name
 
 std::optional<VkShaderModule> create_shader_module(VkDevice logical_device, const std::vector<uint32_t>& bytecode)
 {
-	VkShaderModule shader_module;
-	
-	VkShaderModuleCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = bytecode.size() * sizeof(uint32_t);
-	createInfo.pCode = reinterpret_cast<const uint32_t*>(bytecode.data());
-	VkResult res = vkCreateShaderModule(logical_device, &createInfo, vulkan_common::allocation_callback, &shader_module);
-	if (!res == VK_SUCCESS) {
-            LOG_ERROR("Failed to create shader module : %d", static_cast<uint32_t>(res));
-		return nullptr;
-	}
-	return shader_module;
+    VkShaderModule shader_module;
+
+    VkShaderModuleCreateInfo createInfo{};
+    createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = bytecode.size() * sizeof(uint32_t);
+    createInfo.pCode    = reinterpret_cast<const uint32_t*>(bytecode.data());
+    VkResult res        = vkCreateShaderModule(logical_device, &createInfo, vulkan_common::allocation_callback, &shader_module);
+    if (!res == VK_SUCCESS)
+    {
+        LOG_ERROR("Failed to create shader module : %d", static_cast<uint32_t>(res));
+        return nullptr;
+    }
+    return shader_module;
 }
 
 ShaderModule::ShaderModule(VkDevice logical_device, std::string in_file_name, const std::string& shader_code, glslang_stage_t shader_kind) : device(logical_device), file_name(in_file_name)
 {
-	if (auto bytecode = compile_module(file_name, shader_code, shader_kind))
-	{
-		if (auto shader_m = create_shader_module(logical_device, bytecode.value()))
-		{
-			build_reflection_data(bytecode.value());
-			shader_module = shader_m.value();
-		}
-	}
+    if (auto bytecode = compile_module(file_name, shader_code, shader_kind))
+    {
+        if (auto shader_m = create_shader_module(logical_device, bytecode.value()))
+        {
+            build_reflection_data(bytecode.value());
+            shader_module = shader_m.value();
+        }
+    }
 }
 
-ShaderModule::ShaderModule(VkDevice logical_device, std::filesystem::path source_path, glslang_stage_t shader_kind)
-	: device(logical_device), file_name(source_path.string())
+ShaderModule::ShaderModule(VkDevice logical_device, std::filesystem::path source_path, glslang_stage_t shader_kind) : device(logical_device), file_name(source_path.string())
 {
-	auto shader_data = read_shader_file(source_path);
-	if (shader_data) {
-		if (auto bytecode = compile_module(source_path.string(), shader_data.value(), shader_kind))
-		{
-			if (auto shader_m = create_shader_module(logical_device, bytecode.value()))
-			{
-				build_reflection_data(bytecode.value());
-				shader_module = shader_m.value();
-			}
-		}
-	}
+    auto shader_data = read_shader_file(source_path);
+    if (shader_data)
+    {
+        if (auto bytecode = compile_module(source_path.string(), shader_data.value(), shader_kind))
+        {
+            if (auto shader_m = create_shader_module(logical_device, bytecode.value()))
+            {
+                build_reflection_data(bytecode.value());
+                shader_module = shader_m.value();
+            }
+        }
+    }
 }
 
 ShaderModule::~ShaderModule()
 {
-	vkDestroyShaderModule(device, shader_module, vulkan_common::allocation_callback);
+    vkDestroyShaderModule(device, shader_module, vulkan_common::allocation_callback);
 }
 
 void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
 {
-	const spirv_cross::Compiler compiler(bytecode);
+    const spirv_cross::Compiler compiler(bytecode);
 
 #if ENABLE_SHADER_LOGGING
-        LOG_INFO("### BUILDING SHADER ###");
+    LOG_INFO("### BUILDING SHADER ###");
 #endif
 
-	/**
-	 *  PUSH CONSTANTS
-	 */
+    /**
+     *  PUSH CONSTANTS
+     */
 
+    const auto push_constant_buffers = compiler.get_shader_resources().push_constant_buffers;
 
-	const auto push_constant_buffers = compiler.get_shader_resources().push_constant_buffers;
-	
 #if ENABLE_SHADER_LOGGING
-        LOG_INFO("push constant : %d", push_constant_buffers.size());
-	for (auto& push_constant : push_constant_buffers)
-	{ LOG_INFO("\t=> #%d (%s)", push_constant.id, push_constant.name.c_str());
-	}
+    LOG_INFO("push constant : %d", push_constant_buffers.size());
+    for (auto& push_constant : push_constant_buffers)
+    {
+        LOG_INFO("\t=> #%d (%s)", push_constant.id, push_constant.name.c_str());
+    }
 #endif
 
-	push_constant_buffer_size = 0;
-	if (!push_constant_buffers.empty())
-	{
-            if (push_constant_buffers.size() != 1) LOG_ERROR("unhandled push constant buffer count");
-		
-		for (auto& buffer_range : compiler.get_active_buffer_ranges(compiler.get_shader_resources().push_constant_buffers[0].id)) {
-#if ENABLE_SHADER_LOGGING
-                    LOG_INFO("\t\t => Accessing member # % u, offset % u, size % u", buffer_range.index, buffer_range.offset, buffer_range.range);
-#endif
-			push_constant_buffer_size += static_cast<uint32_t>(buffer_range.range);
-		}
-		
-#if ENABLE_SHADER_LOGGING
-                LOG_INFO("push constant size : %d", push_constant_buffer_size);
-#endif
-	}
+    push_constant_buffer_size = 0;
+    if (!push_constant_buffers.empty())
+    {
+        if (push_constant_buffers.size() != 1)
+            LOG_ERROR("unhandled push constant buffer count");
 
-
-	/**
-	 *  UNIFORM BUFFERS
-	 */
-
-	const auto uniform_buffers = compiler.get_shader_resources().uniform_buffers;
-	
+        for (auto& buffer_range : compiler.get_active_buffer_ranges(compiler.get_shader_resources().push_constant_buffers[0].id))
+        {
 #if ENABLE_SHADER_LOGGING
-        LOG_INFO("uniform buffers : %d", uniform_buffers.size());
+            LOG_INFO("\t\t => Accessing member # % u, offset % u, size % u", buffer_range.index, buffer_range.offset, buffer_range.range);
 #endif
-	
-	if (!uniform_buffers.empty())
-	{
-            if (uniform_buffers.size() != 1) LOG_ERROR("unhandled uniform buffer count");
-		for (auto& buffer : uniform_buffers)
-		{
-			uint32_t set = compiler.get_decoration(buffer.id, spv::DecorationDescriptorSet);
-			uniform_buffer_binding = compiler.get_decoration(buffer.id, spv::DecorationBinding);
-#if ENABLE_SHADER_LOGGING
-                        LOG_INFO("\t => Found UBO % s at set = %u, binding = %u!", buffer.name.c_str(), set, uniform_buffer_binding);
-#endif
-		}
-	}
+            push_constant_buffer_size += static_cast<uint32_t>(buffer_range.range);
+        }
 
-	/**
-	 *  IMAGE SAMPLERS
-	 */
+#if ENABLE_SHADER_LOGGING
+        LOG_INFO("push constant size : %d", push_constant_buffer_size);
+#endif
+    }
 
-	const auto sampled_image = compiler.get_shader_resources().sampled_images;
-	
+    /**
+     *  UNIFORM BUFFERS
+     */
+
+    const auto uniform_buffers = compiler.get_shader_resources().uniform_buffers;
+
 #if ENABLE_SHADER_LOGGING
-        LOG_INFO("uniform sampler : %d", sampled_image.size());
+    LOG_INFO("uniform buffers : %d", uniform_buffers.size());
 #endif
-	
-	if (!sampled_image.empty())
-	{
-		for (const auto& sampler : sampled_image)
-		{
-			uint32_t set = compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
-			uint32_t sampled_image_binding = compiler.get_decoration(sampler.id, spv::DecorationBinding);
+
+    if (!uniform_buffers.empty())
+    {
+        if (uniform_buffers.size() != 1)
+            LOG_ERROR("unhandled uniform buffer count");
+        for (auto& buffer : uniform_buffers)
+        {
+            uint32_t set           = compiler.get_decoration(buffer.id, spv::DecorationDescriptorSet);
+            uniform_buffer_binding = compiler.get_decoration(buffer.id, spv::DecorationBinding);
 #if ENABLE_SHADER_LOGGING
-                        LOG_INFO("\t => Found sampled image % s at set = % u, binding = % u!", sampler.name.c_str(), set, sampled_image_binding);
+            LOG_INFO("\t => Found UBO % s at set = %u, binding = %u!", buffer.name.c_str(), set, uniform_buffer_binding);
 #endif
-			sampled_image_bindings.push_back(sampled_image_binding);
-		}
-	}
+        }
+    }
+
+    /**
+     *  IMAGE SAMPLERS
+     */
+
+    const auto sampled_image = compiler.get_shader_resources().sampled_images;
+
+#if ENABLE_SHADER_LOGGING
+    LOG_INFO("uniform sampler : %d", sampled_image.size());
+#endif
+
+    if (!sampled_image.empty())
+    {
+        for (const auto& sampler : sampled_image)
+        {
+            uint32_t set                   = compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
+            uint32_t sampled_image_binding = compiler.get_decoration(sampler.id, spv::DecorationBinding);
+#if ENABLE_SHADER_LOGGING
+            LOG_INFO("\t => Found sampled image % s at set = % u, binding = % u!", sampler.name.c_str(), set, sampled_image_binding);
+#endif
+            sampled_image_bindings.push_back(sampled_image_binding);
+        }
+    }
 }
 
 void ShaderModule::initialize_glslang()
