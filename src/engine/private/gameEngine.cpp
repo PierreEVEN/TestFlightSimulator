@@ -13,6 +13,11 @@ namespace GameEngine
 
 void init()
 {
+    Logger::get().set_thread_identifier([]() -> uint8_t {
+        if (auto* found_worker = job_system::Worker::get())
+            return found_worker->get_worker_id();
+        return UINT8_MAX;
+    });
     Logger::get().set_log_file("./saved/log/Log - %s.log");
     LOG_INFO("Initialize game engine");
     ShaderModule::initialize_glslang();
