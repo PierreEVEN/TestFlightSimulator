@@ -48,7 +48,7 @@ Window::Window(WindowParameters window_parameters) : window_width(window_paramet
 
     // Create window vulkan objects
     command_pool = new command_pool::Container(gfx_context->logical_device, gfx_context->queue_families.graphic_family.value());
-    LOG_WARNING("finished window creation");
+    LOG_INFO("finished window creation");
     setup_swapchain_property();
 
     create_or_recreate_render_pass();
@@ -121,6 +121,7 @@ void Window::resize_window(const int res_x, const int res_y)
 
 void Window::wait_init_idle()
 {
+    BEGIN_NAMED_RECORD(WAIT_INIT_IDLE);
     /**
      * Select available handles for next image
      */
@@ -130,10 +131,13 @@ void Window::wait_init_idle()
 
     // Ensure all frame data are submitted
     vkWaitForFences(gfx_context->logical_device, 1, &in_flight_fences[current_frame_id], VK_TRUE, UINT64_MAX);
+
+    END_NAMED_RECORD(WAIT_INIT_IDLE);
 }
 
 RenderContext Window::prepare_frame()
 {
+    BEGIN_NAMED_RECORD(PREPARE_FRAME);
     // Retrieve the next available image ID
     uint32_t image_index;
     VkResult result = vkAcquireNextImageKHR(gfx_context->logical_device, back_buffer->get_swapchain()->get(), UINT64_MAX, image_acquire_semaphore[current_frame_id], VK_NULL_HANDLE, &image_index);
@@ -195,6 +199,7 @@ RenderContext Window::prepare_frame()
     vkCmdSetViewport(render_context.command_buffer, 0, 1, &viewport);
     vkCmdSetScissor(render_context.command_buffer, 0, 1, &scissor);
 
+    END_NAMED_RECORD(PREPARE_FRAME);
     return render_context;
 }
 
