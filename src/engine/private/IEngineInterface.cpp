@@ -11,6 +11,11 @@ AssetManager* IEngineInterface::get_asset_manager()
     return asset_manager.get();
 }
 
+void IEngineInterface::close()
+{
+    glfwSetWindowShouldClose(get_window()->get_handle(), true);
+}
+
 void IEngineInterface::run_main_task(WindowParameters window_parameters)
 {
     game_window    = std::make_unique<Window>(window_parameters);

@@ -98,7 +98,7 @@ class IJobTask
     }
 
     std::shared_ptr<IJobTask>   parent_task = nullptr;
-    TObjectPool<IJobTask, 4096> children_pool;
+    TObjectPool<IJobTask, 16384> children_pool;
     worker_lock                 child_lock;
     std::latch                  completion_lock = std::latch(1);
 

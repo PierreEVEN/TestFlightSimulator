@@ -16,7 +16,7 @@
 #include "spirv_glsl.hpp"
 #include "ui/window/windows/profiler.h"
 
-#define ENABLE_SHADER_LOGGING false
+#define ENABLE_SHADER_LOGGING true
 
 std::optional<std::string> read_shader_file(const std::filesystem::path& source_path)
 {
@@ -205,9 +205,11 @@ std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name
     }
 
     glslang_shader_delete(shader);
-    // @TODO glslang_program_delete( program );
+    auto program_data = std::vector<uint32_t>(glslang_program_SPIRV_get_ptr(program), glslang_program_SPIRV_get_ptr(program) + glslang_program_SPIRV_get_size(program));
 
-    return std::vector<uint32_t>(glslang_program_SPIRV_get_ptr(program), glslang_program_SPIRV_get_ptr(program) + glslang_program_SPIRV_get_size(program));
+    glslang_program_delete( program );
+
+    return program_data;
 }
 
 std::optional<VkShaderModule> create_shader_module(VkDevice logical_device, const std::vector<uint32_t>& bytecode)
@@ -265,7 +267,7 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
     const spirv_cross::Compiler compiler(bytecode);
 
 #if ENABLE_SHADER_LOGGING
-    LOG_INFO("### BUILDING SHADER ###");
+    std::string shader_log = "\n### NEW SHADER ###\n";
 #endif
 
     /**
@@ -275,10 +277,10 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
     const auto push_constant_buffers = compiler.get_shader_resources().push_constant_buffers;
 
 #if ENABLE_SHADER_LOGGING
-    LOG_INFO("push constant : %d", push_constant_buffers.size());
+    shader_log += stringutils::format("push constant : %d\n", push_constant_buffers.size());
     for (auto& push_constant : push_constant_buffers)
     {
-        LOG_INFO("\t=> #%d (%s)", push_constant.id, push_constant.name.c_str());
+        shader_log += stringutils::format("\t-- #%d (%s)\n", push_constant.id, push_constant.name.c_str());
     }
 #endif
 
@@ -291,13 +293,13 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
         for (auto& buffer_range : compiler.get_active_buffer_ranges(compiler.get_shader_resources().push_constant_buffers[0].id))
         {
 #if ENABLE_SHADER_LOGGING
-            LOG_INFO("\t\t => Accessing member # % u, offset % u, size % u", buffer_range.index, buffer_range.offset, buffer_range.range);
+            shader_log += stringutils::format("\t\t ---- Accessing member # % u, offset % u, size %u\n", buffer_range.index, buffer_range.offset, buffer_range.range);
 #endif
             push_constant_buffer_size += static_cast<uint32_t>(buffer_range.range);
         }
 
 #if ENABLE_SHADER_LOGGING
-        LOG_INFO("push constant size : %d", push_constant_buffer_size);
+        shader_log += stringutils::format("push constant size : %d\n", push_constant_buffer_size);
 #endif
     }
 
@@ -308,7 +310,7 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
     const auto uniform_buffers = compiler.get_shader_resources().uniform_buffers;
 
 #if ENABLE_SHADER_LOGGING
-    LOG_INFO("uniform buffers : %d", uniform_buffers.size());
+    shader_log += stringutils::format("uniform buffers : %d\n", uniform_buffers.size());
 #endif
 
     if (!uniform_buffers.empty())
@@ -320,7 +322,7 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
             uint32_t set           = compiler.get_decoration(buffer.id, spv::DecorationDescriptorSet);
             uniform_buffer_binding = compiler.get_decoration(buffer.id, spv::DecorationBinding);
 #if ENABLE_SHADER_LOGGING
-            LOG_INFO("\t => Found UBO % s at set = %u, binding = %u!", buffer.name.c_str(), set, uniform_buffer_binding);
+            shader_log += stringutils::format("\t -- Found UBO % s at set = %u, binding = %u!\n", buffer.name.c_str(), set, uniform_buffer_binding);
 #endif
         }
     }
@@ -332,7 +334,7 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
     const auto sampled_image = compiler.get_shader_resources().sampled_images;
 
 #if ENABLE_SHADER_LOGGING
-    LOG_INFO("uniform sampler : %d", sampled_image.size());
+    shader_log += stringutils::format("uniform sampler : %d\n", sampled_image.size());
 #endif
 
     if (!sampled_image.empty())
@@ -342,11 +344,14 @@ void ShaderModule::build_reflection_data(const std::vector<uint32_t>& bytecode)
             uint32_t set                   = compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
             uint32_t sampled_image_binding = compiler.get_decoration(sampler.id, spv::DecorationBinding);
 #if ENABLE_SHADER_LOGGING
-            LOG_INFO("\t => Found sampled image % s at set = % u, binding = % u!", sampler.name.c_str(), set, sampled_image_binding);
+            shader_log += stringutils::format("\t -- Found sampled image % s at set = % u, binding = % u!\n", sampler.name.c_str(), set, sampled_image_binding);
 #endif
             sampled_image_bindings.push_back(sampled_image_binding);
         }
     }
+#if ENABLE_SHADER_LOGGING
+    LOG_DEBUG(shader_log.c_str());
+#endif
 }
 
 void ShaderModule::initialize_glslang()

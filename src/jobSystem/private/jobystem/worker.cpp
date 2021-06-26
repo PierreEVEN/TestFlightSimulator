@@ -19,7 +19,7 @@ namespace job_system {
     Worker *workers = nullptr;
     size_t worker_count = 0;
 
-    TObjectPool<IJobTask, 2048> job_pool;
+    TObjectPool<IJobTask, 16384> job_pool;
     std::counting_semaphore<> workers_create_semaphore(0);
     std::counting_semaphore<> workers_release_semaphore(0);
     std::counting_semaphore<> workers_destroy_semaphore(0);

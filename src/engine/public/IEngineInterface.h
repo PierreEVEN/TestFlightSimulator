@@ -26,6 +26,8 @@ class IEngineInterface
     Window*        get_window() const { return game_window.get(); }
     WindowManager* get_window_manager() const { return window_manager.get(); }
 
+    void close();
+
   protected:
     virtual void load_resources()   = 0;
     virtual void pre_initialize()   = 0;
