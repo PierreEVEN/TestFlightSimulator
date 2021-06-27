@@ -41,3 +41,8 @@ void Node::draw(VkCommandBuffer buffer, uint8_t image_index)
 
 	
 }
+
+glm::dmat4 Node::get_world_transformation() const
+{
+    return glm::dmat4();
+}

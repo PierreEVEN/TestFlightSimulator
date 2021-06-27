@@ -16,6 +16,10 @@ void IEngineInterface::close()
     glfwSetWindowShouldClose(get_window()->get_handle(), true);
 }
 
+IEngineInterface::IEngineInterface() : last_delta_second_time(std::chrono::steady_clock::now())
+{
+}
+
 void IEngineInterface::run_main_task(WindowParameters window_parameters)
 {
     game_window    = std::make_unique<Window>(window_parameters);
@@ -28,6 +32,10 @@ void IEngineInterface::run_main_task(WindowParameters window_parameters)
 
     while (game_window->begin_frame())
     {
+        const auto now         = std::chrono::steady_clock::now();
+        delta_second           = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(now - last_delta_second_time).count()) / 1000000000.0;
+        last_delta_second_time = now;
+
         BEGIN_NAMED_RECORD(DRAW_FRAME);
         game_window->wait_init_idle();
         BEGIN_NAMED_RECORD(PRE_DRAW);

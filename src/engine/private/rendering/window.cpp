@@ -25,7 +25,10 @@ std::unordered_map<GLFWwindow*, Window*> window_map;
 void framebuffer_size_callback(GLFWwindow* handle, const int res_x, const int res_y)
 {
     auto window_ptr = window_map.find(handle);
-    if (window_ptr != window_map.end()) { window_ptr->second->resize_window(res_x, res_y); }
+    if (window_ptr != window_map.end())
+    {
+        window_ptr->second->resize_window(res_x, res_y);
+    }
 }
 
 Window::Window(WindowParameters window_parameters) : window_width(window_parameters.size_x), window_height(window_parameters.size_y), window_name(window_parameters.application_name.c_str())
@@ -33,11 +36,13 @@ Window::Window(WindowParameters window_parameters) : window_width(window_paramet
     std::lock_guard<std::mutex> lock(window_map_lock);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    if (window_parameters.b_is_fullscreen) glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+    if (window_parameters.b_is_fullscreen)
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 
     // Create window handle
     window_handle = glfwCreateWindow(window_parameters.size_x, window_parameters.size_y, window_parameters.application_name.c_str(), nullptr, nullptr);
-    if (!window_handle) LOG_FATAL("failed to create glfw Window");
+    if (!window_handle)
+        LOG_FATAL("failed to create glfw Window");
     glfwSetFramebufferSizeCallback(window_handle, framebuffer_size_callback);
 
     // Create window surface
@@ -154,7 +159,8 @@ RenderContext Window::prepare_frame()
         return RenderContext{};
     }
 
-    if (images_in_flight[image_index] != VK_NULL_HANDLE) vkWaitForFences(gfx_context->logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
+    if (images_in_flight[image_index] != VK_NULL_HANDLE)
+        vkWaitForFences(gfx_context->logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
     images_in_flight[image_index] = in_flight_fences[current_frame_id];
 
     RenderContext render_context{.is_valid = true, .command_buffer = command_buffers[image_index], .framebuffer = back_buffer->get(image_index), .image_index = image_index};
@@ -168,7 +174,10 @@ RenderContext Window::prepare_frame()
     begin_info.flags            = 0;       // Optional
     begin_info.pInheritanceInfo = nullptr; // Optional
 
-    if (vkBeginCommandBuffer(render_context.command_buffer, &begin_info) != VK_SUCCESS) { LOG_FATAL("Failed to create command buffer #%d", image_index); }
+    if (vkBeginCommandBuffer(render_context.command_buffer, &begin_info) != VK_SUCCESS)
+    {
+        LOG_FATAL("Failed to create command buffer #%d", image_index);
+    }
 
     std::array<VkClearValue, 2> clear_values{};
     clear_values[0].color        = {0.6f, 0.9f, 1.f, 1.0f};
@@ -296,7 +305,10 @@ void Window::create_window_surface()
 }
 void Window::create_or_recreate_render_pass()
 {
-    if (render_pass != VK_NULL_HANDLE) { destroy_render_pass(); }
+    if (render_pass != VK_NULL_HANDLE)
+    {
+        destroy_render_pass();
+    }
 
     LOG_INFO("Create render pass");
     VkAttachmentDescription colorAttachment{};

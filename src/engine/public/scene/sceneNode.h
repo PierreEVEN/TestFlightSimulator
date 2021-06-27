@@ -1,19 +1,16 @@
 #pragma once
-#include "node.h"
 #include "assets/assetPtr.h"
-
+#include "node.h"
 
 class Scene;
 
 class SceneNode : public Node
 {
-public:
+  public:
+    SceneNode(TAssetPtr<Scene> in_scene);
 
-	SceneNode(TAssetPtr<Scene> in_scene);
-	
-	void draw(VkCommandBuffer buffer, uint8_t image_index) override;
+    void draw(VkCommandBuffer buffer, uint8_t image_index) override;
 
-private:
-
-	TAssetPtr<Scene> scene;
+  private:
+    TAssetPtr<Scene> scene;
 };

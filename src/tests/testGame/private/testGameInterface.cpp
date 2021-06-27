@@ -49,6 +49,7 @@ void TestGameInterface::render_ui()
             if (ImGui::MenuItem("content browser")) new ContentBrowser(this, "content browser");
             ImGui::EndMenu();
         }
+        ImGui::Text("%lf fps", 1.0 / get_delta_second());
         ImGui::EndMainMenuBar();
     }
 }

@@ -207,7 +207,7 @@ std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name
     glslang_shader_delete(shader);
     auto program_data = std::vector<uint32_t>(glslang_program_SPIRV_get_ptr(program), glslang_program_SPIRV_get_ptr(program) + glslang_program_SPIRV_get_size(program));
 
-    glslang_program_delete( program );
+    glslang_program_delete(program);
 
     return program_data;
 }
