@@ -1,12 +1,12 @@
 
 
-#include "assets/Scene.h"
+#include "assets/SceneAsset.h"
 
 #include "ios/scene_importer.h"
 #include "jobSystem/job_system.h"
 #include "rendering/window.h"
 
-Scene::Scene(const std::filesystem::path& asset_path)
+SceneAsset::SceneAsset(const std::filesystem::path& asset_path)
 {
     creation_task = job_system::new_job([&, asset_path] {
         //importer  = std::make_shared<SceneImporter>(get_engine_interface(), asset_path, get_id().to_string());
@@ -16,4 +16,4 @@ Scene::Scene(const std::filesystem::path& asset_path)
     });
 }
 
-Scene::~Scene() { creation_task->wait(); }
+SceneAsset::~SceneAsset() { creation_task->wait(); }

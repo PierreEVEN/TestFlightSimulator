@@ -12,13 +12,13 @@ namespace job_system {
 class SceneImporter;
 class Node;
 
-class Scene : public AssetBase
+class SceneAsset : public AssetBase
 {
 public:
 
-	Scene(const std::filesystem::path& asset_path);
+	SceneAsset(const std::filesystem::path& asset_path);
 
-	virtual ~Scene();
+	virtual ~SceneAsset();
 
 	[[nodiscard]] Node* get_root_node() const { return root_node; }
 

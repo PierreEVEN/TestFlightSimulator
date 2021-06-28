@@ -2,9 +2,9 @@
 
 #include "scene/sceneNode.h"
 
-#include "assets/Scene.h"
+#include "assets/SceneAsset.h"
 
-SceneNode::SceneNode(TAssetPtr<Scene> in_scene)
+SceneNode::SceneNode(TAssetPtr<SceneAsset> in_scene)
 	: Node(), scene(in_scene)
 {	
 }

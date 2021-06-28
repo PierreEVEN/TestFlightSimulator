@@ -1,7 +1,7 @@
 
 #include "testGameInterface.h"
 
-#include "assets/Scene.h"
+#include "assets/SceneAsset.h"
 #include "assets/shader.h"
 #include "assets/texture2d.h"
 #include "ui/window/windowBase.h"
@@ -13,13 +13,13 @@ void TestGameInterface::load_resources()
 {
     get_asset_manager()->create<Texture2d>("default-texture", "data/DefaultTexture.png");
     get_asset_manager()->create<Shader>("shader_Test", "data/test.vs.glsl", "data/test.fs.glsl");
-    get_asset_manager()->create<Scene>("F-16", "data/F-16_b.glb");
+    get_asset_manager()->create<SceneAsset>("F-16", "data/F-16_b.glb");
 /*
     for (int i = 0; i < 4000; ++i)
     {
         get_asset_manager()->create<Texture2d>(AssetId("de2fault-texture" + std::to_string(i)), "data/DefaultTexture.png");
         get_asset_manager()->create<Shader>(AssetId("shad2er_Test"+ std::to_string(i)), "data/test.vs.glsl", "data/test.fs.glsl");
-        get_asset_manager()->create<Scene>(AssetId("F-162" + std::to_string(i)), "data/F-16_b.glb");
+        get_asset_manager()->create<SceneAsset>(AssetId("F-162" + std::to_string(i)), "data/F-16_b.glb");
     }
 */
 }

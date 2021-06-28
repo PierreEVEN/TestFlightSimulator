@@ -2,15 +2,15 @@
 #include "assets/assetPtr.h"
 #include "node.h"
 
-class Scene;
+class SceneAsset;
 
 class SceneNode : public Node
 {
   public:
-    SceneNode(TAssetPtr<Scene> in_scene);
+    SceneNode(TAssetPtr<SceneAsset> in_scene);
 
     void draw(VkCommandBuffer buffer, uint8_t image_index) override;
 
   private:
-    TAssetPtr<Scene> scene;
+    TAssetPtr<SceneAsset> scene;
 };
