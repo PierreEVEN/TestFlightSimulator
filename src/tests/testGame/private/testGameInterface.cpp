@@ -22,6 +22,7 @@ void TestGameInterface::load_resources()
         get_asset_manager()->create<SceneAsset>(AssetId("F-162" + std::to_string(i)), "data/F-16_b.glb");
     }
 */
+    test_ecs();
 }
 
 void TestGameInterface::pre_initialize() {}

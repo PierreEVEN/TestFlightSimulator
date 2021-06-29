@@ -3,6 +3,7 @@
 
 #include "assets/assetBase.h"
 #include "ui/window/windowBase.h"
+#include "scene/scene.h"
 
 #include <filesystem>
 #include <memory>
