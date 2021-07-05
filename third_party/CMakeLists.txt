@@ -4,7 +4,6 @@ endif()
 
 # Vulkan
 set(VULKAN_PATH $ENV{VULKAN_SDK} CACHE INTERNAL "vulkan_sdk_path")
-message("-- vulkan sdk : " ${VULKAN_PATH})
 add_library(vulkan INTERFACE)
 target_include_directories(vulkan INTERFACE ${VULKAN_PATH}/Include)
 IF (WIN32)
@@ -12,6 +11,9 @@ IF (WIN32)
 ELSE()
 	target_link_libraries(vulkan INTERFACE -lvulkan)
 ENDIF()
+
+message("-- vulkan sdk : " ${VULKAN_PATH})
+
 
 # Vma
 set(VMA_DYNAMIC_VULKAN_FUNCTIONS OFF)

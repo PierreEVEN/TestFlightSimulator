@@ -1,5 +1,5 @@
 #pragma once
-#include "IEngineInterface.h"
+#include "engine_interface.h"
 
 class TestGameInterface : public IEngineInterface
 {
@@ -11,10 +11,12 @@ protected:
     void pre_initialize() override;
     void pre_shutdown() override;
     void unload_resources() override;
-    void render_scene() override;
+    void render_scene(RenderContext render_context) override;
     void render_ui() override;
     void render_hud() override;
     void pre_draw() override;
     void post_draw() override;
+
+    std::unique_ptr<Scene> root_scene;
 };
 

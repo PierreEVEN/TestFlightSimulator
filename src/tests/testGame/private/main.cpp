@@ -1,5 +1,5 @@
 #include "cpputils/logger.hpp"
-#include "gameEngine.h"
+#include "game_engine.h"
 #include "testGameInterface.h"
 
 int main(int argc, char* argv[])

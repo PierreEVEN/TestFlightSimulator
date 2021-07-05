@@ -9,7 +9,7 @@
 
 #include <cpputils/logger.hpp>
 #include "rendering/window.h"
-#include "rendering/vulkan/commandPool.h"
+#include "rendering/vulkan/command_pool.h"
 
 namespace vulkan_utils
 {

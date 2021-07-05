@@ -3,7 +3,7 @@
 #include "rendering/gfx_context.h"
 #include <memory>
 
-#include "vulkan/commandPool.h"
+#include "vulkan/command_pool.h"
 
 #include <functional>
 

@@ -1,4 +1,5 @@
 
+/*
 
 #include "ios/scene_importer.h"
 #include <assimp/Importer.hpp>
@@ -17,7 +18,7 @@
 #include "scene/meshNode.h"
 #include "stb_image.h"
 #include "ui/window/windows/profiler.h"
-#include "IEngineInterface.h"
+#include "engine_interface.h"
 
 SceneImporter::SceneImporter(IEngineInterface* context, const std::filesystem::path& source_file, const std::string& desired_asset_name) : window_context(context), object_name(desired_asset_name)
 {
@@ -59,9 +60,8 @@ Node* SceneImporter::process_node(aiNode* ai_node, Node* parent)
 
 Node* SceneImporter::create_node(aiNode* context, Node* parent)
 {
-    /*
-     * Extract transformation
-     */
+     // Extract transformation
+     
 
     aiVector3t<float> ai_scale;
     aiVector3t<float> ai_pos;
@@ -71,7 +71,7 @@ Node* SceneImporter::create_node(aiNode* context, Node* parent)
     const glm::dquat rotation(ai_rot.x, ai_rot.y, ai_rot.z, ai_rot.w);
     const glm::dvec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
 
-    Node* node = new Node(parent, position, rotation, scale);
+    //Node* node = new Node(parent, position, rotation, scale);
 
     // Create meshes
     if (context->mNumMeshes > 0)
@@ -83,13 +83,12 @@ Node* SceneImporter::create_node(aiNode* context, Node* parent)
             auto mat  = TAssetPtr<Shader>(window_context, "shader_Test"); // material_refs[context->mMeshes[i]];
 
             auto* mesh_node = new MeshNode(mesh, mat);
-            mesh_node->attach_to(node);
         }
     }
 
     // LOG_INFO("meshes : %s / meshes : %d", context->mName.data, context->mNumMeshes);
 
-    return node;
+    return nullptr;
 }
 
 TAssetPtr<Texture2d> SceneImporter::process_texture(aiTexture* texture, size_t id)
@@ -158,3 +157,4 @@ TAssetPtr<StaticMesh> SceneImporter::process_mesh(aiMesh* mesh, size_t id)
 
     return window_context->get_asset_manager()->create<StaticMesh>(AssetId(object_name + "-mesh-" + mesh->mName.data + "_" + std::to_string(id)), vertex_group, triangles);
 }
+*/

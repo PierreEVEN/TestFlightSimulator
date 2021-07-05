@@ -18,7 +18,7 @@
 #include <array>
 
 #include "backends/imgui_impl_glfw.h"
-#include "rendering/vulkan/descriptorPool.h"
+#include "rendering/vulkan/descriptor_pool.h"
 #include "rendering/window.h"
 
 static uint32_t instance_count = 0;
@@ -99,8 +99,10 @@ void ImGuiInstance::CreateOrResizeBuffer(VkBuffer& buffer, VkDeviceMemory& buffe
 {
     Window*  v = g_window_context;
     VkResult err;
-    if (buffer != VK_NULL_HANDLE) vkDestroyBuffer(v->get_gfx_context()->logical_device, buffer, vulkan_common::allocation_callback);
-    if (buffer_memory != VK_NULL_HANDLE) vkFreeMemory(v->get_gfx_context()->logical_device, buffer_memory, vulkan_common::allocation_callback);
+    if (buffer != VK_NULL_HANDLE)
+        vkDestroyBuffer(v->get_gfx_context()->logical_device, buffer, vulkan_common::allocation_callback);
+    if (buffer_memory != VK_NULL_HANDLE)
+        vkFreeMemory(v->get_gfx_context()->logical_device, buffer_memory, vulkan_common::allocation_callback);
 
     VkDeviceSize       vertex_buffer_size_aligned = ((new_size - 1) / g_BufferMemoryAlignment + 1) * g_BufferMemoryAlignment;
     VkBufferCreateInfo buffer_info                = {};
@@ -174,7 +176,8 @@ void ImGuiInstance::ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCom
     // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
     int fb_width  = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
     int fb_height = (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
-    if (fb_width <= 0 || fb_height <= 0 || draw_data->TotalVtxCount == 0) return;
+    if (fb_width <= 0 || fb_height <= 0 || draw_data->TotalVtxCount == 0)
+        return;
 
     Window* v = g_window_context;
 
@@ -197,8 +200,10 @@ void ImGuiInstance::ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCom
     // Create or resize the vertex/index buffers
     size_t vertex_size = draw_data->TotalVtxCount * sizeof(ImDrawVert);
     size_t index_size  = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
-    if (rb->VertexBuffer == VK_NULL_HANDLE || rb->VertexBufferSize < vertex_size) CreateOrResizeBuffer(rb->VertexBuffer, rb->VertexBufferMemory, rb->VertexBufferSize, vertex_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-    if (rb->IndexBuffer == VK_NULL_HANDLE || rb->IndexBufferSize < index_size) CreateOrResizeBuffer(rb->IndexBuffer, rb->IndexBufferMemory, rb->IndexBufferSize, index_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    if (rb->VertexBuffer == VK_NULL_HANDLE || rb->VertexBufferSize < vertex_size)
+        CreateOrResizeBuffer(rb->VertexBuffer, rb->VertexBufferMemory, rb->VertexBufferSize, vertex_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    if (rb->IndexBuffer == VK_NULL_HANDLE || rb->IndexBufferSize < index_size)
+        CreateOrResizeBuffer(rb->IndexBuffer, rb->IndexBufferMemory, rb->IndexBufferSize, index_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
     // Upload vertex/index data into a single contiguous GPU buffer
     {
@@ -216,15 +221,6 @@ void ImGuiInstance::ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCom
             vtx_dst += cmd_list->VtxBuffer.Size;
             idx_dst += cmd_list->IdxBuffer.Size;
         }
-        VkMappedMemoryRange range[2] = {};
-        range[0].sType               = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-        range[0].memory              = rb->VertexBufferMemory;
-        range[0].size                = VK_WHOLE_SIZE;
-        range[1].sType               = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-        range[1].memory              = rb->IndexBufferMemory;
-        range[1].size                = VK_WHOLE_SIZE;
-        err                          = vkFlushMappedMemoryRanges(v->get_gfx_context()->logical_device, 2, range);
-        VK_ENSURE(err);
         vkUnmapMemory(v->get_gfx_context()->logical_device, rb->VertexBufferMemory);
         vkUnmapMemory(v->get_gfx_context()->logical_device, rb->IndexBufferMemory);
     }
@@ -267,8 +263,10 @@ void ImGuiInstance::ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCom
                 if (clip_rect.x < fb_width && clip_rect.y < fb_height && clip_rect.z >= 0.0f && clip_rect.w >= 0.0f)
                 {
                     // Negative offsets are illegal for vkCmdSetScissor
-                    if (clip_rect.x < 0.0f) clip_rect.x = 0.0f;
-                    if (clip_rect.y < 0.0f) clip_rect.y = 0.0f;
+                    if (clip_rect.x < 0.0f)
+                        clip_rect.x = 0.0f;
+                    if (clip_rect.y < 0.0f)
+                        clip_rect.y = 0.0f;
 
                     // Apply scissor/clipping rectangle
                     VkRect2D scissor;
@@ -686,12 +684,16 @@ bool ImGuiInstance::ImGui_ImplVulkan_Init(Window* info)
     return true;
 }
 
-void ImGuiInstance::ImGui_ImplVulkan_Shutdown() { ImGui_ImplVulkan_DestroyDeviceObjects(); }
+void ImGuiInstance::ImGui_ImplVulkan_Shutdown()
+{
+    ImGui_ImplVulkan_DestroyDeviceObjects();
+}
 
 void ImGuiInstance::ImGui_ImplVulkan_SetMinImageCount(uint32_t min_image_count)
 {
     IM_ASSERT(min_image_count >= 2);
-    if (g_window_context->get_image_count() == min_image_count) return;
+    if (g_window_context->get_image_count() == min_image_count)
+        return;
 
     Window*  v   = g_window_context;
     VkResult err = vkDeviceWaitIdle(v->get_gfx_context()->logical_device);
@@ -717,9 +719,12 @@ void ImGuiInstance::ImGui_ImplVulkan_SetMinImageCount(uint32_t min_image_count)
 
 int ImGui_ImplVulkanH_GetMinImageCountFromPresentMode(VkPresentModeKHR present_mode)
 {
-    if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR) return 3;
-    if (present_mode == VK_PRESENT_MODE_FIFO_KHR || present_mode == VK_PRESENT_MODE_FIFO_RELAXED_KHR) return 2;
-    if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR) return 1;
+    if (present_mode == VK_PRESENT_MODE_MAILBOX_KHR)
+        return 3;
+    if (present_mode == VK_PRESENT_MODE_FIFO_KHR || present_mode == VK_PRESENT_MODE_FIFO_RELAXED_KHR)
+        return 2;
+    if (present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+        return 1;
     IM_ASSERT(0);
     return 1;
 }
@@ -752,8 +757,12 @@ void ImGuiInstance::ImGui_ImplVulkanH_DestroyFrameRenderBuffers(VkDevice device,
 
 void ImGuiInstance::ImGui_ImplVulkanH_DestroyWindowRenderBuffers(VkDevice device, ImGui_ImplVulkanH_WindowRenderBuffers* buffers, const VkAllocationCallbacks* allocator)
 {
-    if (!buffers->FrameRenderBuffers) return;
-    for (uint32_t n = 0; n < buffers->Count; n++) { ImGui_ImplVulkanH_DestroyFrameRenderBuffers(device, &buffers->FrameRenderBuffers[n], allocator); }
+    if (!buffers->FrameRenderBuffers)
+        return;
+    for (uint32_t n = 0; n < buffers->Count; n++)
+    {
+        ImGui_ImplVulkanH_DestroyFrameRenderBuffers(device, &buffers->FrameRenderBuffers[n], allocator);
+    }
     IM_FREE(buffers->FrameRenderBuffers);
     buffers->FrameRenderBuffers = NULL;
     buffers->Index              = 0;
@@ -800,7 +809,10 @@ ImTextureID ImGuiInstance::ImGui_ImplVulkan_AddTexture(VkSampler sampler, VkImag
 
 ImGuiInstance::ImGuiInstance(Window* context) : g_window_context(context)
 {
-    if (instance_count > 0) { LOG_FATAL("multiple imgui instance are not supported yet"); }
+    if (instance_count > 0)
+    {
+        LOG_FATAL("multiple imgui instance are not supported yet");
+    }
     instance_count++;
 
     LOG_INFO("Initialize imgui ressources");

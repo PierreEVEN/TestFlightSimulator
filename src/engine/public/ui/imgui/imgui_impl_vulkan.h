@@ -37,8 +37,8 @@ struct ImGui_ImplVulkanH_FrameRenderBuffers
 {
     VkDeviceMemory VertexBufferMemory = VK_NULL_HANDLE;
     VkDeviceMemory IndexBufferMemory  = VK_NULL_HANDLE;
-    VkDeviceSize   VertexBufferSize   = VK_NULL_HANDLE;
-    VkDeviceSize   IndexBufferSize    = VK_NULL_HANDLE;
+    VkDeviceSize   VertexBufferSize   = 0;
+    VkDeviceSize   IndexBufferSize    = 0;
     VkBuffer       VertexBuffer       = VK_NULL_HANDLE;
     VkBuffer       IndexBuffer        = VK_NULL_HANDLE;
 };

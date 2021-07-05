@@ -6,16 +6,15 @@
 #include <set>
 #include <unordered_map>
 
-#include "assets/assetBase.h"
+#include "assets/asset_base.h"
 #include "backends/imgui_impl_glfw.h"
 #include "config.h"
-#include "rendering/vulkan/commandPool.h"
-#include "rendering/vulkan/descriptorPool.h"
+#include "rendering/vulkan/command_pool.h"
+#include "rendering/vulkan/descriptor_pool.h"
 #include "rendering/vulkan/framebuffer.h"
 #include "rendering/vulkan/swapchain.h"
-#include "scene/sceneNode.h"
 #include "ui/imgui/imgui_impl_vulkan.h"
-#include "ui/window/windowBase.h"
+#include "ui/window/window_base.h"
 #include "ui/window/windows/profiler.h"
 #include <cpputils/logger.hpp>
 
