@@ -1,5 +1,7 @@
 #pragma once
 #include "node_base.h"
+#include "scene.h"
+#include "rendering/window.h"
 
 class Scene;
 
@@ -11,7 +13,7 @@ class PrimitiveNode : public Node
 
     void set_visible(bool b_visible);
 
-    virtual void render(VkCommandBuffer& command_buffer, size_t image_index) = 0;
+    virtual void render(RenderContext render_context) = 0;
     
   private:
     glm::dmat4   render_matrix = glm::dmat4();

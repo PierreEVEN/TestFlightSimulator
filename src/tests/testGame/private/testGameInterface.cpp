@@ -22,8 +22,8 @@ void TestGameInterface::load_resources()
     root_scene = std::make_unique<Scene>();
 
     const TAssetPtr<MeshData> mesh_data = get_asset_manager()->create<MeshData>(
-        "test_mesh_data", std::vector<Vertex>{Vertex{.pos = glm::vec3(0, 0, 0)}, Vertex{.pos = glm::vec3(1, 0, 0)}, Vertex{.pos = glm::vec3(1, 1, 0)}, Vertex{.pos = glm::vec3(0, 1, 0)}},
-        std::vector<uint32_t>{0, 1, 2, 0, 2, 3});
+        "test_mesh_data", std::vector<Vertex>{Vertex{.pos = glm::vec3(-10, -10, 1)}, Vertex{.pos = glm::vec3(10, -10, 1)}, Vertex{.pos = glm::vec3(10, 10, 1)}, Vertex{.pos = glm::vec3(-10, 10, 1)}},
+        std::vector<uint32_t>{0, 1, 2, 0, 3, 2});
 
     const TAssetPtr<Shader>   vertex_shader   = get_asset_manager()->create<Shader>("test_vertex_shader", "data/test.vs.glsl", EShaderKind::VertexShader);
     const TAssetPtr<Shader>   fragment_shader = get_asset_manager()->create<Shader>("test_fragment_shader", "data/test.fs.glsl", EShaderKind::FragmentShader);
@@ -32,7 +32,6 @@ void TestGameInterface::load_resources()
 
     MeshNode* test_node = root_scene->add_node<MeshNode>(mesh, material);
 
-    root_scene->tick(0);
 }
 
 void TestGameInterface::pre_initialize()
@@ -49,9 +48,7 @@ void TestGameInterface::unload_resources()
 
 void TestGameInterface::render_scene(RenderContext render_context)
 {
-    MeshNode test_node(TAssetPtr<Mesh>(this, "test_mesh"), nullptr);
-
-    test_node.render(render_context.command_buffer, render_context.image_index);
+    root_scene->render_scene(render_context);
 }
 
 void TestGameInterface::render_ui()
@@ -85,6 +82,7 @@ void TestGameInterface::render_hud()
 
 void TestGameInterface::pre_draw()
 {
+    root_scene->tick(0);
 }
 
 void TestGameInterface::post_draw()

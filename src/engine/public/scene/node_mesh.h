@@ -12,7 +12,7 @@ class MeshNode : public PrimitiveNode
     {
     }
 
-    void render(VkCommandBuffer& command_buffer, size_t image_index) override;
+    void render(RenderContext render_context) override;
 
   private:
     TAssetPtr<Mesh>     mesh;

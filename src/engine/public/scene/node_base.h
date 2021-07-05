@@ -20,7 +20,6 @@ class Node
   public:
     Node() = default;
 
-    void initialize_internal(Scene* in_scene, Node* in_parent);
     virtual ~Node() = default;
 
     [[nodiscard]] Scene* get_render_scene() const
@@ -32,7 +31,11 @@ class Node
     {
     }
 
+  protected:
+
   private:
+    void initialize_internal(Scene* in_scene, Node* in_parent);
+
     glm::dvec3         position = glm::dvec3();
     glm::dquat         rotation = glm::dquat();
     glm::dvec3         scale    = glm::dvec3();
