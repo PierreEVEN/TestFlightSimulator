@@ -2,46 +2,53 @@
 
 #include "assets/asset_material.h"
 
-#include "engine_interface.h"
 #include "assets/asset_mesh_data.h"
 #include "assets/asset_shader.h"
+#include "assets/asset_uniform_buffer.h"
+#include "engine_interface.h"
+#include "magic_enum/magic_enum.h"
 
-VkWriteDescriptorSet TextureShaderParameter::get_descriptor_set() const
+/*
+VkWriteDescriptorSet StructShaderParameter::generate_write_descriptor_sets()
 {
-    VkWriteDescriptorSet imgWDescSet{};
-    /*
-    fragmentImageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    fragmentImageInfos[i].imageView   = dynamicMaterialProperties.fragmentTextures2D[i]->GetImageView();
-    fragmentImageInfos[i].sampler     = dynamicMaterialProperties.fragmentTextures2D[i]->GetSampler();
-
-    VkWriteDescriptorSet imgWDescSet{};
-    imgWDescSet.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    imgWDescSet.dstSet          = parent->GetDescriptorSet(iIndex);
-    imgWDescSet.dstBinding      = currentBinding;
-    imgWDescSet.dstArrayElement = 0;
-    imgWDescSet.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    imgWDescSet.descriptorCount = 1;
-    imgWDescSet.pImageInfo      = &fragmentImageInfos[i];
-    imgWDescSet.pBufferInfo     = nullptr;
-    imgWDescSet.pNext           = nullptr;
-    newDescSets.push_back(imgWDescSet);
-
-
-
-*/
-    return imgWDescSet;
+    VkWriteDescriptorSet struct_descriptor_set{};
+    struct_descriptor_set.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    struct_descriptor_set.dstSet          = descriptor_sets[iIndex];
+    struct_descriptor_set.dstBinding      = currentBinding;
+    struct_descriptor_set.dstArrayElement = 0;
+    struct_descriptor_set.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    struct_descriptor_set.descriptorCount = 1;
+    struct_descriptor_set.pBufferInfo     = &drawViewport->GetViewportUbos()->GetDescriptorBufferInfo(iIndex);
+    struct_descriptor_set.pImageInfo      = nullptr;
+    struct_descriptor_set.pNext           = nullptr;
+    return struct_descriptor_set;
 }
+*/
 
-Material::Material(const TAssetPtr<Shader>& in_vertex_shader, const TAssetPtr<Shader>& in_fragment_shader) : vertex_shader(in_vertex_shader), fragment_shader(in_fragment_shader)
+Material::Material(const ShaderStageData& in_vertex_stage, const ShaderStageData& in_fragment_stage, const std::shared_ptr<PushConstant>& in_push_constant)
+    : vertex_stage(in_vertex_stage), fragment_stage(in_fragment_stage), push_constant(in_push_constant)
 {
     destroy_resources();
-    create_descriptor_sets(MakeLayoutBindings({}));
-    create_pipeline({});
+    if (!vertex_stage.shader || !fragment_stage.shader)
+        return;
+    create_descriptor_sets(make_layout_bindings());
+    create_pipeline();
 }
 
 Material::~Material()
 {
     destroy_resources();
+}
+
+void Material::update_push_constants(VkCommandBuffer& command_buffer)
+{
+    if (push_constant)
+    {
+        if (push_constant->get_data())
+            vkCmdPushConstants(command_buffer, get_pipeline_layout(), push_constant->stage_flags, 0, static_cast<uint32_t>(push_constant->get_size()), push_constant->get_data());
+        else
+            LOG_ERROR("push constant data for vertex stage has never been set");
+    }
 }
 
 void Material::destroy_resources()
@@ -50,106 +57,138 @@ void Material::destroy_resources()
         vkDestroyPipeline(get_engine_interface()->get_gfx_context()->logical_device, shader_pipeline, vulkan_common::allocation_callback);
     if (pipeline_layout != VK_NULL_HANDLE)
         vkDestroyPipelineLayout(get_engine_interface()->get_gfx_context()->logical_device, pipeline_layout, vulkan_common::allocation_callback);
-    if (descriptorSetLayout != VK_NULL_HANDLE)
-        vkDestroyDescriptorSetLayout(get_engine_interface()->get_gfx_context()->logical_device, descriptorSetLayout, vulkan_common::allocation_callback);
-    shader_pipeline      = VK_NULL_HANDLE;
-    pipeline_layout      = VK_NULL_HANDLE;
-    descriptorSetLayout = VK_NULL_HANDLE;
+    if (descriptor_set_layout != VK_NULL_HANDLE)
+        vkDestroyDescriptorSetLayout(get_engine_interface()->get_gfx_context()->logical_device, descriptor_set_layout, vulkan_common::allocation_callback);
+    shader_pipeline       = VK_NULL_HANDLE;
+    pipeline_layout       = VK_NULL_HANDLE;
+    descriptor_set_layout = VK_NULL_HANDLE;
 }
 
-std::vector<VkDescriptorSetLayoutBinding> Material::MakeLayoutBindings(const SMaterialStaticProperties& materialProperties)
+std::vector<VkDescriptorSetLayoutBinding> Material::make_layout_bindings()
 {
-    uint32_t                                  currentId = 0;
-    std::vector<VkDescriptorSetLayoutBinding> outBindings;
+    vertex_uniform_bindings.clear();
+    fragment_uniform_bindings.clear();
 
-    if (materialProperties.bUseGlobalUbo)
+    std::vector<VkDescriptorSetLayoutBinding> result_bindings;
+
+    // VERTEX BUFFER
+
+    // vertex uniform buffers
+
+    std::unordered_map<std::string, ShaderProperty> uniform_buffers;
+
+    for (const auto& param : vertex_stage.shader->get_uniform_buffers())
     {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding            = currentId;
-        uboLayoutBinding.descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount    = 1;
-        uboLayoutBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        outBindings.push_back(uboLayoutBinding);
-        currentId++;
+        uniform_buffers[param.property_name] = param;
     }
 
-    /** Vertex textures */
-    for (uint32_t i = 0; i < materialProperties.VertexTexture2DCount; ++i)
+    for (const auto& uniform : vertex_stage.uniform_buffer)
     {
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding            = currentId;
-        samplerLayoutBinding.descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount    = 1;
-        samplerLayoutBinding.stageFlags         = VK_SHADER_STAGE_VERTEX_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        outBindings.push_back(samplerLayoutBinding);
-        currentId++;
+        if (const auto found_buffer = uniform_buffers.find(uniform->get_name()); found_buffer != uniform_buffers.end())
+        {
+            result_bindings.emplace_back(VkDescriptorSetLayoutBinding{
+                .binding            = found_buffer->second.location,
+                .descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount    = 1,
+                .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
+                .pImmutableSamplers = nullptr,
+            });
+            vertex_uniform_bindings[found_buffer->second.property_name] = found_buffer->second.location;
+        }
+        else
+        {
+            LOG_ERROR("specified uniform buffer named %s that doesn't exist in vertex stage", uniform->get_name().c_str());
+        }
     }
 
-    /** Fragment textures */
-    for (uint32_t i = 0; i < materialProperties.FragmentTexture2DCount; ++i)
+    uniform_buffers.clear();
+
+    // FRAGMENT BUFFER
+
+    // fragment uniform buffers
+
+    for (const auto& param : fragment_stage.shader->get_uniform_buffers())
     {
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding            = currentId;
-        samplerLayoutBinding.descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount    = 1;
-        samplerLayoutBinding.stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        outBindings.push_back(samplerLayoutBinding);
-        currentId++;
+        uniform_buffers[param.property_name] = param;
     }
-    return outBindings;
+
+    for (const auto& uniform : fragment_stage.uniform_buffer)
+    {
+        if (const auto found_buffer = uniform_buffers.find(uniform->get_name()); found_buffer != uniform_buffers.end())
+        {
+            result_bindings.emplace_back(VkDescriptorSetLayoutBinding{
+                .binding            = found_buffer->second.location,
+                .descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount    = 1,
+                .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
+                .pImmutableSamplers = nullptr,
+            });
+            fragment_uniform_bindings[found_buffer->second.property_name] = found_buffer->second.location;
+        }
+        else
+        {
+            LOG_ERROR("specified uniform buffer named %s that doesn't exist in fragment stage", uniform->get_name().c_str());
+        }
+    }
+
+    return result_bindings;
 }
 
-void Material::create_pipeline(const SMaterialStaticProperties& materialProperties)
+void Material::create_pipeline()
 {
-
     if (pipeline_layout != VK_NULL_HANDLE)
         vkDestroyPipelineLayout(get_engine_interface()->get_gfx_context()->logical_device, pipeline_layout, vulkan_common::allocation_callback);
     if (shader_pipeline != VK_NULL_HANDLE)
         vkDestroyPipeline(get_engine_interface()->get_gfx_context()->logical_device, shader_pipeline, vulkan_common::allocation_callback);
 
-    VK_CHECK(descriptorSetLayout, "Descriptor set layout should be initialized before graphic pipeline");
+    VK_CHECK(descriptor_set_layout, "Descriptor set layout should be initialized before graphic pipeline");
     VK_CHECK(get_engine_interface()->get_window()->get_render_pass(), "Render pass should be initialized before graphic pipeline");
 
-    if (!vertex_shader)
-    {
-        LOG_ERROR("vertex shader is not valid");
-        return;
-    }
-
-    if (!fragment_shader)
-    {
-        LOG_ERROR("fragment shader is not valid");
-        return;
-    }
     /** Shader pipeline */
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage  = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = vertex_shader->get_shader_module();
+    vertShaderStageInfo.module = vertex_stage.shader->get_shader_module();
     vertShaderStageInfo.pName  = "main";
 
     VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
     fragShaderStageInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragShaderStageInfo.stage  = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStageInfo.module = fragment_shader->get_shader_module();
+    fragShaderStageInfo.module = fragment_stage.shader->get_shader_module();
     fragShaderStageInfo.pName  = "main";
 
-    /** Model transform */
-    VkPushConstantRange pushConstantRange;
-    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    pushConstantRange.offset     = 0;
-    pushConstantRange.size       = sizeof(glm::dmat4);
+    // PUSH CONSTANTS
+    std::unique_ptr<VkPushConstantRange> push_constant_ranges;
+    if (push_constant)
+    {
+        if (vertex_stage.shader->get_push_constants() || fragment_stage.shader->get_push_constants())
+        {
+            push_constant->stage_flags = vertex_stage.shader->get_push_constants() && fragment_stage.shader->get_push_constants() ? VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT
+                                         : fragment_stage.shader->get_push_constants()                                            ? VK_SHADER_STAGE_FRAGMENT_BIT
+                                                                                                                                  : VK_SHADER_STAGE_VERTEX_BIT;
+
+            push_constant_ranges             = std::make_unique<VkPushConstantRange>();
+            push_constant_ranges->stageFlags = push_constant->stage_flags;
+            push_constant_ranges->offset     = 0;
+            push_constant_ranges->size       = static_cast<uint32_t>(push_constant->get_size());
+        }
+        else
+        {
+            LOG_ERROR("specified push constant that is not available in current shaders");
+        }
+    }
+    else if (vertex_stage.shader->get_push_constants() || fragment_stage.shader->get_push_constants())
+    {
+        LOG_ERROR("missing push constant parameter");
+    }
 
     /** Pipeline layout */
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount         = 1;
-    pipelineLayoutInfo.pSetLayouts            = &descriptorSetLayout;
-    pipelineLayoutInfo.pushConstantRangeCount = 1;
-    pipelineLayoutInfo.pPushConstantRanges    = &pushConstantRange;
+    pipelineLayoutInfo.pSetLayouts            = &descriptor_set_layout;
+    pipelineLayoutInfo.pushConstantRangeCount = push_constant_ranges ? 1 : 0;
+    pipelineLayoutInfo.pPushConstantRanges    = push_constant_ranges ? push_constant_ranges.get() : nullptr;
     VK_ENSURE(vkCreatePipelineLayout(get_engine_interface()->get_gfx_context()->logical_device, &pipelineLayoutInfo, nullptr, &pipeline_layout), "Failed to create pipeline layout");
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
@@ -178,9 +217,9 @@ void Material::create_pipeline(const SMaterialStaticProperties& materialProperti
     rasterizer.sType                   = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable        = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode             = materialProperties.materialCreationFlag & EMATERIAL_CREATION_FLAG_WIREFRAME ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
+    rasterizer.polygonMode             = VK_POLYGON_MODE_FILL; // VK_POLYGON_MODE_LINE : wireframe
     rasterizer.lineWidth               = 1.0f;
-    rasterizer.cullMode                = materialProperties.materialCreationFlag & EMATERIAL_CREATION_FLAG_DOUBLESIDED ? VK_CULL_MODE_NONE : VK_CULL_MODE_FRONT_BIT;
+    rasterizer.cullMode                = VK_CULL_MODE_NONE; // VK_CULL_MODE_FRONT_BIT : backface culling
     rasterizer.frontFace               = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable         = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -199,8 +238,8 @@ void Material::create_pipeline(const SMaterialStaticProperties& materialProperti
 
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
     depthStencil.sType                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencil.depthTestEnable       = materialProperties.materialCreationFlag & EMATERIAL_CREATION_FLAG_DISABLE_DEPTH_TEST ? VK_FALSE : VK_TRUE;
-    depthStencil.depthWriteEnable      = materialProperties.materialCreationFlag & EMATERIAL_CREATION_FLAG_DISABLE_DEPTH_TEST ? VK_FALSE : VK_TRUE;
+    depthStencil.depthTestEnable       = VK_TRUE; // DEPTH TEST
+    depthStencil.depthWriteEnable      = VK_TRUE; // DEPTH TEST
     depthStencil.depthCompareOp        = VK_COMPARE_OP_LESS;
     depthStencil.depthBoundsTestEnable = VK_FALSE;
     depthStencil.minDepthBounds        = 0.0f; // Optional
@@ -264,60 +303,73 @@ void Material::create_descriptor_sets(std::vector<VkDescriptorSetLayoutBinding> 
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
     layoutInfo.pBindings    = layoutBindings.data();
-    VK_ENSURE(vkCreateDescriptorSetLayout(get_engine_interface()->get_gfx_context()->logical_device, &layoutInfo, vulkan_common::allocation_callback, &descriptorSetLayout), "Failed to create descriptor set layout");
+    VK_ENSURE(vkCreateDescriptorSetLayout(get_engine_interface()->get_gfx_context()->logical_device, &layoutInfo, vulkan_common::allocation_callback, &descriptor_set_layout), "Failed to create descriptor set layout");
 
     /** Allocate descriptor set */
-    std::vector<VkDescriptorSetLayout> layouts(get_engine_interface()->get_window()->get_image_count(), descriptorSetLayout);
+    std::vector<VkDescriptorSetLayout> layouts(get_engine_interface()->get_window()->get_image_count(), descriptor_set_layout);
     descriptor_sets.resize(get_engine_interface()->get_window()->get_image_count());
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(get_engine_interface()->get_window()->get_image_count());
+    allocInfo.descriptorSetCount = get_engine_interface()->get_window()->get_image_count();
     allocInfo.pSetLayouts        = layouts.data();
     allocInfo.descriptorPool     = VK_NULL_HANDLE;
     get_engine_interface()->get_window()->get_descriptor_pool()->alloc_memory(allocInfo);
     VK_ENSURE(vkAllocateDescriptorSets(get_engine_interface()->get_gfx_context()->logical_device, &allocInfo, descriptor_sets.data()), "Failed to allocate descriptor sets");
 }
 
-/*
-
-void Rendering::MaterialRessourceItem::UpdateDescriptorSets(ViewportInstance* drawViewport, size_t imageIndex)
+void Material::update_descriptor_sets(size_t imageIndex)
 {
-    if (dynamicMaterialProperties.vertexTextures2D.size() != staticMaterialProperties.VertexTexture2DCount)
+    std::vector<VkWriteDescriptorSet> write_descriptor_sets = {};
+
+    for (const auto& uniform : vertex_stage.uniform_buffer)
     {
-        LOG_ASSERT("Vertex texure number (" + ToString(dynamicMaterialProperties.vertexTextures2D.size()) + ") should be the same than material properties VertexTexture2DCount (" +
-                   ToString(staticMaterialProperties.VertexTexture2DCount) + ")");
+        if (auto binding = vertex_uniform_bindings.find(uniform->get_name()); binding != vertex_uniform_bindings.end())
+        {
+            write_descriptor_sets.emplace_back(VkWriteDescriptorSet{
+                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .pNext            = nullptr,
+                .dstSet           = descriptor_sets[imageIndex],
+                .dstBinding       = binding->second,
+                .dstArrayElement  = 0,
+                .descriptorCount  = 1,
+                .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .pImageInfo       = nullptr,
+                .pBufferInfo      = uniform->get_descriptor_buffer_info(static_cast<uint32_t>(imageIndex)),
+                .pTexelBufferView = nullptr,
+            });
+        }
+        else
+        {
+            LOG_ERROR("failed to find binding for uniform buffer");
+        }
     }
 
-    if (dynamicMaterialProperties.fragmentTextures2D.size() != staticMaterialProperties.FragmentTexture2DCount)
+    for (const auto& uniform : fragment_stage.uniform_buffer)
     {
-        LOG_ASSERT("Fragment texure number (" + ToString(dynamicMaterialProperties.fragmentTextures2D.size()) + ") should be the same than material properties FragmentTexture2DCount (" +
-                   ToString(staticMaterialProperties.FragmentTexture2DCount) + ")");
+        if (auto binding = fragment_uniform_bindings.find(uniform->get_name()); binding != fragment_uniform_bindings.end())
+        {
+            write_descriptor_sets.emplace_back(VkWriteDescriptorSet{
+                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .pNext            = nullptr,
+                .dstSet           = descriptor_sets[imageIndex],
+                .dstBinding       = binding->second,
+                .dstArrayElement  = 0,
+                .descriptorCount  = 1,
+                .descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .pImageInfo       = nullptr,
+                .pBufferInfo      = uniform->get_descriptor_buffer_info(static_cast<uint32_t>(imageIndex)),
+                .pTexelBufferView = nullptr,
+            });
+        }
+        else
+        {
+            LOG_ERROR("failed to find binding for uniform buffer");
+        }
     }
 
-    // for (int iIndex = 0; iIndex < G_SWAP_CHAIN_IMAGE_COUNT; ++iIndex) {
-    size_t                            iIndex = imageIndex;
-    std::vector<VkWriteDescriptorSet> newDescSets;
-    uint32_t                          currentBinding = 0;
-
-    if (staticMaterialProperties.bUseGlobalUbo)
-    {
-
-        VkWriteDescriptorSet matrixUbo{};
-        matrixUbo.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        matrixUbo.dstSet          = parent->GetDescriptorSet(iIndex);
-        matrixUbo.dstBinding      = currentBinding;
-        matrixUbo.dstArrayElement = 0;
-        matrixUbo.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        matrixUbo.descriptorCount = 1;
-        matrixUbo.pBufferInfo     = &drawViewport->GetViewportUbos()->GetDescriptorBufferInfo(iIndex);
-        matrixUbo.pImageInfo      = nullptr;
-        matrixUbo.pNext           = nullptr;
-        newDescSets.push_back(matrixUbo);
-        currentBinding++;
-    }
-
-    std::vector<VkDescriptorImageInfo> vertexImageInfos(staticMaterialProperties.VertexTexture2DCount);
-    for (uint32_t i = 0; i < staticMaterialProperties.VertexTexture2DCount; ++i)
+    /*
+    std::vector<VkDescriptorImageInfo> vertexImageInfos(descriptor_sets.size());
+    for (uint32_t i = 0; i < vertexImageInfos.size(); ++i)
     {
         vertexImageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         vertexImageInfos[i].imageView   = dynamicMaterialProperties.vertexTextures2D[i]->GetImageView();
@@ -325,7 +377,7 @@ void Rendering::MaterialRessourceItem::UpdateDescriptorSets(ViewportInstance* dr
 
         VkWriteDescriptorSet imgWDescSet{};
         imgWDescSet.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        imgWDescSet.dstSet          = parent->GetDescriptorSet(iIndex);
+        imgWDescSet.dstSet          = descriptor_sets[iIndex];
         imgWDescSet.dstBinding      = currentBinding;
         imgWDescSet.dstArrayElement = 0;
         imgWDescSet.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -336,28 +388,7 @@ void Rendering::MaterialRessourceItem::UpdateDescriptorSets(ViewportInstance* dr
         newDescSets.push_back(imgWDescSet);
         currentBinding++;
     }
-
-    std::vector<VkDescriptorImageInfo> fragmentImageInfos(staticMaterialProperties.FragmentTexture2DCount);
-    for (uint32_t i = 0; i < staticMaterialProperties.FragmentTexture2DCount; ++i)
-    {
-        fragmentImageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        fragmentImageInfos[i].imageView   = dynamicMaterialProperties.fragmentTextures2D[i]->GetImageView();
-        fragmentImageInfos[i].sampler     = dynamicMaterialProperties.fragmentTextures2D[i]->GetSampler();
-
-        VkWriteDescriptorSet imgWDescSet{};
-        imgWDescSet.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        imgWDescSet.dstSet          = parent->GetDescriptorSet(iIndex);
-        imgWDescSet.dstBinding      = currentBinding;
-        imgWDescSet.dstArrayElement = 0;
-        imgWDescSet.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        imgWDescSet.descriptorCount = 1;
-        imgWDescSet.pImageInfo      = &fragmentImageInfos[i];
-        imgWDescSet.pBufferInfo     = nullptr;
-        imgWDescSet.pNext           = nullptr;
-        newDescSets.push_back(imgWDescSet);
-        currentBinding++;
-    }
-    vkUpdateDescriptorSets(G_LOGICAL_DEVICE, static_cast<uint32_t>(newDescSets.size()), newDescSets.data(), 0, nullptr);
-    //}
+    */
+    
+    vkUpdateDescriptorSets(get_engine_interface()->get_gfx_context()->logical_device, static_cast<uint32_t>(write_descriptor_sets.size()), write_descriptor_sets.data(), 0, nullptr);
 }
-*/

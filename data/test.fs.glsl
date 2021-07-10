@@ -5,8 +5,19 @@ layout (location = 0) in vec2 texCoords;
 
 layout(location = 0) out vec4 outColor;
 
+layout(binding = 5) uniform GlobalCameraUniformBuffer {
+    mat4 worldProjection;
+    mat4 viewMatrix;
+	vec3 cameraLocation;
+} ubo;
+
+
+
+// PUSH CONSTANTS
+layout(push_constant) uniform PushConstant_STR {
+	mat4 model;
+} primitive;
 
 void main() {
-	outColor = vec4(1, 1, 0, 0);//texture(colorMap, texCoords);
-	
+	outColor = vec4(1, 1, 0, 0);//texture(colorMap, texCoords);	
 }

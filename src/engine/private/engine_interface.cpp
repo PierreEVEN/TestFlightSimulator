@@ -39,9 +39,9 @@ void IEngineInterface::run_main_task(WindowParameters window_parameters)
         BEGIN_NAMED_RECORD(DRAW_FRAME);
         game_window->wait_init_idle();
         BEGIN_NAMED_RECORD(PRE_DRAW);
-        pre_draw();
         END_NAMED_RECORD(PRE_DRAW);
         auto render_context = game_window->prepare_frame();
+        pre_draw();
         if (render_context.is_valid)
         {
             BEGIN_NAMED_RECORD(RENDER_SCENE);

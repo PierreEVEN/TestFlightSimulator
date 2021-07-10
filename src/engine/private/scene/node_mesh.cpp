@@ -24,11 +24,11 @@ void MeshNode::render(RenderContext render_context)
     if (!mesh_data || !material)
         return;
 
+    //@TODO : do once
+    material->update_descriptor_sets(render_context.image_index);
 
-    /* Draw procedure : 
-    vkCmdPushConstants(command_buffer, material->get_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Mat4f), &objectTransform);
-    */
-
+    material->update_push_constants(render_context.command_buffer);
+    
     vkCmdBindDescriptorSets(render_context.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->get_pipeline_layout(), 0, 1, &material->get_descriptor_sets()[render_context.image_index], 0, nullptr);
     vkCmdBindPipeline(render_context.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->get_pipeline());
 

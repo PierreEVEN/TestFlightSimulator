@@ -1,37 +1,72 @@
 #pragma once
 #include "asset_base.h"
+#include "spirv_cross.hpp"
 
 #include <vulkan/vulkan_core.h>
 
-enum class EShaderKind
+enum class EShaderStage
 {
     VertexShader,
     FragmentShader,
     GeometryShader
 };
 
+enum class EShaderPropertyType
+{
+    Scalar,
+    Sampler,
+    Structure,
+};
+
+struct ShaderProperty
+{
+    std::string                     property_name;
+    spirv_cross::SPIRType::BaseType property_type;
+    size_t                          structure_size;
+    uint32_t                        location;
+    uint32_t                        vec_size;
+    EShaderStage                    shader_stage;
+
+    std::vector<ShaderProperty> structure_properties;
+};
+
 class Shader : public AssetBase
 {
   public:
-    Shader(const std::filesystem::path& source_mesh_path, EShaderKind in_shader_kind);
+    Shader(const std::filesystem::path& source_mesh_path, EShaderStage in_shader_kind);
     virtual ~Shader() override;
     [[nodiscard]] VkShaderModule get_shader_module() const
     {
         return shader_module;
     }
 
+    [[nodiscard]] const std::optional<ShaderProperty>& get_push_constants() const
+    {
+        return push_constants;
+    }
+
+    [[nodiscard]] const std::vector<ShaderProperty>& get_uniform_buffers() const
+    {
+        return uniform_buffer;
+    }
+
+    [[nodiscard]] const std::vector<ShaderProperty>& get_sampled_images() const
+    {
+        return sampled_images;
+    }
+
   private:
     void                                 build_reflection_data(const std::vector<uint32_t>& bytecode);
     std::optional<std::string>           read_shader_file(const std::filesystem::path& source_path);
-    std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name, const std::string& shader_code, EShaderKind shader_kind, bool optimize = true);
+    std::optional<std::vector<uint32_t>> compile_module(const std::string& file_name, const std::string& shader_code, EShaderStage shader_kind, bool optimize = true);
     std::optional<VkShaderModule>        create_shader_module(VkDevice logical_device, const std::vector<uint32_t>& bytecode);
 
-    EShaderKind    shader_kind;
-    VkShaderModule shader_module = VK_NULL_HANDLE;
+    const EShaderStage shader_stage;
+    VkShaderModule     shader_module = VK_NULL_HANDLE;
 
-    /* Reflection data */
-
-    uint32_t              push_constant_buffer_size = 0;
-    int32_t               uniform_buffer_binding    = -1;
-    std::vector<uint32_t> sampled_image_bindings;
+    // Reflection data
+    std::string                   entry_point;
+    std::optional<ShaderProperty> push_constants = std::optional<ShaderProperty>();
+    std::vector<ShaderProperty>   uniform_buffer = {};
+    std::vector<ShaderProperty>   sampled_images = {};
 };

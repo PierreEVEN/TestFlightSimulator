@@ -31,15 +31,62 @@ class Node
     {
     }
 
-  protected:
+    [[nodiscard]] glm::dvec3 get_world_position() const
+    {
+        return position;
+    }
 
+    [[nodiscard]] glm::dvec3 get_relative_position() const
+    {
+        return position;
+    }
+
+    [[nodiscard]] glm::dquat get_world_rotation() const
+    {
+        return rotation;
+    }
+
+    [[nodiscard]] glm::dquat get_relative_rotation() const
+    {
+        return rotation;
+    }
+
+    [[nodiscard]] glm::dvec3 get_relative_scale() const
+    {
+        return scale;
+    }
+
+    [[nodiscard]] glm::dmat4 get_relative_transform() const
+    {
+        return relative_transform;
+    }
+
+    [[nodiscard]] glm::dmat4 get_world_transform() const
+    {
+        return world_transform;
+    }
+
+    [[nodiscard]] glm::dvec3 get_forward_vector() const
+    {
+        return get_world_rotation() * glm::dvec3(1, 0, 0);
+    }
+
+    
+    [[nodiscard]] glm::dvec3 get_world_up() const
+    {
+        return glm::dvec3(0, 0, 1);
+    }
+
+  protected:
   private:
     void initialize_internal(Scene* in_scene, Node* in_parent);
 
-    glm::dvec3         position = glm::dvec3();
-    glm::dquat         rotation = glm::dquat();
-    glm::dvec3         scale    = glm::dvec3();
-    Node*              parent   = nullptr;
+    glm::dvec3         position           = glm::dvec3(0.0);
+    glm::dquat         rotation           = glm::dquat();
+    glm::dvec3         scale              = glm::dvec3(1.0);
+    glm::dmat4         relative_transform = glm::dmat4(1.0);
+    glm::dmat4         world_transform    = glm::dmat4(1.0);
+    Node*              parent             = nullptr;
     std::vector<Node*> children;
 
     // Initialized in Scene constructor
