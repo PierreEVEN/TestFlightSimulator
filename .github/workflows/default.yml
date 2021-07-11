@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+
+env:
+  vulkan_sdk: C:/VulkanSDK/1.2.182.0
+
 jobs:
   build-windows:
   
@@ -14,9 +18,16 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Install vulkan
+      shell: cmd
+      run: |
+        cd ${{ github.workspace }}
+        curl -L --silent --show-error --output VulkanSDK.exe https://sdk.lunarg.com/sdk/download/1.2.154.1/windows/VulkanSDK-1.2.182.0-Installer.exe?Human=true
+        VulkanSDK.exe /S
+    
     # Generate sln
     - name: generate-sln
-      shell: bash
+      shell: cmd
       run: |
         cmake -B temp
         
