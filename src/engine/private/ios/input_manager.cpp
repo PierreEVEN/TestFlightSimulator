@@ -142,14 +142,14 @@ void InputManager::handle_key_input(InputAction& action, const double delta_time
 
     if (action.b_was_just_pressed)
     {
-        action.pressed_event.Execute(action, delta_time);
+        action.pressed_event.execute(action, delta_time);
     }
     if (action.b_was_just_released)
     {
-        action.released_event.Execute(action, delta_time);
+        action.released_event.execute(action, delta_time);
     }
     if (action.b_is_pressed)
     {
-        action.press_event.Execute(action, delta_time);
+        action.press_event.execute(action, delta_time);
     }
 }

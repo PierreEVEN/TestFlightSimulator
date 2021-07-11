@@ -22,12 +22,17 @@ struct InputActionReference
     EInputType input_type;
 };
 
+class InputAxis
+{
+    
+};
+
 class InputAction
 {
     friend class InputManager;
 
   public:
-    InputAction(const std::string& name, const std::vector<InputActionReference> in_key_combination) : input_name(name), key_combination(in_key_combination)
+    InputAction(const std::string& name, const std::vector<InputActionReference>& in_key_combination) : input_name(name), key_combination(in_key_combination)
     {
     }
 
