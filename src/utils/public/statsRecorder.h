@@ -1,14 +1,20 @@
 #pragma once
 
+#if CXX_MSVC
 #define BEGIN_RECORD() StatRecorder __lambda_stat_recorder("", ##__FUNCTION__)
 #define END_RECORD() __lambda_stat_recorder.end()
-
 #define ADD_TIMEPOINT() { if (Profiler::get().is_profiler_recording()) StatRecorder __lambda_named_timepoint("", ##__FUNCTION__, true); }
-
 #define ADD_NAMED_TIMEPOINT(name)  { if (Profiler::get().is_profiler_recording()) StatRecorder name(#name, ##__FUNCTION__, true); }
-
 #define BEGIN_NAMED_RECORD(name) StatRecorder name(#name, ##__FUNCTION__)
 #define END_NAMED_RECORD(name) name.end()
+#else
+#define BEGIN_RECORD() StatRecorder __lambda_stat_recorder("", __FUNCTION__)
+#define END_RECORD() __lambda_stat_recorder.end()
+#define ADD_TIMEPOINT() { if (Profiler::get().is_profiler_recording()) StatRecorder __lambda_named_timepoint("", __FUNCTION__, true); }
+#define ADD_NAMED_TIMEPOINT(name)  { if (Profiler::get().is_profiler_recording()) StatRecorder name(#name, __FUNCTION__, true); }
+#define BEGIN_NAMED_RECORD(name) StatRecorder name(#name, __FUNCTION__)
+#define END_NAMED_RECORD(name) name.end()
+#endif
 
 #include <chrono>
 #include <mutex>

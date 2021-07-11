@@ -11,10 +11,17 @@
 
 
 #include <cpputils/logger.hpp>
+#if CXX_MSVC
 #define VK_ENSURE(condition, ...) \
     if ((condition) != VK_SUCCESS) { LOG_FATAL("VK_ERROR %d : %s", condition, __VA_ARGS__); }
 #define VK_CHECK(object, ...) \
     if ((object) == VK_NULL_HANDLE) { LOG_FATAL("VK_ERROR_NULL_HANDLE %d : %s", object, __VA_ARGS__); }
+#else
+#define VK_ENSURE(condition, ...) \
+    if ((condition) != VK_SUCCESS) { LOG_FATAL("VK_ERROR %d : %s", condition, ##__VA_ARGS__); }
+#define VK_CHECK(object, ...) \
+    if ((object) == VK_NULL_HANDLE) { LOG_FATAL("VK_ERROR_NULL_HANDLE %d : %s", object, ##__VA_ARGS__); }
+#endif
 
 class GfxContext;
 class Window;

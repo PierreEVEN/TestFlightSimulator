@@ -59,7 +59,7 @@ void GfxContext::select_physical_device(VkSurfaceKHR surface)
         vkGetPhysicalDeviceProperties(device, &pProperties);
         PhysLog += "\t-" + std::string(pProperties.deviceName) + " (driver version : " + std::to_string(pProperties.driverVersion) + ")\n";
     }
-    LOG_INFO(PhysLog.c_str());
+    LOG_INFO("%s", PhysLog.c_str());
 
     // Pick desired device
     for (const auto& device : devices)

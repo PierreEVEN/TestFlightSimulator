@@ -104,7 +104,7 @@ namespace job_system {
         workers_create_semaphore.release();
         Worker *worker;
         do {
-            if (worker = get()) {
+            if ((worker = get())) {
                 worker->next_task();
             }
             else

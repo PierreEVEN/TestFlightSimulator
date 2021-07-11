@@ -1,6 +1,8 @@
 
 #include "assets/asset_mesh_data.h"
 
+#include <string.h>
+
 #include "engine_interface.h"
 #include "rendering/vulkan/common.h"
 #include "rendering/vulkan/utils.h"

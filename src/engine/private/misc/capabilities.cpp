@@ -35,7 +35,7 @@ namespace capabilities
 
 		std::vector<const char*> required_extensions = vulkan_utils::get_required_extensions();
 
-		LOG_INFO(log.c_str());
+		LOG_INFO("%s", log.c_str());
 
 		for (const auto& required_ext : required_extensions)
 		{
