@@ -25,7 +25,7 @@ void MeshNode::render(RenderContext render_context)
         return;
 
     //@TODO : do once
-    material->update_descriptor_sets(render_context.image_index);
+    //material->update_descriptor_sets(render_context.image_index);
 
     material->update_push_constants(render_context.command_buffer);
     

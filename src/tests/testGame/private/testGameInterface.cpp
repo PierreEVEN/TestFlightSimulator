@@ -1,6 +1,7 @@
 
 #include "testGameInterface.h"
 
+#include "camera_basic_controller.h"
 #include "assets/asset_material.h"
 #include "assets/asset_mesh.h"
 #include "assets/asset_mesh_data.h"
@@ -52,8 +53,14 @@ void TestGameInterface::load_resources()
     const TAssetPtr<Mesh> mesh = get_asset_manager()->create<Mesh>("test_mesh", mesh_data, material);
 
     // add test scene component to scene
-    root_scene->add_node<MeshNode>(mesh, material);
-    root_scene->set_camera(root_scene->add_node<Camera>());
+    auto node_1 = root_scene->add_node<MeshNode>(mesh, material);
+    auto node_2 = root_scene->add_node<MeshNode>(mesh, material);
+    auto camera = root_scene->add_node<Camera>();
+    node_2->set_relative_position(glm::vec3(1, 0, 0));
+
+    root_scene->set_camera(camera);
+
+    controller = std::make_unique<CameraBasicController>(camera, get_input_manager());
 }
 
 void TestGameInterface::pre_initialize()
@@ -70,6 +77,7 @@ void TestGameInterface::unload_resources()
 
 void TestGameInterface::render_scene(RenderContext render_context)
 {
+    TAssetPtr<Material>(this, "test_material")->update_descriptor_sets(render_context.image_index);
     root_scene->render_scene(render_context);
 }
 

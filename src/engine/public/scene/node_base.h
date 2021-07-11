@@ -70,13 +70,44 @@ class Node
         return get_world_rotation() * glm::dvec3(1, 0, 0);
     }
 
+    [[nodiscard]] glm::dvec3 get_right_vector() const
+    {
+        return get_world_rotation() * glm::dvec3(0, 1, 0);
+    }
+
+    [[nodiscard]] glm::dvec3 get_up_vector() const
+    {
+        return get_world_rotation() * glm::dvec3(0, 0, 1);
+    }
+
     [[nodiscard]] glm::dvec3 get_world_up() const
     {
         return glm::dvec3(0, 0, 1);
     }
+    
+    void set_relative_position(const glm::dvec3& in_position)
+    {
+        position = in_position;
+        recompute_transform();
+    }
+
+    void set_relative_rotation(const glm::dquat& in_rotation)
+    {
+        rotation = in_rotation;
+        recompute_transform();
+    }
+
+    void set_relative_scale(const glm::dvec3& in_scale)
+    {
+        scale = in_scale;
+        recompute_transform();
+    }
 
   protected:
   private:
+
+      void recompute_transform();
+
     void initialize_internal(Scene* in_scene, Node* in_parent);
 
     glm::dvec3         position           = glm::dvec3(0.0);
