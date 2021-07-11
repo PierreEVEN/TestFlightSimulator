@@ -14,26 +14,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
-    - name: setup-msbuild
-      uses: microsoft/setup-msbuild@v1
-      
     # Generate sln
     - name: generate-sln
       shell: bash
       run: |
-        sh Build.sh
+        cmake -B temp
         
     # Build engine Release
-    - name: build-sln-Release
+    - name: compile-release
       shell: cmd
       run: |
-        @echo | msbuild -m temp/TestFlightSimulator.sln /t:build /p:Configuration="Release" /p:Platform="x64" /p:BuildInParallel=true
-        
-    # Build engine Debug
-    - name: build-sln-Release
-      shell: cmd
-      run: |
-        @echo | msbuild -m temp/TestFlightSimulator.sln /t:build /p:Configuration="Debug" /p:Platform="x64" /p:BuildInParallel=true
+        cmake --build temp
         
   build-linux:
   
@@ -44,17 +35,16 @@ jobs:
           
     - name: install-libxrandr
       shell: bash
-      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libvulkan1 mesa-vulkan-drivers vulkan-utils
           
     # Generate makefile
     - name: generate-makefile
       shell: bash
       run: |
-        sh Build.sh
+        cmake -B temp
         
     # Build engine Release
-    - name: build-sln-Release
+    - name: compile-release
       shell: bash
       run: |
-        cd temp
-        make
+        cmake --build temp
