@@ -3,12 +3,12 @@
 #include "assets/asset_ptr.h"
 #include "rendering/window.h"
 
-#include <cpputils/logger.hpp>
 #include "assets/asset_uniform_buffer.h"
+#include <cpputils/logger.hpp>
 
+#include <glm/glm.hpp>
 #include <memory>
 #include <vector>
-#include <glm/glm.hpp>
 
 class AssetManager;
 class Camera;
@@ -48,25 +48,29 @@ class Scene
 
         new (node_storage) Node_T(std::forward<Args_T>(arguments)...);
 
+        if (!node_storage->render_scene)
+        {
+            LOG_ERROR("don't call Node() constructor in children class : %s", typeid(Node_T).name());
+        }
+
         scene_nodes.emplace_back(std::dynamic_pointer_cast<Node>(node_ptr));
 
         return node_ptr;
     }
 
-    void set_camera(std::shared_ptr<Camera> new_camera)
-    {
-        enabled_camera = std::move(new_camera);
-    }
+    void set_camera(std::shared_ptr<Camera> new_camera);
 
     [[nodiscard]] TAssetPtr<UniformBuffer> get_scene_uniform_buffer() const
     {
         return camera_uniform_buffer;
     }
 
+    [[nodiscard]] glm::dmat4 make_projection_matrix(const RenderContext& render_context) const;
+
   private:
     TAssetPtr<UniformBuffer> camera_uniform_buffer = nullptr;
-    std::shared_ptr<Camera>    enabled_camera        = nullptr;
+    std::shared_ptr<Camera>  enabled_camera        = nullptr;
 
-    std::vector<std::shared_ptr<Node>> scene_nodes;
+    std::vector<std::shared_ptr<Node>>          scene_nodes;
     std::vector<std::shared_ptr<PrimitiveNode>> rendered_nodes;
 };

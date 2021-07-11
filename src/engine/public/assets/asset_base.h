@@ -82,7 +82,7 @@ class AssetBase : public NonCopiable
     }
 
   protected:
-    AssetBase() = default;
+    AssetBase() {}
 
 
   private:

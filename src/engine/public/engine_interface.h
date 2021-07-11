@@ -2,12 +2,13 @@
 #include "rendering/window.h"
 
 #include "assets/asset_base.h"
+#include "ios/input_manager.h"
 #include "ui/window/window_base.h"
-#include "scene/scene.h"
 
 #include <filesystem>
 #include <memory>
 
+class InputManager;
 class PlayerController;
 
 class IEngineInterface
@@ -35,6 +36,11 @@ class IEngineInterface
         return game_window.get();
     }
 
+    [[nodiscard]] InputManager* get_input_manager() const
+    {
+        return input_manager.get();
+    }
+
     [[nodiscard]] WindowManager* get_window_manager() const
     {
         return window_manager.get();
@@ -52,11 +58,11 @@ class IEngineInterface
     virtual void pre_shutdown()     = 0;
     virtual void unload_resources() = 0;
 
-    virtual void pre_draw()     = 0;
+    virtual void pre_draw()                                 = 0;
     virtual void render_scene(RenderContext render_context) = 0;
-    virtual void post_draw()    = 0;
-    virtual void render_ui()    = 0;
-    virtual void render_hud()   = 0;
+    virtual void post_draw()                                = 0;
+    virtual void render_ui()                                = 0;
+    virtual void render_hud()                               = 0;
 
     IEngineInterface();
 
@@ -67,4 +73,5 @@ class IEngineInterface
     std::unique_ptr<AssetManager>         asset_manager  = nullptr;
     std::unique_ptr<Window>               game_window    = nullptr;
     std::unique_ptr<WindowManager>        window_manager = nullptr;
+    std::unique_ptr<InputManager>         input_manager  = nullptr;
 };

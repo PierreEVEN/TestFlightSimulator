@@ -1,5 +1,6 @@
 #pragma once
 #include "engine_interface.h"
+#include "scene/scene.h"
 
 class TestGameInterface : public IEngineInterface
 {
@@ -18,5 +19,11 @@ protected:
     void post_draw() override;
 
     std::unique_ptr<Scene> root_scene;
+
+private:
+
+    void truc_pressed(const InputAction&);
+  void truc_released(const InputAction&);
+  void truc_press(const InputAction&);
 };
 

@@ -18,8 +18,7 @@ class Node
     friend class Scene;
 
   public:
-    Node() = default;
-
+    Node() {}
     virtual ~Node() = default;
 
     [[nodiscard]] Scene* get_render_scene() const
@@ -71,7 +70,6 @@ class Node
         return get_world_rotation() * glm::dvec3(1, 0, 0);
     }
 
-    
     [[nodiscard]] glm::dvec3 get_world_up() const
     {
         return glm::dvec3(0, 0, 1);
@@ -87,7 +85,7 @@ class Node
     glm::dmat4         relative_transform = glm::dmat4(1.0);
     glm::dmat4         world_transform    = glm::dmat4(1.0);
     Node*              parent             = nullptr;
-    std::vector<Node*> children;
+    std::vector<Node*> children           = {};
 
     // Initialized in Scene constructor
     Scene* render_scene;

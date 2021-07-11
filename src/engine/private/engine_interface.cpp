@@ -25,6 +25,7 @@ void IEngineInterface::run_main_task(WindowParameters window_parameters)
     game_window    = std::make_unique<Window>(window_parameters);
     window_manager = std::make_unique<WindowManager>();
     asset_manager  = std::make_unique<AssetManager>(this);
+    input_manager  = std::make_unique<InputManager>(game_window->get_handle());
 
     load_resources();
 
@@ -32,6 +33,8 @@ void IEngineInterface::run_main_task(WindowParameters window_parameters)
 
     while (game_window->begin_frame())
     {
+        input_manager->poll_events();
+
         const auto now         = std::chrono::steady_clock::now();
         delta_second           = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(now - last_delta_second_time).count()) / 1000000000.0;
         last_delta_second_time = now;

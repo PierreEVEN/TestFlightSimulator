@@ -34,6 +34,6 @@ void main() {
 
 	//texCoords = texture(image, uv).xy;
 	gl_Position = primitive.model * vec4(pos.xyz, 1.0);
-	//	gl_Position = ubo.worldProjection * ubo.viewMatrix * primitive.model * vec4(pos.xyz, 1.0);
+	gl_Position = ubo.worldProjection * ubo.viewMatrix * primitive.model * vec4(pos.xyz, 1.0);
 
 }

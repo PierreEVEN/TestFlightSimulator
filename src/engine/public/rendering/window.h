@@ -29,6 +29,8 @@ struct RenderContext
     VkCommandBuffer command_buffer = VK_NULL_HANDLE;
     VkFramebuffer   framebuffer    = VK_NULL_HANDLE;
     uint32_t        image_index    = 0;
+    uint32_t        res_x          = 0;
+    uint32_t        res_y          = 0;
 };
 
 class Window
@@ -42,22 +44,64 @@ class Window
     bool begin_frame();
     bool end_frame();
 
-    [[nodiscard]] DescriptorPool*                       get_descriptor_pool() const { return descriptor_pool; }
-    [[nodiscard]] VkCommandPool                         get_command_pool() const { return command_pool->get(); }
-    [[nodiscard]] GLFWwindow*                           get_handle() const { return window_handle; }
-    [[nodiscard]] GfxContext*                           get_gfx_context() const { return gfx_context.get(); }
-    [[nodiscard]] VkSurfaceKHR                          get_surface() const { return surface; }
-    [[nodiscard]] uint32_t                              get_image_count() const { return swapchain_image_count; }
-    [[nodiscard]] vulkan_utils::SwapchainSupportDetails get_support_details() const { return swapchain_support_details; }
-    [[nodiscard]] VkSurfaceFormatKHR                    get_surface_format() const { return swapchain_surface_format; }
-    [[nodiscard]] VkPresentModeKHR                      get_present_mode() const { return swapchain_present_mode; }
-    [[nodiscard]] VkRenderPass                          get_render_pass() const { return render_pass; }
+    [[nodiscard]] DescriptorPool* get_descriptor_pool() const
+    {
+        return descriptor_pool;
+    }
+    [[nodiscard]] VkCommandPool get_command_pool() const
+    {
+        return command_pool->get();
+    }
+    [[nodiscard]] GLFWwindow* get_handle() const
+    {
+        return window_handle;
+    }
+    [[nodiscard]] GfxContext* get_gfx_context() const
+    {
+        return gfx_context.get();
+    }
+    [[nodiscard]] VkSurfaceKHR get_surface() const
+    {
+        return surface;
+    }
+    [[nodiscard]] uint32_t get_image_count() const
+    {
+        return swapchain_image_count;
+    }
+    [[nodiscard]] vulkan_utils::SwapchainSupportDetails get_support_details() const
+    {
+        return swapchain_support_details;
+    }
+    [[nodiscard]] VkSurfaceFormatKHR get_surface_format() const
+    {
+        return swapchain_surface_format;
+    }
+    [[nodiscard]] VkPresentModeKHR get_present_mode() const
+    {
+        return swapchain_present_mode;
+    }
+    [[nodiscard]] VkRenderPass get_render_pass() const
+    {
+        return render_pass;
+    }
 
-    [[nodiscard]] uint32_t get_msaa_sample_count() const { return msaa_sample_count; }
-    [[nodiscard]] uint32_t get_max_msaa_sample_count() const { return max_msaa_sample_count; }
+    [[nodiscard]] uint32_t get_msaa_sample_count() const
+    {
+        return msaa_sample_count;
+    }
+    [[nodiscard]] uint32_t get_max_msaa_sample_count() const
+    {
+        return max_msaa_sample_count;
+    }
 
-    [[nodiscard]] uint32_t get_height() const { return window_height; }
-    [[nodiscard]] uint32_t get_width() const { return window_width; }
+    [[nodiscard]] uint32_t get_height() const
+    {
+        return window_height;
+    }
+    [[nodiscard]] uint32_t get_width() const
+    {
+        return window_width;
+    }
 
     Node* TEMP_NODE = nullptr;
 

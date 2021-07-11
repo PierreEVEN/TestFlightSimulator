@@ -7,8 +7,8 @@
 #include "assets/asset_shader.h"
 #include "assets/asset_uniform_buffer.h"
 #include "imgui.h"
-#include "scene/node_mesh.h"
 #include "scene/node_camera.h"
+#include "scene/node_mesh.h"
 #include "ui/window/window_base.h"
 #include "ui/window/windows/content_browser.h"
 #include "ui/window/windows/profiler.h"
@@ -20,18 +20,23 @@ PlayerController* TestGameInterface::get_controller()
 
 void TestGameInterface::load_resources()
 {
+    get_input_manager()->add_input(InputAction("test", {GLFW_KEY_ESCAPE, GLFW_KEY_A}));
+    get_input_manager()->get_input("test")->press_event.Add(this, &TestGameInterface::truc_press);
+    get_input_manager()->get_input("test")->pressed_event.Add(this, &TestGameInterface::truc_pressed);
+    get_input_manager()->get_input("test")->released_event.Add(this, &TestGameInterface::truc_released);
+
     root_scene = std::make_unique<Scene>(get_asset_manager());
 
     // Create mesh data
     const TAssetPtr<MeshData> mesh_data = get_asset_manager()->create<MeshData>(
-        "test_mesh_data", std::vector<Vertex>{{.pos = glm::vec3(-10, -10, 1)}, {.pos = glm::vec3(10, -10, 1)}, {.pos = glm::vec3(10, 10, 1)}, {.pos = glm::vec3(-10, 10, 1)}}, std::vector<uint32_t>{0, 1, 2, 0, 3, 2});
+        "test_mesh_data", std::vector<Vertex>{{.pos = glm::vec3(10, -5, -5)}, {.pos = glm::vec3(10, -5, 5)}, {.pos = glm::vec3(10, 5, 5)}, {.pos = glm::vec3(10, 5, -5)}}, std::vector<uint32_t>{0, 1, 2, 0, 3, 2});
 
     // Create shaders
     const TAssetPtr<Shader> vertex_shader   = get_asset_manager()->create<Shader>("test_vertex_shader", "data/test.vs.glsl", EShaderStage::VertexShader);
     const TAssetPtr<Shader> fragment_shader = get_asset_manager()->create<Shader>("test_fragment_shader", "data/test.fs.glsl", EShaderStage::FragmentShader);
 
     // create material parameters
-    const ShaderStageData          vertex_stage{
+    const ShaderStageData vertex_stage{
         .shader         = vertex_shader,
         .uniform_buffer = {root_scene->get_scene_uniform_buffer()},
     };
@@ -41,9 +46,7 @@ void TestGameInterface::load_resources()
     };
 
     // create material
-    glm::mat4 model_mat(1.0);
-    model_mat[0][3]                    = 1;
-    const TAssetPtr<Material> material = get_asset_manager()->create<Material>("test_material", vertex_stage, fragment_stage, std::make_shared<PushConstant>(model_mat));
+    const TAssetPtr<Material> material = get_asset_manager()->create<Material>("test_material", vertex_stage, fragment_stage, std::make_shared<PushConstant>(glm::mat4(1.0)));
 
     // assemble mesh
     const TAssetPtr<Mesh> mesh = get_asset_manager()->create<Mesh>("test_mesh", mesh_data, material);
@@ -107,4 +110,19 @@ void TestGameInterface::pre_draw()
 
 void TestGameInterface::post_draw()
 {
+}
+
+void TestGameInterface::truc_pressed(const InputAction&)
+{
+    LOG_WARNING("pressed");
+}
+
+void TestGameInterface::truc_released(const InputAction&)
+{
+    LOG_WARNING("released");
+}
+
+void TestGameInterface::truc_press(const InputAction&)
+{
+    LOG_WARNING("press");
 }

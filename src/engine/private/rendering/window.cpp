@@ -162,7 +162,14 @@ RenderContext Window::prepare_frame()
         vkWaitForFences(gfx_context->logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
     images_in_flight[image_index] = in_flight_fences[current_frame_id];
 
-    RenderContext render_context{.is_valid = true, .command_buffer = command_buffers[image_index], .framebuffer = back_buffer->get(image_index), .image_index = image_index};
+    RenderContext render_context{
+        .is_valid       = true,
+        .command_buffer = command_buffers[image_index],
+        .framebuffer    = back_buffer->get(image_index),
+        .image_index    = image_index,
+        .res_x          = get_width(),
+        .res_y          = get_height(),
+    };
 
     /**
      * Build command queues
@@ -287,7 +294,6 @@ void Window::render_data(RenderContext& render_context)
 
 bool Window::begin_frame()
 {
-    glfwPollEvents();
     return !glfwWindowShouldClose(window_handle);
 }
 
