@@ -2,6 +2,7 @@
 
 #include <latch>
 #include <vector>
+#include <condition_variable>
 
 #include "jobSystem/worker.h"
 #include "types/semaphores.h"

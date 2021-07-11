@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
+#include <string.h>
 
 class UniformBuffer : public AssetBase
 {
