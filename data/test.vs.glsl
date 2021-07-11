@@ -15,6 +15,7 @@ layout(binding = 9) uniform GlobalCameraUniformBuffer {
 	vec3 cameraLocation;
 } ubo;
 
+// SAMPLERS
 //layout (binding = 6) uniform sampler2D image;
 //layout (binding = 7) uniform sampler2D shadowMap;
 
@@ -31,9 +32,5 @@ out gl_PerVertex {
 };
 
 void main() {
-
-	//texCoords = texture(image, uv).xy;
-	gl_Position = primitive.model * vec4(pos.xyz, 1.0);
 	gl_Position = ubo.worldProjection * ubo.viewMatrix * primitive.model * vec4(pos.xyz, 1.0);
-
 }

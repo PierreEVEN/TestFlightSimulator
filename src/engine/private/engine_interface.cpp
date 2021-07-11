@@ -33,7 +33,7 @@ void IEngineInterface::run_main_task(WindowParameters window_parameters)
 
     while (game_window->begin_frame())
     {
-        input_manager->poll_events();
+        input_manager->poll_events(get_delta_second());
 
         const auto now         = std::chrono::steady_clock::now();
         delta_second           = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(now - last_delta_second_time).count()) / 1000000000.0;

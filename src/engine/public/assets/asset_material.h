@@ -116,6 +116,11 @@ class Material : public AssetBase
     void update_push_constants(VkCommandBuffer& command_buffer);
 
     void update_descriptor_sets(size_t imageIndex);
+    
+    void set_push_constant_model_matrix(const glm::mat4& mat) const
+    {
+        push_constant->set_data(mat);
+    }
 
   private:
     void destroy_resources();
@@ -126,7 +131,7 @@ class Material : public AssetBase
 
     ShaderStageData               vertex_stage   = {};
     ShaderStageData               fragment_stage = {};
-    std::shared_ptr<PushConstant>     push_constant  = nullptr;
+    std::shared_ptr<PushConstant> push_constant  = nullptr;
     
     std::unordered_map<std::string, uint32_t> vertex_uniform_bindings;
     std::unordered_map<std::string, uint32_t> fragment_uniform_bindings;

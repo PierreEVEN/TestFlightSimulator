@@ -6,7 +6,6 @@
 #include "assets/asset_mesh.h"
 #include "assets/asset_mesh_data.h"
 #include "assets/asset_shader.h"
-#include "assets/asset_uniform_buffer.h"
 #include "imgui.h"
 #include "scene/node_camera.h"
 #include "scene/node_mesh.h"
@@ -21,11 +20,6 @@ PlayerController* TestGameInterface::get_controller()
 
 void TestGameInterface::load_resources()
 {
-    get_input_manager()->add_input(InputAction("test", {GLFW_KEY_ESCAPE, GLFW_KEY_A}));
-    get_input_manager()->get_input("test")->press_event.Add(this, &TestGameInterface::truc_press);
-    get_input_manager()->get_input("test")->pressed_event.Add(this, &TestGameInterface::truc_pressed);
-    get_input_manager()->get_input("test")->released_event.Add(this, &TestGameInterface::truc_released);
-
     root_scene = std::make_unique<Scene>(get_asset_manager());
 
     // Create mesh data
@@ -56,7 +50,8 @@ void TestGameInterface::load_resources()
     auto node_1 = root_scene->add_node<MeshNode>(mesh, material);
     auto node_2 = root_scene->add_node<MeshNode>(mesh, material);
     auto camera = root_scene->add_node<Camera>();
-    node_2->set_relative_position(glm::vec3(1, 0, 0));
+    node_1->set_relative_position(glm::dvec3(0, 0, 0));
+    node_2->set_relative_position(glm::dvec3(1, 1, 1));
 
     root_scene->set_camera(camera);
 
@@ -118,19 +113,4 @@ void TestGameInterface::pre_draw()
 
 void TestGameInterface::post_draw()
 {
-}
-
-void TestGameInterface::truc_pressed(const InputAction&)
-{
-    LOG_WARNING("pressed");
-}
-
-void TestGameInterface::truc_released(const InputAction&)
-{
-    LOG_WARNING("released");
-}
-
-void TestGameInterface::truc_press(const InputAction&)
-{
-    LOG_WARNING("press");
 }

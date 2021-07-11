@@ -16,6 +16,5 @@ class PrimitiveNode : public Node
     virtual void render(RenderContext render_context) = 0;
     
   private:
-    glm::dmat4   render_matrix = glm::dmat4();
     bool         is_visible    = false;
 };

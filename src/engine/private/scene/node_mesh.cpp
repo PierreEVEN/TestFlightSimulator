@@ -27,6 +27,8 @@ void MeshNode::render(RenderContext render_context)
     //@TODO : do once
     //material->update_descriptor_sets(render_context.image_index);
 
+    material->set_push_constant_model_matrix(get_world_transform());
+
     material->update_push_constants(render_context.command_buffer);
     
     vkCmdBindDescriptorSets(render_context.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, material->get_pipeline_layout(), 0, 1, &material->get_descriptor_sets()[render_context.image_index], 0, nullptr);

@@ -27,6 +27,10 @@ public:
         return far_clip_plane;
     }
 
+    [[nodiscard]] glm::dvec3 get_world_up() const
+    {
+        return glm::dvec3(0, 0, 1);
+    }
   private:
 
     float      near_clip_plane = 0.1f;

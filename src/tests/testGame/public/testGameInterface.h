@@ -23,10 +23,6 @@ protected:
 
 private:
 
-    void truc_pressed(const InputAction&);
-  void truc_released(const InputAction&);
-  void truc_press(const InputAction&);
-
     std::unique_ptr<CameraBasicController> controller;
 };
 
