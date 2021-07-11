@@ -12,6 +12,7 @@
 
 #include <chrono>
 #include <mutex>
+#include <thread>
 #include <forward_list>
 
 typedef std::chrono::steady_clock record_clock;
