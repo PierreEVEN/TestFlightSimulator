@@ -2,6 +2,7 @@
 #include "scene/node_base.h"
 
 #include <cpputils/logger.hpp>
+#include <algorithm>
 
 void Node::attach_to(const std::shared_ptr<Node>& new_parent_node, const bool b_keep_world_transform)
 {

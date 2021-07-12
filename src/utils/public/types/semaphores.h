@@ -1,9 +1,10 @@
 #pragma once
 
 
-#if __has_include("semaphore")
+//#if __has_include("semaphore")
 #include <semaphore>
-#else
+/*#else
+static_assert(false, "test");
 #include <condition_variable>
 #include <climits>
 
@@ -71,3 +72,5 @@ namespace std
     using binary_semaphore = counting_semaphore<1>;
 }
 #endif
+
+*/
