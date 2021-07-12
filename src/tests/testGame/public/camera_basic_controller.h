@@ -8,10 +8,12 @@ class Camera;
 class CameraBasicController
 {
   public:
+    CameraBasicController(const std::shared_ptr<Camera>& in_camera, InputManager* input_manager);
 
-      CameraBasicController(const std::shared_ptr<Camera>& in_camera, InputManager* input_manager);
-      
   private:
-      std::shared_ptr<Camera> controlled_camera;
-      double                  movement_speed = 100.0;
+    std::shared_ptr<Camera> controlled_camera;
+    double                  movement_speed = 1000.0;
+
+    double pitch = 0.0;
+    double yaw   = 0.0;
 };

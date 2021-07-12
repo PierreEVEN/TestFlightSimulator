@@ -24,18 +24,18 @@ CameraBasicController::CameraBasicController(const std::shared_ptr<Camera>& in_c
     });
 
     input_manager->get_input("camera_move_right")->press_event.add_lambda([&](const InputAction& input_action, const double delta_time) {
-        controlled_camera->set_relative_position(controlled_camera->get_relative_position() + controlled_camera->get_right_vector() * -movement_speed * delta_time);
-    });
-
-    input_manager->get_input("camera_move_left")->press_event.add_lambda([&](const InputAction& input_action, const double delta_time) {
         controlled_camera->set_relative_position(controlled_camera->get_relative_position() + controlled_camera->get_right_vector() * movement_speed * delta_time);
     });
 
+    input_manager->get_input("camera_move_left")->press_event.add_lambda([&](const InputAction& input_action, const double delta_time) {
+        controlled_camera->set_relative_position(controlled_camera->get_relative_position() + controlled_camera->get_right_vector() * -movement_speed * delta_time);
+    });
+
     input_manager->get_input("camera_move_up")->press_event.add_lambda([&](const InputAction& input_action, const double delta_time) {
-        controlled_camera->set_relative_position(controlled_camera->get_relative_position() + controlled_camera->get_up_vector() * -movement_speed * delta_time);
+        controlled_camera->set_relative_position(controlled_camera->get_relative_position() + controlled_camera->get_up_vector() * movement_speed * delta_time);
     });
 
     input_manager->get_input("camera_move_down")->press_event.add_lambda([&](const InputAction& input_action, const double delta_time) {
-        controlled_camera->set_relative_position(controlled_camera->get_relative_position() + controlled_camera->get_up_vector() * movement_speed * delta_time);
+        controlled_camera->set_relative_position(controlled_camera->get_relative_position() + controlled_camera->get_up_vector() * -movement_speed * delta_time);
     });
 }

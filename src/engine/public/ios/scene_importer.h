@@ -1,53 +1,42 @@
 #pragma once
-/*//@TODO fix
+
 #include <filesystem>
-#include <unordered_map>
-
-
 
 #include "assets/asset_ptr.h"
+#include "assimp/Importer.hpp"
 
-namespace Assimp {
-class Importer;
-}
-
-class Texture2d;
-class Shader;
-
-namespace job_system {
-	class IJobTask;
-}
-
-class AssetId;
-class StaticMesh;
-class Window;
-class Node;
+class Scene;
+class AssetManager;
 struct aiNode;
+class MeshData;
+class Node;
+
+class Shader;
 
 class SceneImporter final
 {
-public:
-	SceneImporter(IEngineInterface* context, const std::filesystem::path& source_file, const std::string& desired_asset_name = "");
-	~SceneImporter();
+  public:
+    SceneImporter(AssetManager* in_asset_manager) : asset_manager(in_asset_manager)
+    {
+        importer = std::make_unique<Assimp::Importer>();
+    }
+    ~SceneImporter() {}
 
-	[[nodiscard]] Node* get_root_node() const { return root_node; }
-private:
+    std::shared_ptr<Node> import_file(const std::filesystem::path& source_file, const std::string& asset_name, Scene* context_scene);
 
-	TAssetPtr<Texture2d> process_texture(struct aiTexture* texture, size_t id);
-	TAssetPtr<Shader> process_material(struct aiMaterial* material, size_t id);
-	TAssetPtr<StaticMesh> process_mesh(struct aiMesh* mesh, size_t id);
-	
-	Node* process_node(aiNode* ai_node, Node* parent);
-	Node* create_node(aiNode* context, Node* parent);
-	
-	Node* root_node = nullptr;
-        IEngineInterface* window_context = nullptr;
+  private:
+    //TAssetPtr<Texture2d> process_texture(struct aiTexture* texture, size_t id);
+    TAssetPtr<Shader>    process_material(struct aiMaterial* material, size_t id);
 
-	std::string object_name;
-	std::vector<TAssetPtr<Texture2d>> texture_refs;
-	std::vector<TAssetPtr<Shader>> material_refs;
-	std::vector<TAssetPtr<StaticMesh>> meshes_refs;
-	
-	std::unique_ptr<Assimp::Importer> importer;
+    std::shared_ptr<Node> process_node(aiNode* ai_node, const std::shared_ptr<Node>& parent, Scene* context_scene);
+    std::shared_ptr<Node> create_node(aiNode* context, const std::shared_ptr<Node>& parent, Scene* context_scene);
+
+    AssetManager* asset_manager = nullptr;
+
+    std::string                       object_name;
+    //std::vector<TAssetPtr<Texture2d>> texture_refs;
+    std::vector<TAssetPtr<Shader>>    material_refs;
+    std::vector<TAssetPtr<MeshData>>  meshes_refs;
+
+    std::unique_ptr<Assimp::Importer> importer;
 };
-*/

@@ -21,3 +21,17 @@ std::unordered_map<AssetId, AssetBase*> AssetManager::get_assets()
     std::lock_guard<std::mutex> lock(register_lock);
     return assets;
 }
+
+AssetId AssetManager::find_valid_asset_id(const std::string& asset_name)
+{
+    if (!find(asset_name))
+        return asset_name;
+
+    int asset_index = 1;
+    while (find(asset_name + "_" + std::to_string(asset_index)))
+    {
+        asset_index++;
+    }    
+
+    return asset_name + "_" + std::to_string(asset_index);
+}

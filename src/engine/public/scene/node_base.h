@@ -103,7 +103,7 @@ class Node
         recompute_transform();
     }
 
-    virtual void attach(const std::shared_ptr<Node>& new_parent_node, bool b_keep_world_transform = false);
+    virtual void attach_to(const std::shared_ptr<Node>& new_parent_node, bool b_keep_world_transform = false);
     virtual void detach(bool b_keep_world_transform);
 
   protected:

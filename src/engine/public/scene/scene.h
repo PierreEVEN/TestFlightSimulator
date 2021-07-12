@@ -15,13 +15,42 @@ class Camera;
 class UniformBuffer;
 class Node;
 class PrimitiveNode;
-class RenderProxy;
 
 struct CameraData
 {
     glm::mat4 world_projection = glm::mat4(1.0);
     glm::mat4 view_matrix      = glm::mat4(1.0);
     glm::vec3 camera_location  = glm::vec3(0, 0, 0);
+};
+
+#define ENTITY_SIZE 256
+
+template <const size_t type_size> using Entity = uint8_t[type_size];
+
+class RenderProxy
+{
+    int add_entity()
+    {
+        return 0; // entity_handle 
+    }
+
+    void remove_entity(int entity_handle)
+    {
+        
+    }
+
+    Entity<256> entity_data[64];
+    bool        data_update_status[64];
+    size_t      entity_count = 64;
+    std::unordered_map<int, int> index_map;
+};
+
+class RenderProxyECS
+{
+  public:
+  private:
+    RenderProxy entities    = {};
+    VkBuffer    ssbo_handle = VK_NULL_HANDLE;
 };
 
 class Scene

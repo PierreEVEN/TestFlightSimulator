@@ -3,11 +3,11 @@
 
 #include <cpputils/logger.hpp>
 
-void Node::attach(const std::shared_ptr<Node>& new_parent_node, const bool b_keep_world_transform)
+void Node::attach_to(const std::shared_ptr<Node>& new_parent_node, const bool b_keep_world_transform)
 {
-    if (!new_parent_node->ensure_node_can_be_attached(new_parent_node.get()))
+    if (!ensure_node_can_be_attached(new_parent_node.get()))
     {
-        LOG_WARNING("cannot attach component to this one");
+        LOG_WARNING("cannot attach_to component to this one");
         return;
     }
 
@@ -52,21 +52,27 @@ bool Node::ensure_node_can_be_attached(const Node* in_node) const
         LOG_WARNING("invalid node");
     }
 
+    if (in_node == this)
+    {
+        LOG_ERROR("cannot attach node to itself");
+        return false;
+    }
+
     if (in_node->render_scene != render_scene)
     {
-        LOG_ERROR("cannot attach node to this one if it is not owned by the same scene");
+        LOG_ERROR("cannot attach_to node to this one if it is not owned by the same scene");
         return false;
     }
 
     if (is_node_in_hierarchy(in_node))
     {
-        LOG_ERROR("cannot attach node to this one : this node is already attached to the current hierarchy");
+        LOG_ERROR("cannot attach_to node to this one : this node is already attached to the current hierarchy");
         return false;
     }
 
     if (in_node->is_node_in_hierarchy(this))
     {
-        LOG_ERROR("cannot attach node to this one : this node is already attached to the current hierarchy");
+        LOG_ERROR("cannot attach_to node to this one : this node is already attached to the current hierarchy.");
         return false;
     }
 

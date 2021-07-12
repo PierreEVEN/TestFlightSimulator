@@ -29,7 +29,7 @@ public:
 
     [[nodiscard]] glm::dvec3 get_world_up() const
     {
-        return glm::dvec3(0, 0, 1);
+        return glm::dvec3(0, 0, -1);
     }
   private:
 

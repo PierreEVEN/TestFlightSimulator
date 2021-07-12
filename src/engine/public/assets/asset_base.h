@@ -15,11 +15,12 @@ class Window;
 class AssetBase;
 class IEngineInterface;
 
-
 class AssetManager final
 {
   public:
-    AssetManager(IEngineInterface* in_engine_interface) : engine_interface(in_engine_interface) {}
+    AssetManager(IEngineInterface* in_engine_interface) : engine_interface(in_engine_interface)
+    {
+    }
     ~AssetManager();
 
     template <class AssetClass, typename... Args> TAssetPtr<AssetClass> create(const AssetId& asset_id, Args... args)
@@ -42,16 +43,20 @@ class AssetManager final
         return asset_ptr;
     }
 
-    bool exists(const AssetId& id) { return assets.find(id) != assets.end(); }
-
+    bool exists(const AssetId& id)
+    {
+        return assets.find(id) != assets.end();
+    }
+    
     [[nodiscard]] AssetBase* find(const AssetId& id);
+    [[nodiscard]] AssetId                                 find_valid_asset_id(const std::string& asset_name);
+    [[nodiscard]] std::unordered_map<AssetId, AssetBase*> get_assets();
 
-    std::unordered_map<AssetId, AssetBase*> get_assets();
 
   private:
     std::mutex                              register_lock;
     std::unordered_map<AssetId, AssetBase*> assets;
-    IEngineInterface*                             engine_interface;
+    IEngineInterface*                       engine_interface;
 };
 
 class AssetBase : public NonCopiable
@@ -59,13 +64,16 @@ class AssetBase : public NonCopiable
   public:
     friend class AssetManager;
 
-    virtual std::string to_string() { return asset_id->to_string(); }
+    virtual std::string to_string()
+    {
+        return asset_id->to_string();
+    }
 
     [[nodiscard]] AssetId get_id() const
     {
         if (!asset_id)
             LOG_FATAL("asset id is null : %x", this);
-        return AssetId (* asset_id);
+        return AssetId(*asset_id);
     }
 
     virtual bool try_load()
@@ -73,7 +81,10 @@ class AssetBase : public NonCopiable
         return false;
     }
 
-    [[nodiscard]] IEngineInterface* get_engine_interface() const { return engine_interface; }
+    [[nodiscard]] IEngineInterface* get_engine_interface() const
+    {
+        return engine_interface;
+    }
 
     virtual ~AssetBase()
     {
@@ -82,8 +93,9 @@ class AssetBase : public NonCopiable
     }
 
   protected:
-    AssetBase() {}
-
+    AssetBase()
+    {
+    }
 
   private:
     void internal_constructor(IEngineInterface* in_engine_interface, const AssetId& id)
@@ -92,6 +104,6 @@ class AssetBase : public NonCopiable
         asset_id         = new AssetId(id);
     }
 
-    AssetId* asset_id;
+    AssetId*          asset_id;
     IEngineInterface* engine_interface;
 };

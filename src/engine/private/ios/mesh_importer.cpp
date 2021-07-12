@@ -8,7 +8,7 @@
 
 #include <cpputils/logger.hpp>
 
-TAssetPtr<MeshData> MeshImporter::import_mesh(const std::string& asset_name, const std::filesystem::path& file_path, const std::string& desired_node)
+TAssetPtr<MeshData> MeshImporter::import_mesh(const std::filesystem::path& file_path, const std::string& asset_name, const std::string& desired_node)
 {    
     if (!exists(file_path) || !is_regular_file(file_path))
     {
@@ -68,7 +68,7 @@ std::vector<std::string> MeshImporter::get_mesh_list(const std::filesystem::path
 }
 
 
-TAssetPtr<MeshData> MeshImporter::process_mesh(const std::string& asset_name, AssetManager* asset_manager, aiMesh* mesh, size_t id)
+TAssetPtr<MeshData> MeshImporter::process_mesh(const AssetId& asset_id, AssetManager* asset_manager, aiMesh* mesh, size_t id)
 {
     std::vector<Vertex> vertex_group;
 
@@ -107,5 +107,5 @@ TAssetPtr<MeshData> MeshImporter::process_mesh(const std::string& asset_name, As
         triangles[face_index + 2] = mesh->mFaces[i].mIndices[2];
     }
 
-    return asset_manager->create<MeshData>(asset_name.c_str(), vertex_group, triangles);
+    return asset_manager->create<MeshData>(asset_id, vertex_group, triangles);
 }

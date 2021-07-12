@@ -17,7 +17,7 @@ public:
 	AssetId(const size_t id_val);
 	AssetId(const AssetId& other);
 	AssetId(const AssetId&& other) noexcept;
-	explicit AssetId(const std::string& name);
+	AssetId(const std::string& name);
 	AssetId(const char* name) : AssetId(std::string(name)) {}
 
 	size_t operator()() const { return id; }

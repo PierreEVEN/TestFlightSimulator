@@ -18,11 +18,11 @@ class MeshImporter
         importer = std::make_unique<Assimp::Importer>();
     }
 
-    TAssetPtr<MeshData> import_mesh(const std::string& asset_name, const std::filesystem::path& file_path, const std::string& desired_node);
+    TAssetPtr<MeshData> import_mesh(const std::filesystem::path& file_path, const std::string& asset_name, const std::string& desired_node);
 
     std::vector<std::string> get_mesh_list(const std::filesystem::path& file_path);
 
-    static TAssetPtr<MeshData> process_mesh(const std::string& asset_name, AssetManager* asset_manager, aiMesh* mesh, size_t id);
+    static TAssetPtr<MeshData> process_mesh(const AssetId& asset_id, AssetManager* asset_manager, aiMesh* mesh, size_t id);
 
   private:
     std::unique_ptr<Assimp::Importer> importer;

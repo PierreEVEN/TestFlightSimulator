@@ -2,19 +2,19 @@
 #include "assets/asset_ptr.h"
 #include "node_primitive.h"
 
+class MeshData;
 class Material;
-class Mesh;
 
 class MeshNode : public PrimitiveNode
 {
   public:
-    MeshNode(TAssetPtr<Mesh> in_mesh, TAssetPtr<Material> in_material_override) : mesh(in_mesh), material_override(in_material_override)
+    MeshNode(TAssetPtr<MeshData> in_mesh, TAssetPtr<Material> in_material) : mesh(in_mesh), material(in_material)
     {
     }
 
     void render(RenderContext render_context) override;
 
   private:
-    TAssetPtr<Mesh>     mesh;
-    TAssetPtr<Material> material_override;
+    TAssetPtr<MeshData> mesh;
+    TAssetPtr<Material> material;
 };
