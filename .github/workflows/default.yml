@@ -72,8 +72,7 @@ jobs:
       run: |
         curl -O https://sdk.lunarg.com/sdk/download/1.2.182.0/mac/vulkansdk-macos-1.2.182.0.dmg
         sudo hdiutil attach vulkansdk-macos-1.2.182.0.dmg
-        ls /Volumes/vulkansdk-macos-1.2.182.0
-        sudo installer -package /Volumes/vulkansdk-macos-1.2.182.0/vulkansdk-macos-1.2.182.0.pkg -target /
+        sudo installer -package /Volumes/vulkansdk-macos-1.2.182.0/InstallVulkan.app -target /
           
     # Generate makefile
     - name: generate-makefile
