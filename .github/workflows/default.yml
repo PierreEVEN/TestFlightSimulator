@@ -70,6 +70,7 @@ jobs:
     - name: install-dependencies
       shell: bash
       run: |
+        brew install python
         curl -O https://sdk.lunarg.com/sdk/download/1.2.182.0/mac/vulkansdk-macos-1.2.182.0.dmg
         sudo hdiutil attach vulkansdk-macos-1.2.182.0.dmg
         sudo open /Volumes/vulkansdk-macos-1.2.182.0/InstallVulkan.app
