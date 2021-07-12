@@ -46,7 +46,7 @@ jobs:
           
     - name: install-libxrandr
       shell: bash
-      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libvulkan1 mesa-vulkan-drivers vulkan-utils vulkan-validationlayers
+      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libvulkan1 mesa-vulkan-drivers vulkan-utils vulkan-validationlayers libvulkan-dev
           
     # Generate makefile
     - name: generate-makefile
