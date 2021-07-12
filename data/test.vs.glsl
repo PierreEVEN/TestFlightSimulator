@@ -22,18 +22,12 @@ layout(binding = 9) uniform GlobalCameraUniformBuffer {
 //layout (binding = 6) uniform sampler2D image;
 //layout (binding = 7) uniform sampler2D shadowMap;
 
+
 struct ObjectData{
 	mat4 model;
 };
 
-// PUSH CONSTANTS
-layout(push_constant) uniform PushConstant_STR {
-	mat4 model;
-} primitive;
-
-
-layout(std140,set = 1, binding = 0) readonly buffer ObjectBuffer{
-
+layout(std140, binding = 0) readonly buffer ObjectBuffer{
 	ObjectData objects[];
 } objectBuffer;
 
@@ -47,5 +41,5 @@ out gl_PerVertex {
 void main() {
 	position = pos;
 	normal = norm;
-	gl_Position = ubo.worldProjection * ubo.viewMatrix * primitive.model * vec4(pos.xyz, 1.0);
+	gl_Position = ubo.worldProjection * ubo.viewMatrix * objectBuffer.objects[gl_BaseInstance].model * vec4(pos.xyz, 1.0);
 }

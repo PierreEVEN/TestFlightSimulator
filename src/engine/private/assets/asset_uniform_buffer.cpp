@@ -5,26 +5,7 @@
 #include "engine_interface.h"
 #include "rendering/vulkan/utils.h"
 
-#include <glm/glm.hpp>
-
-UniformBuffer::UniformBuffer()
-{
-    buffer.resize(get_engine_interface()->get_window()->get_image_count());
-    buffer_memory.resize(get_engine_interface()->get_window()->get_image_count());
-    descriptor_buffer_info.resize(get_engine_interface()->get_window()->get_image_count());
-
-    for (size_t i = 0; i < get_engine_interface()->get_window()->get_image_count(); i++)
-    {
-        vulkan_utils::create_buffer(get_engine_interface()->get_gfx_context(), data_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer[i],
-                                    buffer_memory[i]);
-
-        descriptor_buffer_info[i].buffer = buffer[i];
-        descriptor_buffer_info[i].offset = 0;
-        descriptor_buffer_info[i].range  = data_size;
-    }
-}
-
-UniformBuffer::~UniformBuffer()
+ShaderBuffer::~ShaderBuffer()
 {
     for (size_t i = 0; i < buffer.size(); i++)
     {
@@ -33,7 +14,7 @@ UniformBuffer::~UniformBuffer()
     }
 }
 
-VkDescriptorBufferInfo* UniformBuffer::get_descriptor_buffer_info(uint32_t image_index)
+VkDescriptorBufferInfo* ShaderBuffer::get_descriptor_buffer_info(uint32_t image_index)
 {
     // Create missing buffers for current image
     if (image_index >= descriptor_buffer_info.size())
@@ -42,11 +23,10 @@ VkDescriptorBufferInfo* UniformBuffer::get_descriptor_buffer_info(uint32_t image
         buffer_memory.resize(image_index + 1);
         descriptor_buffer_info.resize(image_index + 1);
         dirty_buffers.resize(image_index + 1);
-        
+
         for (size_t i = descriptor_buffer_info.size() - 1; i <= image_index; ++i)
         {
-            vulkan_utils::create_buffer(get_engine_interface()->get_gfx_context(), data_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                        buffer[i], buffer_memory[i]);
+            vulkan_utils::create_buffer(get_engine_interface()->get_gfx_context(), data_size, buffer_usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer[i], buffer_memory[i]);
 
             descriptor_buffer_info[i].buffer = buffer[i];
             descriptor_buffer_info[i].offset = 0;
@@ -64,6 +44,6 @@ VkDescriptorBufferInfo* UniformBuffer::get_descriptor_buffer_info(uint32_t image
         vkUnmapMemory(get_engine_interface()->get_gfx_context()->logical_device, buffer_memory[image_index]);
         dirty_buffers[image_index] = false;
     }
-    
+
     return &descriptor_buffer_info[image_index];
 }

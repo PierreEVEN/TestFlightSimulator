@@ -284,12 +284,7 @@ void Shader::build_reflection_data(const std::vector<uint32_t>& bytecode)
         entry_point = compiler.get_entry_points_and_stages()[0].name;
     }
 
-    /**
-     *  PUSH CONSTANTS
-     */
-    const auto push_constant_buffers = compiler.get_shader_resources().push_constant_buffers;
-
-    if (!push_constant_buffers.empty())
+    if (const auto push_constant_buffers = compiler.get_shader_resources().push_constant_buffers; !push_constant_buffers.empty())
     {
         if (push_constant_buffers.size() != 1)
         {
@@ -324,9 +319,8 @@ void Shader::build_reflection_data(const std::vector<uint32_t>& bytecode)
      *  UNIFORM BUFFERS
      */
 
-    const auto uniform_buffers = compiler.get_shader_resources().uniform_buffers;
 
-    for (const auto& buffer : uniform_buffers)
+    for (const auto& buffer : compiler.get_shader_resources().uniform_buffers)
     {
         auto var_type = compiler.get_type(buffer.type_id);
 
@@ -349,6 +343,40 @@ void Shader::build_reflection_data(const std::vector<uint32_t>& bytecode)
         }
         uniform_buffer.emplace_back(new_buffer);
     }
+
+    /**
+     * STORAGE BUFFER
+     */
+
+
+    for (const auto& buffer : compiler.get_shader_resources().storage_buffers)
+    {
+        auto var_type = compiler.get_type(buffer.type_id);
+
+        ShaderProperty new_buffer = ShaderProperty{.property_name  = buffer.name,
+                                                   .property_type  = var_type.basetype,
+                                                   .structure_size = compiler.get_declared_struct_size(var_type),
+                                                   .location       = compiler.get_decoration(buffer.id, spv::DecorationBinding),
+                                                   .vec_size       = var_type.vecsize,
+                                                   .shader_stage   = shader_stage};
+        for (int i = 0; i < var_type.member_types.size(); ++i)
+        {
+            const auto member_type = compiler.get_type(var_type.member_types[i]);
+            new_buffer.structure_properties.emplace_back(ShaderProperty{.property_name  = compiler.get_member_name(var_type.type_alias, i).c_str(),
+                                                                        .property_type  = member_type.basetype,
+                                                                        .structure_size = 0,
+                                                                        // compiler.get_declared_struct_size(member_type),
+                                                                        .location     = 0,
+                                                                        .vec_size     = member_type.vecsize,
+                                                                        .shader_stage = shader_stage});
+        }
+        storage_buffer.emplace_back(new_buffer);
+    }
+
+
+    /**
+     * SAMPLED IMAGES
+     */
 
     for (const auto& image : compiler.get_shader_resources().sampled_images)
     {
@@ -396,6 +424,20 @@ void Shader::build_reflection_data(const std::vector<uint32_t>& bytecode)
         for (const auto& buffer : uniform_buffer)
         {
             shader_log += stringutils::format("\t-- %s%d %s (%d bytes) binding=%d\n", magic_enum::enum_name(buffer.property_type).data(), buffer.vec_size, buffer.property_name.c_str(), buffer.structure_size, buffer.location);
+            for (const auto& struct_member : buffer.structure_properties)
+            {
+                shader_log += stringutils::format("\t---- %s%d %s\n", magic_enum::enum_name(struct_member.property_type).data(), struct_member.vec_size, struct_member.property_name.c_str());
+            }
+        }
+    }
+
+    if (!storage_buffer.empty())
+    {
+        shader_log += stringutils::format("storage buffers : %d\n", storage_buffer.size());
+        for (const auto& buffer : storage_buffer)
+        {
+            shader_log +=
+                stringutils::format("\t-- %s%d %s (%d bytes) binding=%d\n", magic_enum::enum_name(buffer.property_type).data(), buffer.vec_size, buffer.property_name.c_str(), buffer.structure_size, buffer.location);
             for (const auto& struct_member : buffer.structure_properties)
             {
                 shader_log += stringutils::format("\t---- %s%d %s\n", magic_enum::enum_name(struct_member.property_type).data(), struct_member.vec_size, struct_member.property_name.c_str());

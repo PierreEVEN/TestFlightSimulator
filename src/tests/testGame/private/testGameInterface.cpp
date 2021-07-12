@@ -32,7 +32,8 @@ void TestGameInterface::load_resources()
     // create material parameters
     const ShaderStageData vertex_stage{
         .shader         = vertex_shader,
-        .uniform_buffer = {root_scene->get_scene_uniform_buffer()},
+        .uniform_buffer  = {root_scene->get_scene_uniform_buffer()},
+        .storage_buffers = {root_scene->get_model_ssbo()},
     };
     const ShaderStageData fragment_stage{
         .shader         = fragment_shader,
@@ -40,7 +41,7 @@ void TestGameInterface::load_resources()
     };
 
     // create material
-    const TAssetPtr<Material> material = get_asset_manager()->create<Material>("test_material", vertex_stage, fragment_stage, std::make_shared<PushConstant>(glm::mat4(1.0)));
+    const TAssetPtr<Material> material = get_asset_manager()->create<Material>("test_material", vertex_stage, fragment_stage);
 
 
     auto camera = root_scene->add_node<Camera>();

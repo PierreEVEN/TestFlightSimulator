@@ -12,7 +12,7 @@
 
 class AssetManager;
 class Camera;
-class UniformBuffer;
+class ShaderBuffer;
 class Node;
 class PrimitiveNode;
 
@@ -89,15 +89,21 @@ class Scene
 
     void set_camera(std::shared_ptr<Camera> new_camera);
 
-    [[nodiscard]] TAssetPtr<UniformBuffer> get_scene_uniform_buffer() const
+    [[nodiscard]] TAssetPtr<ShaderBuffer> get_scene_uniform_buffer() const
     {
         return camera_uniform_buffer;
+    }
+
+    [[nodiscard]] TAssetPtr<ShaderBuffer> get_model_ssbo() const
+    {
+        return global_model_ssbo;
     }
 
     [[nodiscard]] glm::dmat4 make_projection_matrix(const RenderContext& render_context) const;
 
   private:
-    TAssetPtr<UniformBuffer> camera_uniform_buffer = nullptr;
+    TAssetPtr<ShaderBuffer> camera_uniform_buffer = nullptr;
+    TAssetPtr<ShaderBuffer> global_model_ssbo = nullptr;
     std::shared_ptr<Camera>  enabled_camera        = nullptr;
 
     std::vector<std::shared_ptr<Node>>          scene_nodes;

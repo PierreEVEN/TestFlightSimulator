@@ -55,6 +55,11 @@ class Shader : public AssetBase
         return sampled_images;
     }
 
+    [[nodiscard]] const std::vector<ShaderProperty>& get_storage_buffers() const
+    {
+        return storage_buffer;
+    }
+
   private:
     void                                 build_reflection_data(const std::vector<uint32_t>& bytecode);
     std::optional<std::string>           read_shader_file(const std::filesystem::path& source_path);
@@ -68,5 +73,6 @@ class Shader : public AssetBase
     std::string                   entry_point;
     std::optional<ShaderProperty> push_constants = std::optional<ShaderProperty>();
     std::vector<ShaderProperty>   uniform_buffer = {};
+    std::vector<ShaderProperty>   storage_buffer = {};
     std::vector<ShaderProperty>   sampled_images = {};
 };

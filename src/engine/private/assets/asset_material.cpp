@@ -68,6 +68,8 @@ std::vector<VkDescriptorSetLayoutBinding> Material::make_layout_bindings()
 {
     vertex_uniform_bindings.clear();
     fragment_uniform_bindings.clear();
+    vertex_ssbo_bindings.clear();
+    fragment_ssbo_bindings.clear();
 
     std::vector<VkDescriptorSetLayoutBinding> result_bindings;
 
@@ -76,6 +78,7 @@ std::vector<VkDescriptorSetLayoutBinding> Material::make_layout_bindings()
     // vertex uniform buffers
 
     std::unordered_map<std::string, ShaderProperty> uniform_buffers;
+    std::unordered_map<std::string, ShaderProperty> storage_buffers;
 
     for (const auto& param : vertex_stage.shader->get_uniform_buffers())
     {
@@ -130,6 +133,62 @@ std::vector<VkDescriptorSetLayoutBinding> Material::make_layout_bindings()
             LOG_ERROR("specified uniform buffer named %s that doesn't exist in fragment stage", uniform->get_name().c_str());
         }
     }
+
+    // VERTEX SSBO
+
+    for (const auto& param : vertex_stage.shader->get_storage_buffers())
+    {
+        storage_buffers[param.property_name] = param;
+    }
+
+    for (const auto& ssbo : vertex_stage.storage_buffers)
+    {
+        if (const auto found_buffer = storage_buffers.find(ssbo->get_name()); found_buffer != storage_buffers.end())
+        {
+            result_bindings.emplace_back(VkDescriptorSetLayoutBinding{
+                .binding            = found_buffer->second.location,
+                .descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .descriptorCount    = 1,
+                .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
+                .pImmutableSamplers = nullptr,
+            });
+            vertex_ssbo_bindings[found_buffer->second.property_name] = found_buffer->second.location;
+        }
+        else
+        {
+            LOG_ERROR("specified storage buffer named %s that doesn't exist in vertex stage", ssbo->get_name().c_str());
+        }
+    }
+
+    uniform_buffers.clear();
+
+    // FRAGMENT SSBO
+
+    for (const auto& param : fragment_stage.shader->get_storage_buffers())
+    {
+        storage_buffers[param.property_name] = param;
+    }
+
+    for (const auto& ssbo : fragment_stage.storage_buffers)
+    {
+        if (const auto found_buffer = storage_buffers.find(ssbo->get_name()); found_buffer != storage_buffers.end())
+        {
+            result_bindings.emplace_back(VkDescriptorSetLayoutBinding{
+                .binding            = found_buffer->second.location,
+                .descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .descriptorCount    = 1,
+                .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
+                .pImmutableSamplers = nullptr,
+            });
+            fragment_ssbo_bindings[found_buffer->second.property_name] = found_buffer->second.location;
+        }
+        else
+        {
+            LOG_ERROR("specified storage buffer named %s that doesn't exist in fragment stage", ssbo->get_name().c_str());
+        }
+    }
+
+    uniform_buffers.clear();
 
     return result_bindings;
 }
@@ -367,6 +426,52 @@ void Material::update_descriptor_sets(size_t imageIndex)
         }
     }
 
+    for (const auto& ssbo : vertex_stage.storage_buffers)
+    {
+        if (auto binding = vertex_ssbo_bindings.find(ssbo->get_name()); binding != vertex_ssbo_bindings.end())
+        {
+            write_descriptor_sets.emplace_back(VkWriteDescriptorSet{
+                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .pNext            = nullptr,
+                .dstSet           = descriptor_sets[imageIndex],
+                .dstBinding       = binding->second,
+                .dstArrayElement  = 0,
+                .descriptorCount  = 1,
+                .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .pImageInfo       = nullptr,
+                .pBufferInfo      = ssbo->get_descriptor_buffer_info(static_cast<uint32_t>(imageIndex)),
+                .pTexelBufferView = nullptr,
+            });
+        }
+        else
+        {
+            LOG_ERROR("failed to find binding for ssbo buffer");
+        }
+    }
+
+    for (const auto& ssbo : fragment_stage.storage_buffers)
+    {
+        if (auto binding = fragment_ssbo_bindings.find(ssbo->get_name()); binding != fragment_ssbo_bindings.end())
+        {
+            write_descriptor_sets.emplace_back(VkWriteDescriptorSet{
+                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .pNext            = nullptr,
+                .dstSet           = descriptor_sets[imageIndex],
+                .dstBinding       = binding->second,
+                .dstArrayElement  = 0,
+                .descriptorCount  = 1,
+                .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .pImageInfo       = nullptr,
+                .pBufferInfo      = ssbo->get_descriptor_buffer_info(static_cast<uint32_t>(imageIndex)),
+                .pTexelBufferView = nullptr,
+            });
+        }
+        else
+        {
+            LOG_ERROR("failed to find binding for ssbo buffer");
+        }
+    }
+
     /*
     std::vector<VkDescriptorImageInfo> vertexImageInfos(descriptor_sets.size());
     for (uint32_t i = 0; i < vertexImageInfos.size(); ++i)
@@ -389,6 +494,6 @@ void Material::update_descriptor_sets(size_t imageIndex)
         currentBinding++;
     }
     */
-    
+
     vkUpdateDescriptorSets(get_engine_interface()->get_gfx_context()->logical_device, static_cast<uint32_t>(write_descriptor_sets.size()), write_descriptor_sets.data(), 0, nullptr);
 }

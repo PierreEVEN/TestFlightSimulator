@@ -6,9 +6,14 @@
 #include "scene/node_camera.h"
 #include "scene/node_primitive.h"
 
+struct ModMatrix
+{
+    glm::mat4 a;
+};
 Scene::Scene(AssetManager* asset_manager)
 {
-    camera_uniform_buffer = asset_manager->create<UniformBuffer>("global_camera_uniform_buffer", "GlobalCameraUniformBuffer", CameraData{});
+    camera_uniform_buffer = asset_manager->create<ShaderBuffer>("global_camera_uniform_buffer", "GlobalCameraUniformBuffer", CameraData{}, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+    global_model_ssbo     = asset_manager->create<ShaderBuffer>("global_object_buffer", "ObjectBuffer", sizeof(ModMatrix) * 100, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 }
 
 void Scene::tick(const double delta_second)
@@ -27,6 +32,14 @@ void Scene::render_scene(RenderContext render_context)
             .camera_location  = enabled_camera->get_world_position(),
         };
         camera_uniform_buffer->set_data(camera_data);
+
+        std::vector<ModMatrix> matrix(100);
+        for (int i = 0; i < 100; ++i)
+        {
+            matrix[i].a = glm::mat4(1.0);
+        }
+
+        global_model_ssbo->write_buffer(matrix.data(), matrix.size() * sizeof(ModMatrix), 0);
     }
     else
     {
