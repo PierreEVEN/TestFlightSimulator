@@ -8,6 +8,8 @@ layout(location = 3) in vec3 norm;
 layout(location = 4) in vec3 tang;
 layout(location = 5) in vec3 bitang;
 
+layout (location = 8) out vec3 position;
+
 // UNIFORM BUFFER
 layout(binding = 9) uniform GlobalCameraUniformBuffer {
     mat4 worldProjection;
@@ -32,5 +34,6 @@ out gl_PerVertex {
 };
 
 void main() {
+	position = pos;
 	gl_Position = ubo.worldProjection * ubo.viewMatrix * primitive.model * vec4(pos.xyz, 1.0);
 }

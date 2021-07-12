@@ -7,6 +7,7 @@
 #include "assets/asset_mesh_data.h"
 #include "assets/asset_shader.h"
 #include "imgui.h"
+#include "ios/mesh_importer.h"
 #include "scene/node_camera.h"
 #include "scene/node_mesh.h"
 #include "ui/window/window_base.h"
@@ -23,8 +24,8 @@ void TestGameInterface::load_resources()
     root_scene = std::make_unique<Scene>(get_asset_manager());
 
     // Create mesh data
-    const TAssetPtr<MeshData> mesh_data = get_asset_manager()->create<MeshData>(
-        "test_mesh_data", std::vector<Vertex>{{.pos = glm::vec3(10, -5, -5)}, {.pos = glm::vec3(10, -5, 5)}, {.pos = glm::vec3(10, 5, 5)}, {.pos = glm::vec3(10, 5, -5)}}, std::vector<uint32_t>{0, 1, 2, 0, 3, 2});
+    MeshImporter              importer(get_asset_manager());
+    const TAssetPtr<MeshData> mesh_data2 = importer.import_mesh("test_mesh_data_2", "data/sponza/Sponza.gltf", "meshes[0]-4");
 
     // Create shaders
     const TAssetPtr<Shader> vertex_shader   = get_asset_manager()->create<Shader>("test_vertex_shader", "data/test.vs.glsl", EShaderStage::VertexShader);
@@ -44,7 +45,7 @@ void TestGameInterface::load_resources()
     const TAssetPtr<Material> material = get_asset_manager()->create<Material>("test_material", vertex_stage, fragment_stage, std::make_shared<PushConstant>(glm::mat4(1.0)));
 
     // assemble mesh
-    const TAssetPtr<Mesh> mesh = get_asset_manager()->create<Mesh>("test_mesh", mesh_data, material);
+    const TAssetPtr<Mesh> mesh = get_asset_manager()->create<Mesh>("test_mesh", mesh_data2, material);
 
     // add test scene component to scene
     auto node_1 = root_scene->add_node<MeshNode>(mesh, material);

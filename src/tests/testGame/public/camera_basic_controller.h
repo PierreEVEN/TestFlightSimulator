@@ -13,5 +13,5 @@ class CameraBasicController
       
   private:
       std::shared_ptr<Camera> controlled_camera;
-      double                  movement_speed = 10.0;
+      double                  movement_speed = 100.0;
 };

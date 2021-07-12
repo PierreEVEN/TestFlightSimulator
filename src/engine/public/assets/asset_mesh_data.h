@@ -21,11 +21,6 @@ struct Vertex
     static std::vector<VkVertexInputAttributeDescription> get_attribute_descriptions();
 };
 
-struct VertexGroup
-{
-    std::vector<Vertex> vertices;
-};
-
 class MeshData : public AssetBase
 {
   public:
