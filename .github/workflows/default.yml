@@ -8,7 +8,7 @@ on:
 
 
 env:
-  vulkan_sdk: C:/VulkanSDK/1.2.182.0
+  VULKAN_SDK: C:/VulkanSDK/1.2.182.0
 
 jobs:
   build-windows:
@@ -46,7 +46,7 @@ jobs:
           
     - name: install-libxrandr
       shell: bash
-      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libvulkan1 mesa-vulkan-drivers vulkan-utils
+      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libvulkan1 mesa-vulkan-drivers vulkan-utils vulkan-intel vulkan-validationlayers
           
     # Generate makefile
     - name: generate-makefile
