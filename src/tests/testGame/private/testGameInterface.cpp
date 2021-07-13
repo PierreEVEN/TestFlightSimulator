@@ -37,7 +37,7 @@ void TestGameInterface::load_resources()
 {
     SceneProxy test_proxy;
     test_proxy.register_entity_type<EntityTest>([](EntityTest& entity, RenderContext& render_context) {
-        //LOG_INFO("do stuff");
+        // LOG_INFO("do stuff");
         entity.varA += 1;
     });
 
@@ -45,7 +45,7 @@ void TestGameInterface::load_resources()
     std::vector<EntityHandle> handles;
     for (size_t i = 0; i < 400000; ++i)
     {
-        //LOG_INFO("add %d", i);
+        // LOG_INFO("add %d", i);
         handles.emplace_back(test_proxy.add_entity(EntityTest{}));
     }
 
@@ -55,16 +55,12 @@ void TestGameInterface::load_resources()
     test_proxy.render(test_context);
     auto end = std::chrono::steady_clock::now();
     LOG_WARNING("execution : %lf ms", std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0);
-    while (!handles.empty())
-    {
-        const size_t id = 0;
 
-        //LOG_INFO("remove %d", id);
-        test_proxy.remove_entity(handles[id]);
-        handles.erase(handles.begin() + id);
+    for (size_t i = 0; i < handles.size(); ++i)
+    {
+        test_proxy.remove_entity(handles[i]);
     }
     LOG_WARNING("removed !");
-
 
     root_scene = std::make_unique<Scene>(get_asset_manager());
 

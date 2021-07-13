@@ -55,11 +55,12 @@ template <typename Struct_T> class TSceneProxyEntityGroup final : public ISceneP
         size_t new_element_id = element_count;
 
         resize(element_count + 1);
+        Struct_T* new_entity_ptr = &data[new_element_id];
+        memcpy(new_entity_ptr, &new_element, sizeof(Struct_T));
 
-        memcpy(&data[new_element_id], &new_element, sizeof(Struct_T));
-
-        size_t new_entity_handle = create_new_entity_handle();
-        entity_ptr_map[new_entity_handle] = &data[new_element_id];
+        size_t new_entity_handle          = create_new_entity_handle();
+        handle_to_entity_map[new_entity_handle] = new_entity_ptr;
+        entity_to_handle_map[new_entity_ptr]    = new_entity_handle;
 
         return {
             .entity_id = new_entity_handle,
@@ -71,26 +72,21 @@ template <typename Struct_T> class TSceneProxyEntityGroup final : public ISceneP
     {
         if (element_count > 0)
         {
-            Struct_T* entity = get_entity(in_handle);
-            if (!entity)
+            Struct_T* erased_entity_ptr = get_entity(in_handle);
+            Struct_T* last_entity_ptr    = &data[element_count - 1];
+            size_t    last_entity_handle = entity_to_handle_map[last_entity_ptr];
+
+            if (!erased_entity_ptr)
             {
                 LOG_WARNING("failed to find entity");
             }
             else
             {
-                // Relocate last element to deleted element
-                Struct_T* moved_elem = &data[element_count - 1];
-                for (auto& entity_ptr : entity_ptr_map)
-                {
-                    if (entity_ptr.second == moved_elem)
-                    {
-                        entity_ptr.second = entity;
-                        break;
-                    }
-                }
-
-                memcpy(entity, moved_elem, sizeof(Struct_T));
-                entity_ptr_map.erase(in_handle.entity_id);
+                memcpy(erased_entity_ptr, last_entity_ptr, sizeof(Struct_T));
+                handle_to_entity_map.erase(in_handle.entity_id);
+                handle_to_entity_map[last_entity_handle] = erased_entity_ptr;
+                entity_to_handle_map.erase(last_entity_ptr);
+                entity_to_handle_map[erased_entity_ptr] = last_entity_handle;
                 resize(element_count - 1);
             }
         }
@@ -98,14 +94,13 @@ template <typename Struct_T> class TSceneProxyEntityGroup final : public ISceneP
 
     Struct_T* get_entity(const EntityHandle& in_handle)
     {
-        auto entity = entity_ptr_map.find(in_handle.entity_id);
-        if (entity != entity_ptr_map.end())
+        auto entity = handle_to_entity_map.find(in_handle.entity_id);
+        if (entity != handle_to_entity_map.end())
             return entity->second;
         return nullptr;
     }
 
-    bool b_first = true;
-
+  private:
     void resize(size_t in_elem_count)
     {
         element_count = in_elem_count;
@@ -140,11 +135,19 @@ template <typename Struct_T> class TSceneProxyEntityGroup final : public ISceneP
             {
                 void*         new_entity_ptr = data;
                 const int64_t offset         = (reinterpret_cast<int64_t>(new_entity_ptr) - reinterpret_cast<int64_t>(previous_entity_ptr));
-                for (auto& entity : entity_ptr_map)
+                for (auto& entity : handle_to_entity_map)
                 {
                     uint64_t new_position = reinterpret_cast<uint64_t>(entity.second) + offset;
                     entity.second         = reinterpret_cast<Struct_T*>(new_position);
                 }
+
+                std::unordered_map<Struct_T*, size_t> temp_map;
+                for (const auto& handle : entity_to_handle_map)
+                {
+                    uint64_t new_position = reinterpret_cast<uint64_t>(handle.first) + offset;
+                    temp_map[reinterpret_cast<Struct_T*>(new_position)] = handle.second;
+                }
+                entity_to_handle_map = temp_map;
             }
         }
     }
@@ -157,7 +160,7 @@ template <typename Struct_T> class TSceneProxyEntityGroup final : public ISceneP
         do
         {
             handle = entity_map_random_handle++;
-        } while (entity_ptr_map.contains(handle));
+        } while (handle_to_entity_map.contains(handle));
         return handle;
     }
 
@@ -165,7 +168,8 @@ template <typename Struct_T> class TSceneProxyEntityGroup final : public ISceneP
     size_t                                element_count  = 0;
     size_t                                allocated_size = 0;
     const ProxyFunctionType<Struct_T>     proxy_function;
-    std::unordered_map<size_t, Struct_T*> entity_ptr_map;
+    std::unordered_map<size_t, Struct_T*> handle_to_entity_map;
+    std::unordered_map<Struct_T*, size_t> entity_to_handle_map;
 };
 
 class SceneProxy
