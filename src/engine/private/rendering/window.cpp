@@ -144,7 +144,9 @@ RenderContext Window::prepare_frame()
     BEGIN_NAMED_RECORD(PREPARE_FRAME);
     // Retrieve the next available image ID
     uint32_t image_index;
+    BEGIN_NAMED_RECORD(ACQUIRE_NEXT_IMAGE);
     VkResult result = vkAcquireNextImageKHR(gfx_context->logical_device, back_buffer->get_swapchain()->get(), UINT64_MAX, image_acquire_semaphore[current_frame_id], VK_NULL_HANDLE, &image_index);
+    END_NAMED_RECORD(ACQUIRE_NEXT_IMAGE);
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
         int width = 0, height = 0;
@@ -158,9 +160,11 @@ RenderContext Window::prepare_frame()
         return RenderContext{};
     }
 
+    BEGIN_NAMED_RECORD(WAIT_FOR_FENCES);
     if (images_in_flight[image_index] != VK_NULL_HANDLE)
         vkWaitForFences(gfx_context->logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
     images_in_flight[image_index] = in_flight_fences[current_frame_id];
+    END_NAMED_RECORD(WAIT_FOR_FENCES);
 
     RenderContext render_context{
         .is_valid       = true,
@@ -232,7 +236,9 @@ void Window::render_data(RenderContext& render_context)
     ImGui::Render();
     ImDrawData* draw_data = ImGui::GetDrawData();
 
+    BEGIN_NAMED_RECORD(RENDER_IMGUI_DATA);
     imgui_instance->ImGui_ImplVulkan_RenderDrawData(draw_data, render_context.command_buffer);
+    END_NAMED_RECORD(RENDER_IMGUI_DATA);
 
     /************************************************************************/
     /* End imgui draw stuff                                                 */
@@ -260,6 +266,7 @@ void Window::render_data(RenderContext& render_context)
     submitInfo.signalSemaphoreCount  = 1;
     submitInfo.pSignalSemaphores     = finished_semaphore;
 
+    BEGIN_NAMED_RECORD(SUBMIT_QUEUE);
     /** Submit command buffers */
     vkResetFences(gfx_context->logical_device, 1, &in_flight_fences[current_frame_id]);
     gfx_context->submit_graphic_queue(submitInfo, in_flight_fences[current_frame_id]); // Pass fence to know when all the data are submitted
@@ -280,6 +287,7 @@ void Window::render_data(RenderContext& render_context)
     presentInfo.pResults        = nullptr; // Optional
 
     VkResult result = gfx_context->submit_present_queue(presentInfo);
+    END_NAMED_RECORD(SUBMIT_QUEUE);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || bHasViewportBeenResized)
     {
         int width = 0, height = 0;

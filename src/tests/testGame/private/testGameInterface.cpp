@@ -20,49 +20,28 @@ PlayerController* TestGameInterface::get_controller()
     return nullptr;
 }
 
-struct EntityTest
-{
-    TAssetPtr<MeshData> mesh;
-    TAssetPtr<Material> material;
-    float               varA;
-    glm::vec4           varB;
-};
-
-void operate(EntityTest& entity, RenderContext& render_context)
-{
-    entity.varA += 1;
-}
-
 void TestGameInterface::load_resources()
 {
-    SceneProxy test_proxy;
-    test_proxy.register_entity_type<EntityTest>([](EntityTest& entity, RenderContext& render_context) {
-        // LOG_INFO("do stuff");
-        entity.varA += 1;
-    });
-
-    LOG_WARNING("create...");
-    std::vector<EntityHandle> handles;
-    for (size_t i = 0; i < 400000; ++i)
-    {
-        // LOG_INFO("add %d", i);
-        handles.emplace_back(test_proxy.add_entity(EntityTest{}));
-    }
-
-    LOG_WARNING("created !");
-    RenderContext test_context;
-    auto          start = std::chrono::steady_clock::now();
-    test_proxy.render(test_context);
-    auto end = std::chrono::steady_clock::now();
-    LOG_WARNING("execution : %lf ms", std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0);
-
-    for (size_t i = 0; i < handles.size(); ++i)
-    {
-        test_proxy.remove_entity(handles[i]);
-    }
-    LOG_WARNING("removed !");
-
     root_scene = std::make_unique<Scene>(get_asset_manager());
+
+    root_scene->get_scene_proxy().register_entity_type<MeshProxyData>([](MeshProxyData& entity, RenderContext& render_context) {
+        
+
+        if (render_context.last_used_material != entity.material)
+        {
+            render_context.last_used_material = entity.material;
+            vkCmdBindDescriptorSets(render_context.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_context.last_used_material->get_pipeline_layout(), 0, 1,
+                                    &render_context.last_used_material->get_descriptor_sets()[render_context.image_index],
+                                    0,
+                                    nullptr);
+            vkCmdBindPipeline(render_context.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, entity.material->get_pipeline());
+        }
+
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(render_context.command_buffer, 0, 1, &entity.vertex_buffer, offsets);
+        vkCmdBindIndexBuffer(render_context.command_buffer, entity.index_buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(render_context.command_buffer, static_cast<uint32_t>(entity.indice_count), 1, 0, 0, 0);
+    });
 
     // Create shaders
     const TAssetPtr<Shader> vertex_shader   = get_asset_manager()->create<Shader>("test_vertex_shader", "data/test.vs.glsl", EShaderStage::VertexShader);
@@ -81,16 +60,14 @@ void TestGameInterface::load_resources()
     };
 
     // create material
-    const TAssetPtr<Material> material = get_asset_manager()->create<Material>("test_material", vertex_stage, fragment_stage);
-
+    TAssetPtr<Material> material = get_asset_manager()->create<Material>("test_material", vertex_stage, fragment_stage);
     auto camera = root_scene->add_node<Camera>();
-
     root_scene->set_camera(camera);
 
     // Create mesh data
     SceneImporter scene_importer(get_asset_manager());
     const auto    imported_node = scene_importer.import_file("data/sponza.glb", "sponza_elem", root_scene.get());
-
+    
     controller = std::make_unique<CameraBasicController>(camera, get_input_manager());
 }
 
@@ -135,7 +112,7 @@ void TestGameInterface::render_ui()
                 new ContentBrowser(this, "content browser");
             ImGui::EndMenu();
         }
-        ImGui::Text("%lf fps", 1.0 / get_delta_second());
+        ImGui::Text("%d fps   ...   %lf ms", static_cast<int>(1.0 / get_delta_second()), get_delta_second() * 1000.0);
         ImGui::EndMainMenuBar();
     }
 }

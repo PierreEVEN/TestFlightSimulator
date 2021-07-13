@@ -2,6 +2,7 @@
 
 #include "assets/asset_ptr.h"
 #include "rendering/window.h"
+#include "scene_proxy.h"
 
 #include "assets/asset_shader_buffer.h"
 #include <cpputils/logger.hpp>
@@ -31,17 +32,16 @@ class RenderProxy
 {
     int add_entity()
     {
-        return 0; // entity_handle 
+        return 0; // entity_handle
     }
 
     void remove_entity(int entity_handle)
     {
-        
     }
 
-    Entity<256> entity_data[64];
-    bool        data_update_status[64];
-    size_t      entity_count = 64;
+    Entity<256>                  entity_data[64];
+    bool                         data_update_status[64];
+    size_t                       entity_count = 64;
     std::unordered_map<int, int> index_map;
 };
 
@@ -61,7 +61,7 @@ class Scene
     Scene(AssetManager* asset_manager);
 
     void tick(const double delta_second);
-    void render_scene(RenderContext render_context);
+    void render_scene(RenderContext& render_context);
 
     template <typename Node_T, typename... Args_T> std::shared_ptr<Node_T> add_node(Args_T&&... arguments)
     {
@@ -69,12 +69,7 @@ class Scene
         node_storage->render_scene = this;
 
         std::shared_ptr<Node_T> node_ptr(node_storage);
-
-        if (std::is_base_of<PrimitiveNode, Node_T>::value)
-        {
-            rendered_nodes.emplace_back(std::dynamic_pointer_cast<PrimitiveNode>(node_ptr));
-        }
-
+        
         new (node_storage) Node_T(std::forward<Args_T>(arguments)...);
 
         if (!node_storage->render_scene)
@@ -101,11 +96,16 @@ class Scene
 
     [[nodiscard]] glm::dmat4 make_projection_matrix(const RenderContext& render_context) const;
 
+    [[nodiscard]] SceneProxy& get_scene_proxy()
+    {
+        return scene_proxy;
+    }
+
   private:
     TAssetPtr<ShaderBuffer> camera_uniform_buffer = nullptr;
-    TAssetPtr<ShaderBuffer> global_model_ssbo = nullptr;
-    std::shared_ptr<Camera>  enabled_camera        = nullptr;
+    TAssetPtr<ShaderBuffer> global_model_ssbo     = nullptr;
+    std::shared_ptr<Camera> enabled_camera        = nullptr;
 
     std::vector<std::shared_ptr<Node>>          scene_nodes;
-    std::vector<std::shared_ptr<PrimitiveNode>> rendered_nodes;
+    SceneProxy                                  scene_proxy;
 };

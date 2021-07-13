@@ -25,12 +25,13 @@ struct WindowParameters
 
 struct RenderContext
 {
-    bool            is_valid       = false;
-    VkCommandBuffer command_buffer = VK_NULL_HANDLE;
-    VkFramebuffer   framebuffer    = VK_NULL_HANDLE;
-    uint32_t        image_index    = 0;
-    uint32_t        res_x          = 0;
-    uint32_t        res_y          = 0;
+    bool            is_valid           = false;
+    VkCommandBuffer command_buffer     = VK_NULL_HANDLE;
+    VkFramebuffer   framebuffer        = VK_NULL_HANDLE;
+    uint32_t        image_index        = 0;
+    uint32_t        res_x              = 0;
+    uint32_t        res_y              = 0;
+    class Material* last_used_material = nullptr;
 };
 
 class Window

@@ -22,7 +22,7 @@ void Scene::tick(const double delta_second)
         component->tick(delta_second);
 }
 
-void Scene::render_scene(RenderContext render_context)
+void Scene::render_scene(RenderContext& render_context)
 {
     if (enabled_camera)
     {
@@ -46,10 +46,7 @@ void Scene::render_scene(RenderContext render_context)
         LOG_WARNING("no default camera enabled for this scene");
         return;
     }
-    for (const auto& component : rendered_nodes)
-    {
-        component->render(render_context);
-    }
+    scene_proxy.render(render_context);
 }
 
 void Scene::set_camera(std::shared_ptr<Camera> new_camera)

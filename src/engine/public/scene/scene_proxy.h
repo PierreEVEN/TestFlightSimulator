@@ -4,15 +4,6 @@
 
 #include <glm/glm.hpp>
 
-class ShaderBuffer;
-
-struct ModelStruct
-{
-    VkBuffer  vertices;
-    VkBuffer  indices;
-    glm::mat4 model_matrix;
-};
-
 struct EntityHandle
 {
     size_t entity_id;
@@ -42,11 +33,17 @@ template <typename Struct_T> class TSceneProxyEntityGroup final : public ISceneP
     {
     }
 
+    ~TSceneProxyEntityGroup()
+    {
+        if (data)
+            free(data);
+    }
+
     void render_group(RenderContext& render_context) override
     {
         for (size_t i = 0; i < element_count; ++i)
-        {
-            proxy_function(data[element_count], render_context);
+        {            
+            proxy_function(data[i], render_context);
         }
     }
 
@@ -231,8 +228,6 @@ class SceneProxy
     }
 
   private:
-    ModelStruct*            model_data        = nullptr;
-    TAssetPtr<ShaderBuffer> global_model_ssbo = nullptr;
 
     std::vector<std::shared_ptr<ISceneProxyEntityGroup>> entity_groupes;
 };

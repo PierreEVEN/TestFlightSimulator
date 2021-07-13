@@ -13,8 +13,6 @@ class PrimitiveNode : public Node
 
     void set_visible(bool b_visible);
 
-    virtual void render(RenderContext render_context) = 0;
-    
   private:
     bool         is_visible    = false;
 };
