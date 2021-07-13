@@ -44,9 +44,36 @@ jobs:
     steps:
     - uses: actions/checkout@v2
           
-    - name: install-libxrandr
+    - name: install-dependencies
       shell: bash
-      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libvulkan1 mesa-vulkan-drivers vulkan-utils vulkan-intel vulkan-validationlayers
+      run: sudo apt-get install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libvulkan1 mesa-vulkan-drivers vulkan-utils vulkan-validationlayers libvulkan-dev libgl1-mesa-dev libglu1-mesa-dev
+          
+    # Generate makefile
+    - name: generate-makefile
+      shell: bash
+      run: |
+        cmake -B temp
+        
+    # Build engine Release
+    - name: compile-release
+      shell: bash
+      run: |
+        cmake --build temp
+
+  build-macos:
+  
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+          
+    - name: install-dependencies
+      shell: bash
+      run: |
+        brew install python
+        curl -O https://sdk.lunarg.com/sdk/download/1.2.182.0/mac/vulkansdk-macos-1.2.182.0.dmg
+        sudo hdiutil attach vulkansdk-macos-1.2.182.0.dmg
+        sudo open /Volumes/vulkansdk-macos-1.2.182.0/InstallVulkan.app
           
     # Generate makefile
     - name: generate-makefile
