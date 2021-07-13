@@ -3,7 +3,7 @@
 #include "assets/asset_ptr.h"
 #include "rendering/window.h"
 
-#include "assets/asset_uniform_buffer.h"
+#include "assets/asset_shader_buffer.h"
 #include <cpputils/logger.hpp>
 
 #include <glm/glm.hpp>

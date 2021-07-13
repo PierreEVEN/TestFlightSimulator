@@ -4,7 +4,7 @@
 
 #include "assets/asset_mesh_data.h"
 #include "assets/asset_shader.h"
-#include "assets/asset_uniform_buffer.h"
+#include "assets/asset_shader_buffer.h"
 #include "engine_interface.h"
 #include "magic_enum/magic_enum.h"
 

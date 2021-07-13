@@ -1,6 +1,6 @@
 
 
-#include "assets/asset_uniform_buffer.h"
+#include "assets/asset_shader_buffer.h"
 
 #include "engine_interface.h"
 #include "rendering/vulkan/utils.h"
