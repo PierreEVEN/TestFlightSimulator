@@ -39,16 +39,16 @@ void WindowManager::remove_window(WindowBase* window)
     delete window;
 }
 
-WindowBase::WindowBase(IEngineInterface* context, const std::string& name, WindowBase* parent) : open(true), window_name(name), window_context(context)
+WindowBase::WindowBase(const std::string& name, WindowBase* parent) : open(true), window_name(name)
 {
     LOG_INFO("open window %s", name.c_str());
-    if (!context->get_window_manager())
+    if (!IEngineInterface::get()->get_window_manager())
     {
         LOG_ERROR("cannot create window : invalid window manager");
         open = false;
         return;
     }
-    context->get_window_manager()->add_window(this);
+    IEngineInterface::get()->get_window_manager()->add_window(this);
 
     if (parent)
     {

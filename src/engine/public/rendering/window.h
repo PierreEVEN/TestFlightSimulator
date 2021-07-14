@@ -57,10 +57,7 @@ class Window
     {
         return window_handle;
     }
-    [[nodiscard]] GfxContext* get_gfx_context() const
-    {
-        return gfx_context.get();
-    }
+
     [[nodiscard]] VkSurfaceKHR get_surface() const
     {
         return surface;
@@ -115,7 +112,6 @@ class Window
     void          render_data(RenderContext& render_context);
 
   private:
-    std::unique_ptr<GfxContext> gfx_context;
 
     GLFWwindow*                           window_handle;
     command_pool::Container*              command_pool;

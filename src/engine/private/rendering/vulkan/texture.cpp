@@ -122,7 +122,7 @@ namespace vulkan_texture {
 	void generate_mipmaps(Window* context, VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels, VkCommandBuffer commandBuffer)
 	{
 		VkFormatProperties formatProperties;
-		vkGetPhysicalDeviceFormatProperties(context->get_gfx_context()->physical_device, imageFormat, &formatProperties);
+            vkGetPhysicalDeviceFormatProperties(GfxContext::get()->physical_device, imageFormat, &formatProperties);
 		if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) { LOG_FATAL("This texture image format doesn't support image blitting");
 		}
 

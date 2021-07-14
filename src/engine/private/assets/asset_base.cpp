@@ -2,6 +2,13 @@
 
 #include "assets/asset_base.h"
 
+static std::shared_ptr<AssetManager> asset_manager_instance;
+
+void AssetManager::destroy()
+{
+    asset_manager_instance = nullptr;
+}
+
 AssetManager::~AssetManager()
 {
     std::lock_guard<std::mutex> lock(register_lock);
@@ -20,6 +27,21 @@ std::unordered_map<AssetId, AssetBase*> AssetManager::get_assets()
 {
     std::lock_guard<std::mutex> lock(register_lock);
     return assets;
+}
+
+void AssetManager::set(std::shared_ptr<AssetManager> in_asset_manager)
+{
+    asset_manager_instance = in_asset_manager;
+}
+
+std::shared_ptr<AssetManager> AssetManager::get_internal()
+{
+    if (!asset_manager_instance)
+    {
+        LOG_ERROR("cannot get asset manager instance while it has not been created");
+        return nullptr;
+    }
+    return asset_manager_instance;
 }
 
 AssetId AssetManager::find_valid_asset_id(const std::string& asset_name)

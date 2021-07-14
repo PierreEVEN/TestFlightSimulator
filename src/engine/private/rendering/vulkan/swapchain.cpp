@@ -50,9 +50,9 @@ void Swapchain::create_or_recreate()
     create_info.imageArrayLayers = 1;
     create_info.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    std::vector<uint32_t> queue_family_indices = {surface_window->get_gfx_context()->queue_families.graphic_family.value(), surface_window->get_gfx_context()->queue_families.present_family.value()};
+    std::vector<uint32_t> queue_family_indices = {GfxContext::get()->queue_families.graphic_family.value(), GfxContext::get()->queue_families.present_family.value()};
 
-    if (surface_window->get_gfx_context()->queue_families.graphic_family != surface_window->get_gfx_context()->queue_families.present_family)
+    if (GfxContext::get()->queue_families.graphic_family != GfxContext::get()->queue_families.present_family)
     {
         create_info.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
         create_info.queueFamilyIndexCount = static_cast<uint32_t>(queue_family_indices.size());
@@ -102,13 +102,13 @@ void Swapchain::create_or_recreate()
 
     LOG_INFO("create swapchain ( %d x %d ) / sharing mode : %d", swapchain_extend.width, swapchain_extend.height, create_info.imageSharingMode);
 
-    VK_ENSURE(vkCreateSwapchainKHR(surface_window->get_gfx_context()->logical_device, &create_info, vulkan_common::allocation_callback, &swapchain), "Failed to create swap chain");
+    VK_ENSURE(vkCreateSwapchainKHR(GfxContext::get()->logical_device, &create_info, vulkan_common::allocation_callback, &swapchain), "Failed to create swap chain");
     VK_CHECK(swapchain, "Invalid swapchain reference");
 }
 
 void Swapchain::destroy()
 {
     LOG_INFO("Destroy swapChain");
-    vkDestroySwapchainKHR(surface_window->get_gfx_context()->logical_device, swapchain, vulkan_common::allocation_callback);
+    vkDestroySwapchainKHR(GfxContext::get()->logical_device, swapchain, vulkan_common::allocation_callback);
     swapchain = VK_NULL_HANDLE;
 }

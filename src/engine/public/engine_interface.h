@@ -14,9 +14,15 @@ class PlayerController;
 class IEngineInterface
 {
   public:
-    template <typename T> static void run(WindowParameters window_parameters = {})
+    template <typename IEngineInterface_T = IEngineInterface> static IEngineInterface_T* get()
     {
-        std::unique_ptr<T> new_interface = std::make_unique<T>();
+        return static_cast<IEngineInterface_T*>(get_internal());
+    }
+
+    template <typename Interface_T> static void run(WindowParameters window_parameters = {})
+    {
+        auto new_interface = std::make_shared<Interface_T>();
+        store(new_interface);
         new_interface->run_main_task(window_parameters);
     }
 
@@ -25,12 +31,7 @@ class IEngineInterface
         return "None";
     }
     [[nodiscard]] virtual PlayerController* get_controller() = 0;
-
-    [[nodiscard]] AssetManager* get_asset_manager();
-    [[nodiscard]] GfxContext*   get_gfx_context() const
-    {
-        return game_window ? game_window->get_gfx_context() : nullptr;
-    }
+    
     [[nodiscard]] Window* get_window() const
     {
         return game_window.get();
@@ -67,10 +68,11 @@ class IEngineInterface
     IEngineInterface();
 
   private:
+    static void                           store(const std::shared_ptr<IEngineInterface>& in_engine_interface);
+    static IEngineInterface*              get_internal();
     void                                  run_main_task(WindowParameters window_parameters);
     double                                delta_second = 0.0;
     std::chrono::steady_clock::time_point last_delta_second_time;
-    std::unique_ptr<AssetManager>         asset_manager  = nullptr;
     std::unique_ptr<Window>               game_window    = nullptr;
     std::unique_ptr<WindowManager>        window_manager = nullptr;
     std::unique_ptr<InputManager>         input_manager  = nullptr;

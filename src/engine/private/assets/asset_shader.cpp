@@ -42,7 +42,7 @@ Shader::Shader(const std::filesystem::path& source_mesh_path, EShaderStage in_sh
     {
         if (auto bytecode = compile_module(source_mesh_path.string(), shader_data.value(), shader_stage))
         {
-            if (auto shader_m = create_shader_module(get_engine_interface()->get_gfx_context()->logical_device, bytecode.value()))
+            if (auto shader_m = create_shader_module(GfxContext::get()->logical_device, bytecode.value()))
             {
                 build_reflection_data(bytecode.value());
                 shader_module = shader_m.value();
@@ -65,7 +65,7 @@ Shader::Shader(const std::filesystem::path& source_mesh_path, EShaderStage in_sh
 
 Shader::~Shader()
 {
-    vkDestroyShaderModule(get_engine_interface()->get_gfx_context()->logical_device, shader_module, vulkan_common::allocation_callback);
+    vkDestroyShaderModule(GfxContext::get()->logical_device, shader_module, vulkan_common::allocation_callback);
 }
 
 static TBuiltInResource glslang_default_resource = {

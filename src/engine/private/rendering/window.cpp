@@ -48,10 +48,10 @@ Window::Window(WindowParameters window_parameters) : window_width(window_paramet
     create_window_surface();
 
     LOG_INFO("create new vulkan window");
-    gfx_context = std::make_unique<GfxContext>(surface);
+    GfxContext::create<GfxContext>(surface);
 
     // Create window vulkan objects
-    command_pool = new command_pool::Container(gfx_context->logical_device, gfx_context->queue_families.graphic_family.value());
+    command_pool = new command_pool::Container();
     LOG_INFO("finished window creation");
     setup_swapchain_property();
 
@@ -74,7 +74,7 @@ Window::~Window()
     std::lock_guard<std::mutex> lock(window_map_lock);
     window_map.erase(window_map.find(window_handle));
 
-    gfx_context->wait_device();
+    GfxContext::get()->wait_device();
 
     delete imgui_instance;
 
@@ -84,7 +84,7 @@ Window::~Window()
     delete back_buffer;
     destroy_render_pass();
     delete command_pool;
-    gfx_context = nullptr;
+    GfxContext::destroy();
     destroy_window_surface();
 
     glfwDestroyWindow(window_handle);
@@ -93,11 +93,11 @@ Window::~Window()
 
 void Window::setup_swapchain_property()
 {
-    swapchain_support_details = vulkan_utils::get_swapchain_support_details(surface, gfx_context->physical_device);
-    swapchain_surface_format  = vulkan_utils::choose_swapchain_surface_format(gfx_context->physical_device, surface);
+    swapchain_support_details = vulkan_utils::get_swapchain_support_details(surface, GfxContext::get()->physical_device);
+    swapchain_surface_format  = vulkan_utils::choose_swapchain_surface_format(surface);
     swapchain_present_mode    = vulkan_utils::choose_swapchain_present_mode(swapchain_support_details.present_modes);
     swapchain_image_count     = swapchain_support_details.capabilities.minImageCount + 1;
-    max_msaa_sample_count     = vulkan_utils::get_max_usable_sample_count(gfx_context->physical_device);
+    max_msaa_sample_count     = vulkan_utils::get_max_usable_sample_count();
     msaa_sample_count         = max_msaa_sample_count;
     LOG_INFO("swapchain details : \n\
 		\t-max pass_samples : %d\n\
@@ -117,7 +117,7 @@ void Window::resize_window(const int res_x, const int res_y)
     window_height = res_y;
 
     BEGIN_NAMED_RECORD(WAIT_DEVICE);
-    gfx_context->wait_device();
+    GfxContext::get()->wait_device();
     END_NAMED_RECORD(WAIT_DEVICE);
 
     back_buffer->set_size(VkExtent2D{static_cast<uint32_t>(res_x), static_cast<uint32_t>(res_y)});
@@ -134,7 +134,7 @@ void Window::wait_init_idle()
     current_frame_id = (current_frame_id + 1) % config::max_frame_in_flight;
 
     // Ensure all frame data are submitted
-    vkWaitForFences(gfx_context->logical_device, 1, &in_flight_fences[current_frame_id], VK_TRUE, UINT64_MAX);
+    vkWaitForFences(GfxContext::get()->logical_device, 1, &in_flight_fences[current_frame_id], VK_TRUE, UINT64_MAX);
 
     END_NAMED_RECORD(WAIT_INIT_IDLE);
 }
@@ -145,7 +145,7 @@ RenderContext Window::prepare_frame()
     // Retrieve the next available image ID
     uint32_t image_index;
     BEGIN_NAMED_RECORD(ACQUIRE_NEXT_IMAGE);
-    VkResult result = vkAcquireNextImageKHR(gfx_context->logical_device, back_buffer->get_swapchain()->get(), UINT64_MAX, image_acquire_semaphore[current_frame_id], VK_NULL_HANDLE, &image_index);
+    VkResult result = vkAcquireNextImageKHR(GfxContext::get()->logical_device, back_buffer->get_swapchain()->get(), UINT64_MAX, image_acquire_semaphore[current_frame_id], VK_NULL_HANDLE, &image_index);
     END_NAMED_RECORD(ACQUIRE_NEXT_IMAGE);
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -162,7 +162,7 @@ RenderContext Window::prepare_frame()
 
     BEGIN_NAMED_RECORD(WAIT_FOR_FENCES);
     if (images_in_flight[image_index] != VK_NULL_HANDLE)
-        vkWaitForFences(gfx_context->logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
+        vkWaitForFences(GfxContext::get()->logical_device, 1, &images_in_flight[image_index], VK_TRUE, UINT64_MAX);
     images_in_flight[image_index] = in_flight_fences[current_frame_id];
     END_NAMED_RECORD(WAIT_FOR_FENCES);
 
@@ -268,8 +268,8 @@ void Window::render_data(RenderContext& render_context)
 
     BEGIN_NAMED_RECORD(SUBMIT_QUEUE);
     /** Submit command buffers */
-    vkResetFences(gfx_context->logical_device, 1, &in_flight_fences[current_frame_id]);
-    gfx_context->submit_graphic_queue(submitInfo, in_flight_fences[current_frame_id]); // Pass fence to know when all the data are submitted
+    vkResetFences(GfxContext::get()->logical_device, 1, &in_flight_fences[current_frame_id]);
+    GfxContext::get()->submit_graphic_queue(submitInfo, in_flight_fences[current_frame_id]); // Pass fence to know when all the data are submitted
 
     /**
      * Present to swapchain
@@ -286,7 +286,7 @@ void Window::render_data(RenderContext& render_context)
     presentInfo.pImageIndices   = &render_context.image_index;
     presentInfo.pResults        = nullptr; // Optional
 
-    VkResult result = gfx_context->submit_present_queue(presentInfo);
+    VkResult result = GfxContext::get()->submit_present_queue(presentInfo);
     END_NAMED_RECORD(SUBMIT_QUEUE);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || bHasViewportBeenResized)
     {
@@ -335,7 +335,7 @@ void Window::create_or_recreate_render_pass()
     colorAttachment.finalLayout    = max_msaa_sample_count > 1 ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     VkAttachmentDescription depthAttachment{};
-    depthAttachment.format         = vulkan_utils::get_depth_format(gfx_context->physical_device);
+    depthAttachment.format         = vulkan_utils::get_depth_format(GfxContext::get()->physical_device);
     depthAttachment.samples        = msaa_sample_count;
     depthAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depthAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -415,7 +415,7 @@ void Window::create_or_recreate_render_pass()
     renderPassInfo.pSubpasses      = &subpass;
     renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
     renderPassInfo.pDependencies   = dependencies.data();
-    VK_ENSURE(vkCreateRenderPass(gfx_context->logical_device, &renderPassInfo, vulkan_common::allocation_callback, &render_pass), "Failed to create render pass");
+    VK_ENSURE(vkCreateRenderPass(GfxContext::get()->logical_device, &renderPassInfo, vulkan_common::allocation_callback, &render_pass), "Failed to create render pass");
 }
 
 void Window::create_command_buffer()
@@ -428,7 +428,7 @@ void Window::create_command_buffer()
     allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = static_cast<uint32_t>(command_buffers.size());
 
-    VK_ENSURE(vkAllocateCommandBuffers(gfx_context->logical_device, &allocInfo, command_buffers.data()), "Failed to allocate command buffer");
+    VK_ENSURE(vkAllocateCommandBuffers(GfxContext::get()->logical_device, &allocInfo, command_buffers.data()), "Failed to allocate command buffer");
 }
 
 void Window::create_fences_and_semaphores()
@@ -448,9 +448,9 @@ void Window::create_fences_and_semaphores()
 
     for (size_t i = 0; i < config::max_frame_in_flight; i++)
     {
-        VK_ENSURE(vkCreateSemaphore(gfx_context->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &image_acquire_semaphore[i]), "Failed to create image available semaphore #%d" + i);
-        VK_ENSURE(vkCreateSemaphore(gfx_context->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &render_finished_semaphores[i]), "Failed to create render finnished semaphore #%d" + i)
-        VK_ENSURE(vkCreateFence(gfx_context->logical_device, &fenceInfo, vulkan_common::allocation_callback, &in_flight_fences[i]), "Failed to create fence #%d" + i);
+        VK_ENSURE(vkCreateSemaphore(GfxContext::get()->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &image_acquire_semaphore[i]), "Failed to create image available semaphore #%d" + i);
+        VK_ENSURE(vkCreateSemaphore(GfxContext::get()->logical_device, &semaphoreInfo, vulkan_common::allocation_callback, &render_finished_semaphores[i]), "Failed to create render finnished semaphore #%d" + i)
+        VK_ENSURE(vkCreateFence(GfxContext::get()->logical_device, &fenceInfo, vulkan_common::allocation_callback, &in_flight_fences[i]), "Failed to create fence #%d" + i);
     }
 }
 
@@ -459,22 +459,22 @@ void Window::destroy_fences_and_semaphores()
     LOG_INFO("destroy fence and semaphores");
     for (size_t i = 0; i < config::max_frame_in_flight; i++)
     {
-        vkDestroySemaphore(gfx_context->logical_device, render_finished_semaphores[i], vulkan_common::allocation_callback);
-        vkDestroySemaphore(gfx_context->logical_device, image_acquire_semaphore[i], vulkan_common::allocation_callback);
-        vkDestroyFence(gfx_context->logical_device, in_flight_fences[i], vulkan_common::allocation_callback);
+        vkDestroySemaphore(GfxContext::get()->logical_device, render_finished_semaphores[i], vulkan_common::allocation_callback);
+        vkDestroySemaphore(GfxContext::get()->logical_device, image_acquire_semaphore[i], vulkan_common::allocation_callback);
+        vkDestroyFence(GfxContext::get()->logical_device, in_flight_fences[i], vulkan_common::allocation_callback);
     }
 }
 
 void Window::destroy_command_buffer()
 {
     LOG_INFO("free command buffers");
-    vkFreeCommandBuffers(gfx_context->logical_device, command_pool->get(), static_cast<uint32_t>(command_buffers.size()), command_buffers.data());
+    vkFreeCommandBuffers(GfxContext::get()->logical_device, command_pool->get(), static_cast<uint32_t>(command_buffers.size()), command_buffers.data());
 }
 
 void Window::destroy_render_pass()
 {
     LOG_INFO("Destroy Render pass");
-    vkDestroyRenderPass(gfx_context->logical_device, render_pass, vulkan_common::allocation_callback);
+    vkDestroyRenderPass(GfxContext::get()->logical_device, render_pass, vulkan_common::allocation_callback);
     render_pass = VK_NULL_HANDLE;
 }
 

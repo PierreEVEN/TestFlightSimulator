@@ -49,11 +49,11 @@ namespace vulkan_utils
 	extern VkDebugUtilsMessengerCreateInfoEXT debug_messenger_create_infos;
 
 	std::vector<const char*> get_required_extensions();
-	SwapchainSupportDetails get_swapchain_support_details(VkSurfaceKHR surface, VkPhysicalDevice device);
-	QueueFamilyIndices find_device_queue_families(VkSurfaceKHR surface, VkPhysicalDevice device);
+        SwapchainSupportDetails  get_swapchain_support_details(VkSurfaceKHR surface, VkPhysicalDevice device);
+        QueueFamilyIndices       find_device_queue_families(VkSurfaceKHR surface, VkPhysicalDevice device);
 	bool is_physical_device_suitable(VkSurfaceKHR surface, VkPhysicalDevice device);
-	VkSurfaceFormatKHR choose_swapchain_surface_format(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
-	VkSampleCountFlagBits get_max_usable_sample_count(VkPhysicalDevice physical_device);
+	VkSurfaceFormatKHR choose_swapchain_surface_format(VkSurfaceKHR surface);
+	VkSampleCountFlagBits get_max_usable_sample_count();
 	VkPresentModeKHR choose_swapchain_present_mode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkFormat find_texture_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features, VkPhysicalDevice physical_device);
 	VkFormat get_depth_format(VkPhysicalDevice physical_device);

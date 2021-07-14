@@ -54,11 +54,11 @@ void Material::update_push_constants(VkCommandBuffer& command_buffer)
 void Material::destroy_resources()
 {
     if (shader_pipeline != VK_NULL_HANDLE)
-        vkDestroyPipeline(get_engine_interface()->get_gfx_context()->logical_device, shader_pipeline, vulkan_common::allocation_callback);
+        vkDestroyPipeline(GfxContext::get()->logical_device, shader_pipeline, vulkan_common::allocation_callback);
     if (pipeline_layout != VK_NULL_HANDLE)
-        vkDestroyPipelineLayout(get_engine_interface()->get_gfx_context()->logical_device, pipeline_layout, vulkan_common::allocation_callback);
+        vkDestroyPipelineLayout(GfxContext::get()->logical_device, pipeline_layout, vulkan_common::allocation_callback);
     if (descriptor_set_layout != VK_NULL_HANDLE)
-        vkDestroyDescriptorSetLayout(get_engine_interface()->get_gfx_context()->logical_device, descriptor_set_layout, vulkan_common::allocation_callback);
+        vkDestroyDescriptorSetLayout(GfxContext::get()->logical_device, descriptor_set_layout, vulkan_common::allocation_callback);
     shader_pipeline       = VK_NULL_HANDLE;
     pipeline_layout       = VK_NULL_HANDLE;
     descriptor_set_layout = VK_NULL_HANDLE;
@@ -196,12 +196,12 @@ std::vector<VkDescriptorSetLayoutBinding> Material::make_layout_bindings()
 void Material::create_pipeline()
 {
     if (pipeline_layout != VK_NULL_HANDLE)
-        vkDestroyPipelineLayout(get_engine_interface()->get_gfx_context()->logical_device, pipeline_layout, vulkan_common::allocation_callback);
+        vkDestroyPipelineLayout(GfxContext::get()->logical_device, pipeline_layout, vulkan_common::allocation_callback);
     if (shader_pipeline != VK_NULL_HANDLE)
-        vkDestroyPipeline(get_engine_interface()->get_gfx_context()->logical_device, shader_pipeline, vulkan_common::allocation_callback);
+        vkDestroyPipeline(GfxContext::get()->logical_device, shader_pipeline, vulkan_common::allocation_callback);
 
     VK_CHECK(descriptor_set_layout, "Descriptor set layout should be initialized before graphic pipeline");
-    VK_CHECK(get_engine_interface()->get_window()->get_render_pass(), "Render pass should be initialized before graphic pipeline");
+    VK_CHECK(IEngineInterface::get()->get_window()->get_render_pass(), "Render pass should be initialized before graphic pipeline");
 
     /** Shader pipeline */
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -248,7 +248,7 @@ void Material::create_pipeline()
     pipelineLayoutInfo.pSetLayouts            = &descriptor_set_layout;
     pipelineLayoutInfo.pushConstantRangeCount = push_constant_ranges ? 1 : 0;
     pipelineLayoutInfo.pPushConstantRanges    = push_constant_ranges ? push_constant_ranges.get() : nullptr;
-    VK_ENSURE(vkCreatePipelineLayout(get_engine_interface()->get_gfx_context()->logical_device, &pipelineLayoutInfo, nullptr, &pipeline_layout), "Failed to create pipeline layout");
+    VK_ENSURE(vkCreatePipelineLayout(GfxContext::get()->logical_device, &pipelineLayoutInfo, nullptr, &pipeline_layout), "Failed to create pipeline layout");
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
@@ -287,12 +287,12 @@ void Material::create_pipeline()
 
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType                 = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampling.rasterizationSamples  = static_cast<VkSampleCountFlagBits>(get_engine_interface()->get_window()->get_msaa_sample_count());
+    multisampling.rasterizationSamples  = static_cast<VkSampleCountFlagBits>(IEngineInterface::get()->get_window()->get_msaa_sample_count());
     multisampling.minSampleShading      = 1.0f;     // Optional
     multisampling.pSampleMask           = nullptr;  // Optional
     multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
     multisampling.alphaToOneEnable      = VK_FALSE; // Optional
-    multisampling.sampleShadingEnable   = get_engine_interface()->get_window()->get_msaa_sample_count() > 1 ? VK_TRUE : VK_FALSE;
+    multisampling.sampleShadingEnable   = IEngineInterface::get()->get_window()->get_msaa_sample_count() > 1 ? VK_TRUE : VK_FALSE;
     multisampling.minSampleShading      = .2f;
 
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
@@ -346,12 +346,12 @@ void Material::create_pipeline()
     pipelineInfo.pColorBlendState    = &colorBlending;
     pipelineInfo.pDynamicState       = &dynamicState; // Optional
     pipelineInfo.layout              = pipeline_layout;
-    pipelineInfo.renderPass          = get_engine_interface()->get_window()->get_render_pass();
+    pipelineInfo.renderPass          = IEngineInterface::get()->get_window()->get_render_pass();
     pipelineInfo.subpass             = 0;
     pipelineInfo.basePipelineHandle  = VK_NULL_HANDLE; // Optional
     pipelineInfo.basePipelineIndex   = -1;             // Optional
     pipelineInfo.pDepthStencilState  = &depthStencil;
-    VK_ENSURE(vkCreateGraphicsPipelines(get_engine_interface()->get_gfx_context()->logical_device, VK_NULL_HANDLE, 1, &pipelineInfo, vulkan_common::allocation_callback, &shader_pipeline),
+    VK_ENSURE(vkCreateGraphicsPipelines(GfxContext::get()->logical_device, VK_NULL_HANDLE, 1, &pipelineInfo, vulkan_common::allocation_callback, &shader_pipeline),
               "Failed to create material graphic pipeline");
 }
 
@@ -362,18 +362,18 @@ void Material::create_descriptor_sets(std::vector<VkDescriptorSetLayoutBinding> 
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
     layoutInfo.pBindings    = layoutBindings.data();
-    VK_ENSURE(vkCreateDescriptorSetLayout(get_engine_interface()->get_gfx_context()->logical_device, &layoutInfo, vulkan_common::allocation_callback, &descriptor_set_layout), "Failed to create descriptor set layout");
+    VK_ENSURE(vkCreateDescriptorSetLayout(GfxContext::get()->logical_device, &layoutInfo, vulkan_common::allocation_callback, &descriptor_set_layout), "Failed to create descriptor set layout");
 
     /** Allocate descriptor set */
-    std::vector<VkDescriptorSetLayout> layouts(get_engine_interface()->get_window()->get_image_count(), descriptor_set_layout);
-    descriptor_sets.resize(get_engine_interface()->get_window()->get_image_count());
+    std::vector<VkDescriptorSetLayout> layouts(IEngineInterface::get()->get_window()->get_image_count(), descriptor_set_layout);
+    descriptor_sets.resize(IEngineInterface::get()->get_window()->get_image_count());
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorSetCount = get_engine_interface()->get_window()->get_image_count();
+    allocInfo.descriptorSetCount = IEngineInterface::get()->get_window()->get_image_count();
     allocInfo.pSetLayouts        = layouts.data();
     allocInfo.descriptorPool     = VK_NULL_HANDLE;
-    get_engine_interface()->get_window()->get_descriptor_pool()->alloc_memory(allocInfo);
-    VK_ENSURE(vkAllocateDescriptorSets(get_engine_interface()->get_gfx_context()->logical_device, &allocInfo, descriptor_sets.data()), "Failed to allocate descriptor sets");
+    IEngineInterface::get()->get_window()->get_descriptor_pool()->alloc_memory(allocInfo);
+    VK_ENSURE(vkAllocateDescriptorSets(GfxContext::get()->logical_device, &allocInfo, descriptor_sets.data()), "Failed to allocate descriptor sets");
 }
 
 void Material::update_descriptor_sets(size_t imageIndex)
@@ -495,5 +495,5 @@ void Material::update_descriptor_sets(size_t imageIndex)
     }
     */
 
-    vkUpdateDescriptorSets(get_engine_interface()->get_gfx_context()->logical_device, static_cast<uint32_t>(write_descriptor_sets.size()), write_descriptor_sets.data(), 0, nullptr);
+    vkUpdateDescriptorSets(GfxContext::get()->logical_device, static_cast<uint32_t>(write_descriptor_sets.size()), write_descriptor_sets.data(), 0, nullptr);
 }

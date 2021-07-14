@@ -6,7 +6,6 @@
 #include "assimp/Importer.hpp"
 
 class Scene;
-class AssetManager;
 struct aiNode;
 class MeshData;
 class Node;
@@ -16,7 +15,7 @@ class Shader;
 class SceneImporter final
 {
   public:
-    SceneImporter(AssetManager* in_asset_manager) : asset_manager(in_asset_manager)
+    SceneImporter()
     {
         importer = std::make_unique<Assimp::Importer>();
     }
@@ -30,9 +29,7 @@ class SceneImporter final
 
     std::shared_ptr<Node> process_node(aiNode* ai_node, const std::shared_ptr<Node>& parent, Scene* context_scene);
     std::shared_ptr<Node> create_node(aiNode* context, const std::shared_ptr<Node>& parent, Scene* context_scene);
-
-    AssetManager* asset_manager = nullptr;
-
+    
     std::string                       object_name;
     //std::vector<TAssetPtr<Texture2d>> texture_refs;
     std::vector<TAssetPtr<Shader>>    material_refs;

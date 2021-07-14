@@ -13,14 +13,25 @@
 class GfxContext;
 class Window;
 class AssetBase;
-class IEngineInterface;
 
-class AssetManager final
+class AssetManager
 {
+
   public:
-    AssetManager(IEngineInterface* in_engine_interface) : engine_interface(in_engine_interface)
+    AssetManager() = default;
+
+    template <typename AssetManager_T, typename... Args> static void initialize(Args&&... arguments)
     {
+        set(std::make_shared<AssetManager_T>(std::forward<Args>(arguments)...));
     }
+
+    template <typename AssetManager_T = AssetManager> static AssetManager_T* get()
+    {
+        return static_cast<AssetManager_T*>(get_internal().get());
+    }
+
+    static void destroy();
+
     ~AssetManager();
 
     template <class AssetClass, typename... Args> TAssetPtr<AssetClass> create(const AssetId& asset_id, Args... args)
@@ -34,7 +45,7 @@ class AssetManager final
         AssetClass* asset_ptr = static_cast<AssetClass*>(std::malloc(sizeof(AssetClass)));
         if (!asset_ptr)
             LOG_FATAL("failed to create asset storage");
-        asset_ptr->internal_constructor(engine_interface, asset_id);
+        asset_ptr->internal_constructor(asset_id);
 
         new (asset_ptr) AssetClass(std::forward<Args>(args)...);
         register_lock.lock();
@@ -47,16 +58,17 @@ class AssetManager final
     {
         return assets.find(id) != assets.end();
     }
-    
-    [[nodiscard]] AssetBase* find(const AssetId& id);
+
+    [[nodiscard]] AssetBase*                              find(const AssetId& id);
     [[nodiscard]] AssetId                                 find_valid_asset_id(const std::string& asset_name);
     [[nodiscard]] std::unordered_map<AssetId, AssetBase*> get_assets();
 
-
   private:
+    static void                          set(std::shared_ptr<AssetManager> in_asset_manager);
+    static std::shared_ptr<AssetManager> get_internal();
+
     std::mutex                              register_lock;
     std::unordered_map<AssetId, AssetBase*> assets;
-    IEngineInterface*                       engine_interface;
 };
 
 class AssetBase : public NonCopiable
@@ -81,11 +93,6 @@ class AssetBase : public NonCopiable
         return false;
     }
 
-    [[nodiscard]] IEngineInterface* get_engine_interface() const
-    {
-        return engine_interface;
-    }
-
     virtual ~AssetBase()
     {
         delete asset_id;
@@ -98,12 +105,10 @@ class AssetBase : public NonCopiable
     }
 
   private:
-    void internal_constructor(IEngineInterface* in_engine_interface, const AssetId& id)
+    void internal_constructor(const AssetId& id)
     {
-        engine_interface = in_engine_interface;
-        asset_id         = new AssetId(id);
+        asset_id = new AssetId(id);
     }
 
-    AssetId*          asset_id;
-    IEngineInterface* engine_interface;
+    AssetId* asset_id;
 };

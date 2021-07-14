@@ -30,12 +30,10 @@ class WindowBase
     friend WindowManager;
 
   public:
-    WindowBase(IEngineInterface* context, const std::string& name, WindowBase* parent = nullptr);
+    WindowBase(const std::string& name, WindowBase* parent = nullptr);
 
     void close();
-
-    [[nodiscard]] IEngineInterface* get_context() const { return window_context; }
-
+    
   protected:
     virtual ~WindowBase();
 
@@ -47,8 +45,7 @@ class WindowBase
 
     std::string window_name;
     size_t      window_id;
-
-    IEngineInterface*        window_context = nullptr;
+    
     WindowBase*              parent_window  = nullptr;
     std::vector<WindowBase*> children;
 };

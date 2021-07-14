@@ -28,7 +28,7 @@ namespace command_pool
 
 	class Container final {
 	public:
-		Container(VkDevice logical_device, uint32_t queue);
+		Container();
 		~Container();
 
 		[[nodiscard]] VkCommandPool& get();

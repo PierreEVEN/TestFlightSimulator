@@ -10,7 +10,7 @@
 GfxContext::GfxContext(VkSurfaceKHR surface)
 {
     select_physical_device(surface);
-    create_logical_device(surface);
+    create_logical_device(surface, physical_device);
     create_vma_allocator();
 }
 
@@ -82,11 +82,11 @@ void GfxContext::select_physical_device(VkSurfaceKHR surface)
     LOG_INFO("Picking physical device %d (%s)", selected_device_properties.deviceID, selected_device_properties.deviceName);
 }
 
-void GfxContext::create_logical_device(VkSurfaceKHR surface)
+void GfxContext::create_logical_device(VkSurfaceKHR surface, VkPhysicalDevice device)
 {
     LOG_INFO("Create logical device");
 
-    queue_families = vulkan_utils::find_device_queue_families(surface, physical_device);
+    queue_families = vulkan_utils::find_device_queue_families(surface, device);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t>                   unique_queue_families = {queue_families.graphic_family.value(), queue_families.present_family.value()};
@@ -157,4 +157,21 @@ void GfxContext::destroy_logical_device()
 {
     LOG_INFO("Destroy logical device");
     vkDestroyDevice(logical_device, vulkan_common::allocation_callback);
+}
+
+static std::shared_ptr<GfxContext> gfx_context_reference;
+
+GfxContext* GfxContext::get_internal()
+{
+    if (!gfx_context_reference)
+    {
+        LOG_WARNING("trying to get gfx context but gfx context has not been created");
+        return nullptr;
+    }
+    return gfx_context_reference.get();
+}
+
+void GfxContext::set_internal(std::shared_ptr<GfxContext> gfx_context)
+{
+    gfx_context_reference = gfx_context;
 }

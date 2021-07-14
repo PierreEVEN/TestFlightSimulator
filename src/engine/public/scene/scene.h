@@ -11,7 +11,6 @@
 #include <memory>
 #include <vector>
 
-class AssetManager;
 class Camera;
 class ShaderBuffer;
 class Node;
@@ -58,7 +57,7 @@ class Scene
     friend class PrimitiveNode;
 
   public:
-    Scene(AssetManager* asset_manager);
+    Scene();
 
     void tick(const double delta_second);
     void render_scene(RenderContext& render_context);

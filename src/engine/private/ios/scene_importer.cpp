@@ -47,7 +47,7 @@ std::shared_ptr<Node> SceneImporter::create_node(aiNode* context, const std::sha
 
     for (size_t i = 0; i < context->mNumMeshes; ++i)
     {
-        auto mesh_node = context_scene->add_node<MeshNode>(meshes_refs[context->mMeshes[i]], TAssetPtr<Material>(asset_manager, "test_material"));
+        auto mesh_node = context_scene->add_node<MeshNode>(meshes_refs[context->mMeshes[i]], TAssetPtr<Material>("test_material"));
         mesh_node->attach_to(node);
     }
 
@@ -88,7 +88,7 @@ std::shared_ptr<Node> SceneImporter::import_file(const std::filesystem::path& so
         material_refs[i] = process_material(scene->mMaterials[i], i);
         */
     for (size_t i = 0; i < scene->mNumMeshes; ++i)
-        meshes_refs[i] = MeshImporter::process_mesh(asset_manager->find_valid_asset_id(asset_name + "_" + scene->mMeshes[i]->mName.C_Str()), asset_manager, scene->mMeshes[i], i);
+        meshes_refs[i] = MeshImporter::process_mesh(AssetManager::get()->find_valid_asset_id(asset_name + "_" + scene->mMeshes[i]->mName.C_Str()), scene->mMeshes[i], i);
 
 
     auto root_node = process_node(scene->mRootNode, nullptr, context_scene);

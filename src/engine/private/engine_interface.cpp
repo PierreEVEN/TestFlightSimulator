@@ -6,10 +6,7 @@
 #include "imgui.h"
 #include "statsRecorder.h"
 
-AssetManager* IEngineInterface::get_asset_manager()
-{
-    return asset_manager.get();
-}
+static std::shared_ptr<IEngineInterface> engine_interface_reference;
 
 void IEngineInterface::close()
 {
@@ -20,12 +17,22 @@ IEngineInterface::IEngineInterface() : last_delta_second_time(std::chrono::stead
 {
 }
 
+void IEngineInterface::store(const std::shared_ptr<IEngineInterface>& in_engine_interface)
+{
+    engine_interface_reference = in_engine_interface;
+}
+
+IEngineInterface* IEngineInterface::get_internal()
+{
+    return engine_interface_reference.get();
+}
+
 void IEngineInterface::run_main_task(WindowParameters window_parameters)
 {
     game_window    = std::make_unique<Window>(window_parameters);
     window_manager = std::make_unique<WindowManager>();
-    asset_manager  = std::make_unique<AssetManager>(this);
-    input_manager  = std::make_unique<InputManager>(game_window->get_handle());
+    AssetManager::initialize<AssetManager>();
+    input_manager = std::make_unique<InputManager>(game_window->get_handle());
 
     load_resources();
 
@@ -81,10 +88,10 @@ void IEngineInterface::run_main_task(WindowParameters window_parameters)
         game_window->end_frame();
         END_NAMED_RECORD(DRAW_FRAME);
     }
-    vkDeviceWaitIdle(get_window()->get_gfx_context()->logical_device);
+    vkDeviceWaitIdle(GfxContext::get()->logical_device);
 
     unload_resources();
-    asset_manager = nullptr;
+    AssetManager::destroy();
 
     pre_shutdown();
     window_manager = nullptr;

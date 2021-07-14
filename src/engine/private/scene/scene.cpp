@@ -10,10 +10,10 @@ struct ModMatrix
 {
     glm::mat4 a;
 };
-Scene::Scene(AssetManager* asset_manager)
+Scene::Scene()
 {
-    camera_uniform_buffer = asset_manager->create<ShaderBuffer>("global_camera_uniform_buffer", "GlobalCameraUniformBuffer", CameraData{}, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-    global_model_ssbo     = asset_manager->create<ShaderBuffer>("global_object_buffer", "ObjectBuffer", sizeof(ModMatrix) * 100, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+    camera_uniform_buffer = AssetManager::get()->create<ShaderBuffer>("global_camera_uniform_buffer", "GlobalCameraUniformBuffer", CameraData{}, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+    global_model_ssbo     = AssetManager::get()->create<ShaderBuffer>("global_object_buffer", "ObjectBuffer", sizeof(ModMatrix) * 100, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 }
 
 void Scene::tick(const double delta_second)

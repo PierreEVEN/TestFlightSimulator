@@ -24,7 +24,7 @@ TAssetPtr<MeshData> MeshImporter::import_mesh(const std::filesystem::path& file_
     }
 
     int asset_index = 0;
-    while (asset_manager->find((asset_name + "_(" + std::to_string(asset_index) + ")").c_str()))
+    while (AssetManager::get()->find((asset_name + "_(" + std::to_string(asset_index) + ")").c_str()))
     {
         asset_index++;
     }
@@ -34,7 +34,7 @@ TAssetPtr<MeshData> MeshImporter::import_mesh(const std::filesystem::path& file_
     {
         if (scene->mMeshes[i]->mName.C_Str() == desired_node)
         {
-            return process_mesh(asset_name, asset_manager, scene->mMeshes[i], i);
+            return process_mesh(asset_name, scene->mMeshes[i], i);
         }
     }
 
@@ -68,7 +68,7 @@ std::vector<std::string> MeshImporter::get_mesh_list(const std::filesystem::path
 }
 
 
-TAssetPtr<MeshData> MeshImporter::process_mesh(const AssetId& asset_id, AssetManager* asset_manager, aiMesh* mesh, size_t id)
+TAssetPtr<MeshData> MeshImporter::process_mesh(const AssetId& asset_id, aiMesh* mesh, size_t id)
 {
     std::vector<Vertex> vertex_group;
 
@@ -107,5 +107,5 @@ TAssetPtr<MeshData> MeshImporter::process_mesh(const AssetId& asset_id, AssetMan
         triangles[face_index + 2] = mesh->mFaces[i].mIndices[2];
     }
 
-    return asset_manager->create<MeshData>(asset_id, vertex_group, triangles);
+    return AssetManager::get()->create<MeshData>(asset_id, vertex_group, triangles);
 }

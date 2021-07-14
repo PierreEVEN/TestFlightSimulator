@@ -1,5 +1,7 @@
 #include "rendering/vulkan/command_pool.h"
 #include "jobSystem/worker.h"
+#include "rendering/gfx_context.h"
+
 #include <cpputils/logger.hpp>
 
 namespace command_pool
@@ -34,14 +36,14 @@ CommandPool::operator bool()
     return std::this_thread::get_id() == pool_thread_id;
 }
 
-Container::Container(VkDevice logical_device, uint32_t queue) : context_logical_device(logical_device), context_queue(queue)
+Container::Container() : context_logical_device(GfxContext::get()->logical_device), context_queue(GfxContext::get()->queue_families.graphic_family.value())
 {
     command_pool_count = job_system::Worker::get_worker_count() + 1; // One for each worker, plus one for the main thread
     LOG_INFO("create command pool for %d workers", command_pool_count);
     command_pools = static_cast<CommandPool*>(std::malloc(command_pool_count * sizeof(CommandPool)));
     for (int i = 0; i < static_cast<int>(command_pool_count); ++i)
     {
-        new (command_pools + i) CommandPool(logical_device, queue);
+        new (command_pools + i) CommandPool(context_logical_device, context_queue);
     }
 }
 

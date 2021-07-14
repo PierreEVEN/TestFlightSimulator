@@ -9,6 +9,23 @@ class GfxContext
 {
   public:
     GfxContext(VkSurfaceKHR surface);
+
+    template <typename GfxContext_T, typename... Args>
+    static void create(Args&&... arguments)
+    {
+        set_internal(std::make_shared<GfxContext_T>(std::forward<Args>(arguments)...));   
+    }
+
+    template <typename GfxContext_T = GfxContext> static GfxContext_T* get()
+    {
+        return static_cast<GfxContext_T*>(get_internal());
+    }
+
+    static void destroy()
+    {
+        set_internal(nullptr);
+    }
+
     ~GfxContext();
 
     VkPhysicalDevice                 physical_device = VK_NULL_HANDLE;
@@ -28,9 +45,12 @@ class GfxContext
     VkQueue    present_queue   = VK_NULL_HANDLE;
 
     void select_physical_device(VkSurfaceKHR surface);
-    void create_logical_device(VkSurfaceKHR surface);
+    void create_logical_device(VkSurfaceKHR surface, VkPhysicalDevice device);
     void create_vma_allocator();
 
     void destroy_vma_allocators();
     void destroy_logical_device();
+
+    static GfxContext* get_internal();
+    static void set_internal(std::shared_ptr<GfxContext> gfx_context);
 };
